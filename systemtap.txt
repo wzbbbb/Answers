@@ -1,0 +1,81 @@
+Most of the required kernel packages can be found at http://download.fedoraproject.org/pub/fedora/linux/releases/. Configure yum accordingly by adding a new "debug" yum repository file under /etc/yum.repos.d containing the following lines:
+
+[fedora-debuginfo]
+name=Fedora $releasever - $basearch - Debug
+failovermethod=priority
+baseurl=http://download.fedoraproject.org/pub/fedora/linux/releases/
+$releasever/Everything/$basearch/debug/
+enabled=1
+
+######################
+For example, to create the instrumentation module simple.ko from a SystemTap script named
+simple.stp for the target kernel 2.6.18-92.1.10.el5 (on x86_64 architecture), use the following
+command:
+stap -r 2.6.18-92.1.10.el5 -e 'probe vfs.read {exit()}' -m simple
+This will create a module named simple.ko. To use the instrumentation module simple.ko, copy it
+to the target system and run the following command (on the target system):
+staprun simple.ko
+
+Important
+The host system must be the same architecture and running the same distribution of Linux
+as the target system in order for the built instrumentation module to work.
+######################
+To allow ordinary users to run SystemTap without root access, add them to one of these user groups:
+
+stapdev
+Members of this group can use stap to run SystemTap scripts, or staprun to run SystemTap instrumentation modules.
+Running stap involves compiling SystemTap scripts into kernel modules and loading them into the kernel. This requires elevated privileges to the system, which are granted to stapdev members. Unfortunately, such privileges also grant effective root access to stapdev members.  As such, you should only grant stapdev group membership to users whom you can trust root access.
+
+stapusr
+Members of this group can only run staprun to run SystemTap instrumentation modules.  In addition, they can only run those modules from /lib/modules/kernel_version/ systemtap/. Note that this directory must be owned only by the root user, and must only be writable by the root user.
+
+-v
+Makes the output of the SystemTap session more verbose. You can repeat this option (for example, stap -vvv script.stp) to provide more details on the script's execution. 
+-o filename
+Sends the standard output to file (filename).
+-x process ID
+Sets the SystemTap handler function target() to the specified process ID.
+######################
+global count_jiffies, count_ms
+probe timer.jiffies(100) { count_jiffies ++ }
+probe timer.ms(100) { count_ms ++ }
+probe timer.ms(12345)
+{
+  hz=(1000*count_jiffies) / count_ms
+  printf ("jiffies:ms ratio %d:%d => CONFIG_HZ=%d\n",
+    count_jiffies, count_ms, hz)
+  exit ()
+}
+######################
+The following is a list of commonly-used SystemTap functions:
+tid()
+The ID of the current thread.
+
+uid()
+The ID of the current user.
+
+cpu()
+The current CPU number.
+
+gettimeofday_s()
+The number of seconds since UNIX epoch (January 1, 1970).
+
+ctime()
+Convert number of seconds since UNIX epoch to date.
+
+pp()
+A string describing the probe point currently being handled.
+
+thread_indent()
+
+name
+Identifies the name of a specific system call. This variable can only be used
+in probes that use the
+event syscall.system_call.
+
+target()
+Used in conjunction with stap script -x process ID or stap script -c command.  If you want to specify a script to take an argument of a process ID or command, use target() as the variable in the script to refer to it. For example:
+probe syscall.* {
+  if (pid() == target())
+    printf("%s/n", name)
+}

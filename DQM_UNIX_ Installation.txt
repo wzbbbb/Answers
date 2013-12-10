@@ -1,0 +1,282 @@
+===== DQM installation and configuration on UNIX
+
+
+==== The Installation
+
+Note: please perform the DQM installation with the "root" user. In this document, the root user is assumed.
+There are two ways to install DQM: 
+1 Manual installation (interactive mode):  proceed the installation by answering questions prompted. 
+For example,
+/SOMEDIR/tools/uxinstall_dqm EN
+Note: EN: English
+      FR: French (default) 
+
+2. Automatic installation: specify a pre-prepared auto-answer file at the beginning of the installation. The pre-prepared answer file can be generated from a previous installation.
+For example:
+/SOMEDIR/tools/uxinstall_dqm EN install_dqm.dft
+Note:  install_dqm.dft: the pre-prepared auto-answer file.
+
+One specific question during the installation deserved to be mentioned, "Bind DQM with universe?". If the DQM is to be used for a Dollar Universe Company, this question should be answered "y". The name of the companies linking to the DQM will be requested afterward. Make sure to list all of the Dollar Universe Company names that will be using this DQM server. Then, a symbolic link will be created in the "/etc" directory for each Dollar Universe Companies. We will investigate the link in a later section.
+
+The rest of the installation is straightforward. Please check the included DQM Manual for more information.
+
+
+===== Configuration
+
+We focus our discussion on two most common configurations:
+1. One DQM server per Dollar Universe Company: Company dedicated DQM server
+2. One DQM server for multiple Dollar Universe Companies: shared DQM server
+
+The following files will be configured automatically during the installation. However, depending on your specific configuration, you may need some modifications.
+
+a) /etc/services
+b) $UXMGR/uxsrsrv.alias
+c) $UXMGR/uxstartup_gen	
+d) /etc/UNIVERSE_DQM_
+
+We will discuss each file in detail for both configurations.
+
+
+1.  Company dedicated DQM server
+
+One DQM server is used by a Dollar Universe Company and shared by all 4 areas (X, S, I, A).
+To make the example more interesting, we use 3 DQM servers to serve 3 Dollar Universe Companies: 
+Company Name	DQM TCP Port Number
+CompanyName1	10620
+CompanyName2	20620	
+CompanyName3	30620
+
+In this case, the DQM configurations are independent for each Dollar Universe Company. 
+
+1.1  /etc/services
+
+In /etc/services, you may have the following entries by default installation: 
+
+DQM     10620/TCP
+DQM     20620/TCP
+DQM     30620/TCP
+
+These entries declare to the operating system that DQM servers are going to use the TCP port 10620, 20620 and 30620. The first column is the aliases used by the Dollar Universe Companies. However, as you can see, the 3 DQM servers are using the same alias "DQM" for their TCP Ports; the Dollar Universe Companies and DQM servers will use the first entry found in the /etc/services file. Therefore, you have to use different aliases for different TCP ports. We recommend you to add Company names to the aliases to differentiate them:  
+CompanyName1_DQM     10620/TCP
+CompanyName2_DQM     20620/TCP
+CompanyName3_DQM     30620/TCP
+
+Note: ""CompanyName1", "CompanyName2" and "CompanyName3" should be replaced with your specific Dollar Universe Company names. 
+
+
+1.2  $UXMGR/uxsrsrv.alias files
+
+For CompanyName1, the following 8 lines should already exist. 
+
+CompanyName1_DQM_X DQM
+CompanyName1_DQM_S DQM
+CompanyName1_DQM_I DQM
+CompanyName1_DQM_A DQM
+_DQM_X       DQM
+_DQM_S       DQM
+_DQM_I       DQM
+_DQM_A       DQM
+
+You need to modify them to the following: 
+
+CompanyName1_DQM_X CompanyName1_DQM
+CompanyName1_DQM_S CompanyName1_DQM
+CompanyName1_DQM_I CompanyName1_DQM
+CompanyName1_DQM_A CompanyName1_DQM
+_DQM_X       CompanyName1_DQM
+_DQM_S       CompanyName1_DQM
+_DQM_I       CompanyName1_DQM
+_DQM_A       CompanyName1_DQM
+
+
+For CompanyName2, the following 8 lines should already exist.
+
+CompanyName2_DQM_X DQM
+CompanyName2_DQM_S DQM
+CompanyName2_DQM_I DQM
+CompanyName2_DQM_A DQM
+_DQM_X       DQM
+_DQM_S       DQM
+_DQM_I       DQM
+_DQM_A       DQM
+
+You need to modify them to the following: 
+
+CompanyName2_DQM_X CompanyName2_DQM
+CompanyName2_DQM_S CompanyName2_DQM
+CompanyName2_DQM_I CompanyName2_DQM
+CompanyName2_DQM_A CompanyName2_DQM
+_DQM_X       CompanyName2_DQM
+_DQM_S       CompanyName2_DQM
+_DQM_I       CompanyName2_DQM
+_DQM_A       CompanyName2_DQM
+
+
+For CompanyName3, the following 8 lines should already exist.
+
+CompanyName3_DQM_X CompanyName3_DQM
+CompanyName3_DQM_S CompanyName3_DQM
+CompanyName3_DQM_I CompanyName3_DQM
+CompanyName3_DQM_A CompanyName3_DQM
+_DQM_X       CompanyName3_DQM
+_DQM_S       CompanyName3_DQM
+_DQM_I       CompanyName3_DQM
+_DQM_A       CompanyName3_DQM
+
+You need to modify them to the following: 
+
+CompanyName3_DQM_X CompanyName3_DQM
+CompanyName3_DQM_S CompanyName3_DQM
+CompanyName3_DQM_I CompanyName3_DQM
+CompanyName3_DQM_A CompanyName3_DQM
+_DQM_X       CompanyName3_DQM
+_DQM_S       CompanyName3_DQM
+_DQM_I       CompanyName3_DQM
+_DQM_A       CompanyName3_DQM
+
+
+Those 8 lines in each $UXMGR/uxsrsrv.alias files indicate that all of the 4 areas of a Dollar Universe Company should submit their jobs to the same DQM server.
+The "CompanyName1_DQM","CompanyName2_DQM" and "CompanyName3_DQM" in the second column of each file is the alias of the DQM TCP port, as defined in the /etc/services file. 
+
+
+1.3  The $UXMGR/uxstartup_gen file
+
+This file defines the DQM startup procedure. The DQM section in the file should look like the following;
+
+# ------------- DQM
+# if DQM is  present (link /etc/UNIVERSE_DQM_SOCIETE exist  )
+#
+  if [ -a /etc/UNIVERSE_DQM_${SOCIETE} ]
+    then
+      nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} X $NOEUD > $UXLEX/uxstartdqm.log 2>&1 &
+#     nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} S $NOEUD > $UXLSI/uxstartdqm.log 2>&1 &
+#     nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} I $NOEUD > $UXLIN/uxstartdqm.log 2>&1 &
+#     nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} A $NOEUD > $UXLAP/uxstartdqm.log 2>&1 &
+  fi
+#
+#
+
+
+All of the three $UXMGR/uxstartup_gen files (one for each Dollar Universe Company) should be the same.
+For Company dedicated DQM server, from the second to the forth "uxstartdqm" lines need to be commented out. Since all of the 4 areas will share one DQM server, only one DQM server needs to be started.
+
+
+1.4  the /etc/UNIVERSE_DQM_'CompanyName' file
+There should be three symbolic links existing, one for each Dollar Universe Company. In our example,
+
+/etc/UNIVERSE_DQM_CompanyName1 -> "/.../DQM_binary_directory_for_CompanyName1"
+/etc/UNIVERSE_DQM_CompanyName2 -> "/.../DQM_binary_directory_for_CompanyName2"
+/etc/UNIVERSE_DQM_CompanyName3 -> "/.../DQM_binary_directory_for_CompanyName3"
+
+Those links point to the corresponding directories that DQM binaries reside. The existence of the symbolic links is mandatory. Otherwise, the Dollar Universe Company will use the launcher to submit job instead of using DQM server.
+
+
+2. Shared DQM server
+
+In this case, DQM server should be installed after all installations of the Dollar Universe Companies have finished. Remember to link the DQM server to all of the companies. 
+The configuration for the /etc/services and the $UXMGR/uxsrsrv.alias files are the same as in the "Company dedicated" case.
+
+
+2.1  /etc/services
+
+There is one DQM server; therefore, only one entry is needed in /etc/services file for the DQM Server and for all of the Dollar Universe Companies.  This entry is referenced by all of the $UXMGR/uxsrsrv.alias files of different Dollar Universe Companies. Still using above example;
+
+In /etc/services, we can use a line like the following;
+DQM	10620/TCP
+
+Note: we don't need to add Company name to the alias, since only one alias is needed.
+
+
+2.2  $UXMGR/uxsrsrv.alias
+Still using above example, the 3 Dollar Universe Companies, CompanyName1, CompanyName2 and CompanyName3, share the DQM server.
+Again, those 8 lines will already be there, you may or may not need to modify them.
+For Company: CompanyName1, the $UXMGR/uxsrsrv.alias should contains 
+CompanyName1_DQM_X  DQM
+CompanyName1_DQM_S  DQM
+CompanyName1_DQM_I  DQM
+CompanyName1_DQM_A  DQM
+_DQM_X        DQM
+_DQM_S        DQM
+_DQM_I        DQM
+_DQM_A        DQM
+
+For Company: CompanyName2, the $UXMGR/uxsrsrv.alias should contains
+CompanyName2_DQM_X DQM
+CompanyName2_DQM_S DQM
+CompanyName2_DQM_I DQM
+CompanyName2_DQM_A DQM
+_DQM_X       DQM
+_DQM_S       DQM
+_DQM_I       DQM
+_DQM_A       DQM
+
+For Company: CompanyName3, the $UXMGR/uxsrsrv.alias should contains
+CompanyName3_DQM_X DQM
+CompanyName3_DQM_S DQM
+CompanyName3_DQM_I DQM
+CompanyName3_DQM_A DQM
+_DQM_X       DQM
+_DQM_S       DQM
+_DQM_I       DQM
+_DQM_A       DQM
+
+ 
+
+2.3  The $UXMGR/uxstartup_gen file
+
+# ------------- DQM
+# if DQM is  present (link /etc/UNIVERSE_DQM_SOCIETE exist  )
+#
+#  if [ -a /etc/UNIVERSE_DQM_${SOCIETE} ]
+#    then
+#      nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} X $NOEUD > $UXLEX/uxstartdqm.log 2>&1 &
+#      nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} S $NOEUD > $UXLSI/uxstartdqm.log 2>&1 &
+#      nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} I $NOEUD > $UXLIN/uxstartdqm.log 2>&1 &
+#      nohup  /etc/UNIVERSE_DQM_${SOCIETE}/uxstartdqm ${SOCIETE} A $NOEUD > $UXLAP/uxstartdqm.log 2>&1 &
+#  fi
+#
+#
+
+
+As you can see, the whole section is commented out. For a DQM server shared by multiple companies, the starting of the DQM server cannot be handled within $UXEXE/uxstartup_gen files; the complete section should to be commented out. The startup and shutdown of the DQM server has to be performed independently from any Company. The commands regarding startup/shutdown the DQM server will be discussed in the section 2.5.
+
+
+2.4  The $UXMGR/uxshutdown_gen file
+
+In this file you could find the DQM section like the following. For the same reason as in 2.3 (The $UXMGR/uxstartup_gen file), the whole section needs to be commented out. In another word, the shutdown procedure of the DQM server needs to be handled independently from the shutdown of any specific Dollar Universe Company. 
+# shutdown DQM if link exist
+#
+# if [ -a /etc/UNIVERSE_DQM_${SOCIETE} ]
+#    then
+#      /etc/UNIVERSE_DQM_${SOCIETE}/uxstpdqm ${SOCIETE} X
+#     /etc/UNIVERSE_DQM_${SOCIETE}/uxstpdqm ${SOCIETE} X &
+#  fi
+
+
+2.5  Starting and stopping DQM
+
+DQM should be started before all Dollar Universe engines, since it is required to submit any job to the system. For the same reason, DQM should be shut down after all engines are stopped.  DQM server can be started within OS startup scripts. It doesn't rely on Dollar Universe Company to run.  
+
+To start DQM:
+$UXDQM/uxstartdqm 
+
+To stop DQM:
+$UXDQM/uxshutdowndqm
+
+
+2.6  The /etc/UNIVERSE_DQM_  file
+
+Since, during the DQM installation, we have linked the DQM server to all of our 3 Companies, there will be 3 symbolic links existing:
+
+For CompanyName1, 
+/etc/UNIVERSE_DQM_CompanyName1 -> "/.../DQM_binary_directory"
+For CompanyName2, 
+/etc/UNIVERSE_DQM_CompanyName2 -> "/.../DQM_binary_directory"
+For CompanyName3, 
+/etc/UNIVERSE_DQM_CompanyName3 -> "/.../DQM_binary_directory"
+
+However, all of the 3 links point to the same directory.
+From those links, Dollar Universe Companies can find out the location of the binary files of the DQM server.
+
+
+

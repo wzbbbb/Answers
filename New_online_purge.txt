@@ -1,0 +1,187 @@
+The new build of online purge is not activated by default. It can be activated by the environment variable, U_IO_PURGE_ENABLE, set to Y in the uxsetenv files.
+
+When activated, the online purge is composed of a dynamic purge performed by the launcher and of a non-dynamic purge performed cyclically by an IO server thread. These two purges use the same parameters that are defined for each area in a configuration file, u_purge_param.ref, that is located in data directory of the considered area.
+
+For dynamic purge, the master purge file is the launch file,(u_fmsb). Purging a record in u_fmsb file triggers a purge of the associated records in the dynamic files(u_fmcx, u_fmhs, u_fmph,u_fmfu, u_fmev, u_fmtp, u_fmsp, u_fmer, u_fmeq). As far as the dynamic purge is concerned, the retention criteria for the dynamic files are therefore those of the launch files. 
+Statuses purged by the dynamic purge are final statuses.
+ 
+In the case of changes in the purge parameters file, the purge dates determined by the launcher are updated in order to ensure that the changes are taken into account. 
+The non-dynamic purge will delete the records that were not removed by the dynamic purge. In that case the retention criterias are those of the launches file u_fmsb for the u_fmtp/u_fmsp/u_fmcm files ;those of the control file u_fmcx for the  u_fmer/u_fmeq/management criterias files and those of the history file u_fmhs for the u_fmph/u_fmfu files. 
+
+It is the purge thread of the IO server that manages the reading of the purge parameter files. While the thread reads parameter files at regular intervals or if the loadPurParFic <SOC> <ESP> <NODE> binary is used; the IO server is used; the IO server is queried by the launcher to retrieve the purge parameters so that the dynamic purge takes into account any update of the parameters. 
+
+Upon detection of a modification the purge date is updated according to the new parameters. 
+
+The purge parameters file - located in UXDEX/UXDAP/UXDSI/UXDIN and named : 
+u_purge_param.ref - is specific for each area.
+The file's format is the following:
+	# for comments
+	Empty lignes are ignored
+	A significant line has the following format: PARAM=VAL
+Available parameters are the followings:
+
+PUR_DYN 	Y/N 
+Activate/Disable the "dynamic purge" part of the online purge
+
+CHK_FIC            	 DDD:HH:MM                         
+check cycle of the purge parameter file       default 001 :00 :00
+                                              
+PUR_CYC           	DDD:HH:MM                         
+Non dynamic purge cycle performed by IO	      default --- :-- :--
+
+PUR_HHMM    	HH:MM  
+The hour of the non dynamic purge performed by IO 
+                                              default 00 :01
+PUR_LOG         	 Y/N/F/d   # d: for debug mode                             
+Define the options of the purge's log         default N
+
+PUR_FREEZE    	Y/N                                       
+Stop/Start the online purge                   default N
+
+LAN_RET_DEF 	JJJ:HH:MM                         
+Default retention time for the launches file  default 007 :00 :00  
+
+LAN_RET_'XX'      JJJ:HH:MM                    
+Retention time specific to a status           default  LAN_RET_DEF²             
+    
+Possible status list(The relative status of dynamic purge are in bold)
+	H         Disabled status
+	D         Started status
+	W         Event wait status
+	R         Refused status
+	WO        Time oVerrun status after at least one time condition check
+	LO        Runnig status
+	E         Execution status in effect
+	A         Pending execution status
+	I         Aborted status
+	T         Completed status
+	F         Completion in progress status
+CTL_RET_DEF 	JJJ:HH:MM                          
+The retention time by default for the contol file  default 007 :00 :00
+CTL_RET_'XX' 	JJJ:HH:MM                      
+The retention time specific to a status            default CTL_RET_DEF
+The possible status list :
+"	H          Disabled status
+"	D          Started status
+"	W          Event Wait status
+"	R          Refused status
+"	O          Time Overrun status
+"	E          Running status
+"	A          Pending status
+"	I          Aborted status
+"	T          Completed status
+"	F          Completion in progress status
+HST_RET_DEF 	DDD:HH:MM                          
+Default retention time for history file            default 007 :00 :00 
+HST_RET_'XX'	DDD:HH:MM                         
+Default retention time for a status                default HST_RET_DEF 
+The possible status list :
+"	H          Disabled status
+"	D          Started status
+"	W          Event Wait status
+"	R          Refused status
+"	O          Time Overrun status
+"	E          Running status
+"	A          Pending status
+"	I          Aborted status
+"	T          Completed status
+"	F          Completion in progress 
+No parameter is mandatory. If a parameter is not defined the default value will be considered. The default value is also considered if a parameter of DDD :HH :MM format is set as --- :-- :-- or if a parameter of HH :MM format is set as -- :--.
+For the retention time, the zone defined as 000 :00 :00 means an infinite retention time.
+In the case where the parameter file would be missing or if there is an issue to read or parse this file - the default values will be considered during the first load of the parameters and for the next loads the values that were already loaded will be retained. 
+
+PUR_CYC and PUR_HHMM are incompatible; one of the two parameters should be left to --- :-- :-- or -- :-- ;  If PUR_HHMM is used, the cycle of the IO purge is set to 1 day. And if PUR_CYC is defined, the first non-dynamic  purge is triggered 1 minute after the load of the parameters; then the IO cycle purge is implemented.
+
+For the u_fmcm file and the management criterias, the retention time that is considered is the biggest related retention time in the file that is taken account, respectively launches and control files.
+
+If the PUR_LOG parameter is put into Y, a log file is created for the relevant area, named u_purge.log. ( UXLEX, UXLAP, UXLIN, UXLSI respectively) When set to Y, the list of the purge parameters is displayed for every load of the parameters and also during the startup of the non-dynamic purge.
+When set to F (meaning full), the log file will also list the records deleted by the non-dynamic purge and also the list of records of the u_fmsb that are deleted by non-dynamic purge.
+
+The chkPurParFic <file> binary allows for the verification of the correct syntax of the parameters file; the parsing stops at the first error and displays the line in error. chkPurFicParam <help> displays the help facility for this binary.
+
+The loadPurParFic <SOC> <ESP>  <NODE>  binary can be used to force the load of the parameters outside the normal cycle of the parameters file load by IO.  The loadPurParFic <help> binary displays the help facility for this binary. Every time the parameter file is loaded, if the file has not been not modified, the loading does not trigger any update of the purge parameters; if the file syntax is incorrect, the purge parameters that are already loaded are retained.  If PUR_CYC is defined, at every load, the non-dynamic purge will start up 1 minute after the load.  The non-dynamic purge will execute first in the case where the non-dynamic purge and the load of the parameters would be set to execute at the same time.
+
+Examples of log with PUR_LOG into Y:
+##### LOAD OF PURGE PARAMETERS ##### [20080619141700]
+ENABLE [Y] / FREEZE [Y] / DYN [N] / LOG [d] / CHECK PARAM CYCLE [001:00:00] / 
+IO PURGE CYCLE [000:00:10] / IO PURGE HOUR [--:--]
+CTL_RET_A  000:00:05
+CTL_RET_D  000:00:05
+CTL_RET_DEF007:00:00
+CTL_RET_E  000:00:05
+CTL_RET_F  000:00:05
+CTL_RET_I  000:00:05
+CTL_RET_O  000:00:05
+CTL_RET_R  000:00:05
+CTL_RET_T  000:00:05
+CTL_RET_W  000:00:05
+HST_RET_A  000:00:05
+HST_RET_D  000:00:05
+HST_RET_DEF007:00:00
+HST_RET_E  000:00:05
+HST_RET_F  000:00:05
+HST_RET_I  000:00:05
+HST_RET_O  000:00:05
+HST_RET_R  000:00:05
+HST_RET_T  000:00:05
+HST_RET_W  000:00:05
+LAN_RET_A  000:00:05
+LAN_RET_D  000:00:05
+LAN_RET_DEF007:00:00
+LAN_RET_E  000:00:05
+LAN_RET_F  000:00:05
+LAN_RET_H  000:00:05
+LAN_RET_I  000:00:05
+LAN_RET_LO 000:00:05
+LAN_RET_R  000:00:05
+LAN_RET_T  000:00:05
+LAN_RET_W  000:00:05
+LAN_RET_WO 000:00:05
+--------------------------------------------
+##### START OF IO PURGE [20080619141800] #####
+CTL_RET_A  000:00:05
+CTL_RET_D  000:00:05
+CTL_RET_DEF007:00:00
+CTL_RET_E  000:00:05
+CTL_RET_F  000:00:05
+CTL_RET_I  000:00:05
+CTL_RET_O  000:00:05
+CTL_RET_R  000:00:05
+CTL_RET_T  000:00:05
+CTL_RET_W  000:00:05
+HST_RET_A  000:00:05
+HST_RET_D  000:00:05
+HST_RET_DEF007:00:00
+HST_RET_E  000:00:05
+HST_RET_F  000:00:05
+HST_RET_I  000:00:05
+HST_RET_O  000:00:05
+HST_RET_R  000:00:05
+HST_RET_T  000:00:05
+HST_RET_W  000:00:05
+LAN_RET_A  000:00:05
+LAN_RET_D  000:00:05
+LAN_RET_DEF007:00:00
+LAN_RET_E  000:00:05
+LAN_RET_F  000:00:05
+LAN_RET_H  000:00:05
+LAN_RET_I  000:00:05
+LAN_RET_LO 000:00:05
+LAN_RET_R  000:00:05
+LAN_RET_T  000:00:05
+LAN_RET_W  000:00:05
+LAN_RET_WO 000:00:05
+--------------------------------------------
+##### END OF IO PURGE [20080619141800] #####
+--------------------------------------------
+Examples of log with PUR_LOG into F:
+[SIO] [HS] [          ]/[000] [PURGE_OK  ]/[000] [MUPURGE   ] [T] [0000000]/[0000147]/[0000174] [20080619140601]
+[LAN] [SB] [          ]/[000] [PURGE_OK  ]/[000] [CALPMFSO  ] [T] [0000000]/[0000236]/[0000279] [20080619143432]
+[SIO]  / [LAN] 			Part that performs the purge
+[HS] / [CX] / [SB] 		Considered file
+[          ]/[000]	        Session / Session's number
+[PURGE_OK  ]/[000]		Uproc /   Uproc's number
+[MUPURGE  ]			MU
+ [T]				Status
+[0000000]/[0000147]/[0000174]	session's number/uproc's number/launch's number
+[20080619140601]		purge date YYYYMMDDHHMMSS

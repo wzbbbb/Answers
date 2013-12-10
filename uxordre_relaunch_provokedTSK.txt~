@@ -1,0 +1,41 @@
+In fact, here is probabily a better solution for your request.
+
+The command "uxordre" can be used to triger a provoked task. 
+1. defining a session as a provoked task.
+2. including the file detection and needed job in a Uproc in the session. If the file presents, run the job; otherwise go to the next Uproc.
+3. Within the next Uproc, specify the uxordre command to provoke the session itself.
+
+In this way, this session will always be running. Whenever the file presents, within its launch window, the job will be run. In addition, you will only have one task showing in the job monitor.
+
+#######################################################
+e.g. It gives a launch No., which is different from the execution No (fla). shown in the CTL It gives a launch No., which is different from the execution No. shown in the ctl.
+# uxordre upr=QA24534BA mu=DA_US_U_05 node=DA_US_U_05
+numlanc 0000019
+
+
+The execution number will be changed by the launcher each time a related event is arrived.
+The launcher number (is created by the Calculater?) will never change.
+#######################################################
+
+File resource is local only. 
+One way to achieve this is to create 2 provoked tasks
+
+1. Resource_detecting_provoke_task (Node B)
+This task will be checking if the file in questoin is available. If yes, it will launch the provoked task on Node A, Job_on_node_A. 
+
+Task 1 will be a session:
+
+Header
+|
+File_detecting_uproc
+|
+Trailer
+
+Note: the Header and Trailer in the session are dummy uprocs, just to make the session easier to monitor.
+
+2. Job_on_node_A  (Node A)
+This task will do the job on node A and then make the file unavailable; after it finishes, it will provoked the task on node B:  Resource_detecting_provoke_task.  
+
+With is structure, whenever the file is present on node B, the job on node A will be launched.
+
+

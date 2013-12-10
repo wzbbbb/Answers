@@ -1,0 +1,76 @@
+When Dollar Universe submits a job, the launcher or the DQM server executes the following command :
+su - "Submission account" ${UXEXE}/u_batch "Additionnal parameters"
+
+The presence of the - in the su command asks unix to login to the submission account and load it's profile environment (.profile or .login depending on the shell of the user).
+
+Some problems may happend if this file is not available or if the deamon which manages the su - process is overloaded.
+But except that, there are no known problem regarding this submission process.
+
+You may want to ask the some more information about the jobs which aborts and the symptoms etc ....
+
+########################################################################################
+########################################################################################
+########################################################################################
+########################################################################################
+Job submission process:
+
+
+===Within the Dollar Universe Company:
+
+Once the a job is created from a Dollar Universe Company, a record is written into the u_fmsb50.dat file. The launcher will check the file.
+
+If DQM is not used, it will create a sub uxord process to handle the job.
+Otherwise the launcher will connect to the DQM TCP port, and transfer the job to DQM. DQM will spawn a sub process to handle the job.
+
+Then a record will be writen into the u_fmcx50.dat file. The job will be in PENDING status for now.
+
+
+===Into the OS with u_batch
+
+The DQM will su to the proper user (both of the DQM and uxord processes are owned by root) and launch the job to the OS with the $UXEXE/u_batch. The u_batch is considered as an envelope.
+
+
+The following is abstracted from result of pstree -acl
+
+  |-uxdqmsrv) GCO210 X DA_US_U_05
+  |   `-uxdqmsrv) GCO210 X DA_US_U_05
+  |       `-sh) -c ...
+  |           `-su) - univa -c ...
+  |               `-ksh) -c ...
+  |                   `-u_batch) /apps/du/GCO210/exec/u_batch univa 001 GCO210
+M2 SYS_BATCH ...
+  |                       `-sh) /apps/du/GCO210/exp/upr/SLEEP300.000
+  |                           `-sleep) 300
+
+
+u_batch will run in the following order:
+
+uxjobinit -> U_ANTE_UPROC -> uproc script -> U_POST_UPROC -> uxjobend
+
+uxjobinit
+
+1. Will copy the uproc script to $U_TMP_PATH; 
+2. Inform the IO server that the uproc script has been launched into the
+system. The IO will change the status of a job from PENDING into EXECUTING. 
+3. If the $U_TMP_PATH is not accessible, it will have "File open error" from uxjobinit.
+4. If the IO server is not available at this time, uxjobinit will complain in the universe.log. 
+
+
+Then, the all of the required environment variable will be prepared. 
+
+U_ANTE_UPROC
+
+Uproc Script : set the return code
+
+U_ANTE_UPROC
+
+
+uxjobend
+
+inform the IO server the RESEXE (return code of the uproc script).
+The IO will then change the status of the job.
+
+The RESEXE is set with the return code of the uproc script and can be captured withing the U_POST_URPOC.
+
+If a job is completed after the Dollar Universe Company shutdown and before its restart, it will be in ABORTED status.
+If a job is completed after the Dollar Universe Company restarted, the proper status will show.

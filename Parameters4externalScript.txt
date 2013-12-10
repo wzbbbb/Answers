@@ -1,0 +1,13 @@
+When an external script is using the $1, $2, $3 ... variables, the uproc could not use the script directly.
+
+The script have to be launched within the uproc...
+
+
+#!/bin/ksh
+
+/export/home/scripts/script.sh ${Var_1} ${Var_2}
+l_rc=$?
+
+
+(With Var_1 and Var_2 defined as variable on the uproc level)
+

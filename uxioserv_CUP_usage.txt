@@ -1,0 +1,11 @@
+the uxioserv process can take large amounts of cpu percentages. This process is in a continuous polling condition. Can this process be tuned to be less intrusive on the cpu?
+
+The uxioserv process manages all access to the Dollar Universe datafiles.
+If for example the calculator need some information regarding an uproc, this process will ask to the uxioserv to read the related files and provide him the needed information. Same thing if a process wants to update a file.
+
+Several factor may increase the CPU consumption :
+- Large Dollar Universe files (in case the retention parameter if the IU_PUR uproc are too high)
+- Unreorganized Dollar Universe files
+- Fragmented files on the system level
+- Broken files
+- uxioserv in monothreading mode (if U_IO_NOTHREAD valued to Y)

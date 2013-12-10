@@ -1,0 +1,38 @@
+I have managed to extract the MUs and HDP from support3 and insert into support2.
+1. delete the MU DA_US_U_02 from support3 and extract them with the following command
+
+
+An uxlst mu and uxshw mu mu=* would be nice so we could see which mu have been extracted.
+uxext ADM UG=* output=file1
+uxext ADM TIH output=file2
+
+No error message.
+2. transfor the two files to support2 with FTP.
+
+The first time I tried to insert the objects falled. It shows me the error
+"Fatal error reading the requested object".
+for the both commands. I guess this could be du to some promission or transmission  problems. 
+
+This was due to the fact that the file was transfered in ascii mode and not in binary
+
+3. Then I extracted the objects from support3 again, transfered the files to support2,
+and insert the objects to support2,
+uxins ADM UG=* input=file1
+uxins ADM TIH input=file2
+
+4. To add a dependency
+
+uxadd hdp mu=xxx depmu=yyy
+
+5. to delete HDP
+
+uxdlt hdp mu=* depmu=*
+
+
+Same thing, it would be nice to have uxlst mu and uxshw mu mu=* before and after the manipulation to check it there were some modifications and which ones ....
+
+
+
+
+
+

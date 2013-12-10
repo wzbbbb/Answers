@@ -1,0 +1,1292 @@
+DB13 and BMV0, submitting job in CCMS?
+use ZUXM to access $U through SAP GUI (RFC server).
+se11: dictionary : initial screen, can be used to search tables.
+#######################################################
+In $U, files to modify
+...........mgr/uxsapagt.host: mapps COMPANY/AREA/MU -> agent's residence node
+need to specify the area, EXP.
+The file uxsapagt.host could be in $UXEXE.
+
+No empty lines should be in front of the defintion lines.
+ 
+Before the following line added, in the Managers for SAP Solutions, the
+Company show "Idle" status.
+...........uxsrsrv.alias
+{company_name}_SAP_X _SAP_
+{company_name}_SAP_S _SAP_
+{company_name}_SAP_I _SAP_
+{company_name}_SAP_A _SAP_
+
+For V533 + SAP manager V42 and above, the following is needed. Maybe only the last 4 lines that with node name.
+TDGINT_JCS_X _SAP_
+TDGINT_JCS_S _SAP_
+TDGINT_JCS_I _SAP_
+TDGINT_JCS_A _SAP_
+TDGINT_udtcci_JCS_X _SAP_
+TDGINT_udtcci_JCS_S _SAP_
+TDGINT_udtcci_JCS_I _SAP_
+TDGINT_udtcci_JCS_A _SAP_
+
+If the above are not defined, the following error will show in the universe.log, 
+
+<< 2008-05-30 12:26:46 0027200/uxstrsap        /u_getport_c         /000000000 - ERROR: cannot find the port number for Company : [TST520] node : [USSDMDA007], server [SAP] area [X]
+<< 2008-05-30 12:26:46 0027200/uxstrsap        /u_api_call_agtsap_gu/000000000 - u_getserv_c: cannot find the port number for Company : [TST520] node : [USSDMDA007], server [SAP] area [XUSSDMDA007]
+<< 2008-05-30 12:26:46 0027200/uxstrsap        /u_api_jobsap_create /000000000 - fails in communication with SAP agent [-1]
+<< 2008-05-30 12:26:46 0025344/uxjobend        /u_getserv_c_43      /000000000 - ERROR: cannot find the port number for Company : [TST520] node : [USSDMDA007], server [129] area [X]
+
+or similar message from other binaries:
+
+<< 2008-05-30 15:29:00 0013920/UprocApp        /u_getport_c         /000000000 - ERROR: cannot find the port number for Company : [TST520] node : [USSDMDA007], server [SAP] area [X]
+<< 2008-05-30 15:29:00 0013920/UprocApp        /u_api_call_agtsap_gu/000000000 - u_getserv_c: cannot find the port number for Company : [TST520] node : [USSDMDA007], server [SAP] area [XUSSDMDA007]
+<< 2008-05-30 15:29:00 0013920/UprocApp        /u_api_report_search /000000000 - fails in communication with SAP agent [-1]
+
+
+Is needed in the uxsrsrv.alias file, to display Managed SAP jobs:
+SUP512_SAP_* _SAP_
+
+With the above entry, the uxsapagt.host file can contain only this:
+{company_name}/*/*: SAP_MGR_HOST_NAME
+
+
+...........uxsrsrv.sck 
+...........in both DEF files and uxsetenv, 
+
+set U_AGTSAP_VERSION_REQUEST=YES 
+set UXSAP_HOSTS_FILE=d:\du\standard\QCL500\exec\uxsapagt.host
+
+Those commands in $U used to communicate with SAP Manager is considered clients. They need to decide the version of the SAP manager, if the variable U_AGTSAP_VERSION_REQUEST is not set, it will consider the SAP manager as version 3.0, and many function won't be abailable.
+
+...........Will need GCO 2.1 SP1 to have the SAP icon in the $U GUI.
+
+...........In /etc/services
+
+In SAP Manager 4.0
+UxSapMgr4.0/mgr/uxsaprfc.ini: mapps COMPANY/AREA/MU -> SAP system
+				    -> SAP client		            
+				    -> SAP gateway
+				    etc.
+
+A sample 4.0 ini file:
+
+#CLE:            MNT500/X/DA_US_W_07
+CLE:            */*/*
+TargetHost:     USSDMDA007
+TargetServer:   00
+TargetClient:   000
+#User:           SAPCPIC
+User:           DDIC
+Password:       minisap
+Langage:        E
+GatewayHost:    USSDMDA007
+GatewayService: sapgw00
+XmiCompany:     ORSYP 
+XmiProduct:     UNIVERSE
+XmiInterface:   XBP
+XmiVersion:     2.0
+#XmiVersion:     1.0.A
+XmiAuditLevel:  0
+XmiExternUser:  UNI_USER
+#XmiExternUser:  mnt500a
+
+...........need to import the *.DEV files into SAP with SAP transportation system
+
+ 	
+Setting up the Transport System ( optional )
+
+Before configuring the Change and Transport System please unpack TP.zip .
+
+To enable the export or import of transports, you have to initialize the
+Transport Management System.
+Proceed as follows:
+
+    * Log on to system BSP as user DDIC.
+    * Call transaction SE38 and execute program ZR3_TMS_CONFIG.
+    * Change the profile <BSP_DIR>\BSP_D00.pfl using the editor
+    * <BSP_DIR>\sappad.exe:
+      Configure one background process by setting the parameter
+rdisp/wp_no_btc = 1 and restart the  BSP system.
+    * Execute program RDDNEWPP (transaction SE38), which schedules the
+    * background job RDDIMPDP within the BSP system.
+    * For beeing able to export out of the BSP system please read the TMS
+    * documentation regarding virtual systems.
+    * For beeing able to import into the BSP system please read the TMS
+    * documentation about external systems.
+
+To export or import transport requests, use the transport program tp as
+follows:
+
+    * Open a DOS-box and change to the BSP directory (C:\MINIWAS, for
+    * example).
+    * Run the command file dbenv.cmd to set the environment variables for the
+    * database connection.
+    * Start the transport program tp directly with tp
+    * pf=trans\bin\TP_DOMAIN_BSP.PFL <options> or as user DDIC within the BSP
+    * system from the Transport Management System (transaction STMS) . 
+
+For more information about administrative functions consult the respective
+documentation in the SAP Library.
+
+Example
+
+To import the example programs of the book ABAP Objects (ISBN of English
+edition: 0-201-75080-5, ISBN of German edition: 3-89842-147-3) , proceed as
+follows:
+
+   1. Get the transport files from Example_Transport.zip.
+   2. Copy K8A0H5B.B20  to <BSP_DIR>\TRANS\COFILES.
+   3. Copy R8A0H5B.B20  to <BSP_DIR>\TRANS\DATA.
+   4. Open a DOS-box, change to <BSP_DIR>, and run dbenv.cmd .
+   5. Execute tp pf=trans\bin\TP_DOMAIN_BSP.PFL addtobuffer B20K8A0H5B BSP.
+   6. Now you can import the import queue either as user DDIC in transaction
+STMS (recommended) or via tp pf=trans\bin\TP_DOMAIN_BSP.PFL import B20K8A0H5B
+BSP.
+   7. After a succesful import you will find package S_ABAP_BOOK in the Object
+Navigator (transaction SE80).
+
+
+
+To import the files, 
+1. copy the tp command into the BSP_DIR 
+2. Copy files into "cofiles" and "data" directory:
+
+tp pf=trans\bin\TP_DOMAIN_BSP.PFL addtobuffer DEVK999455 BSP
+tp pf=trans\bin\TP_DOMAIN_BSP.PFL import DEVK999455 BSP
+
+The "cofiles" file name is acctually : K999455.DEV
+#######################################################
+If the SAP Mgr 4.0 is not started, the job launched from $U to SAP may
+complain the AGENT is 3.0
+
+#######################################################
+To create a test launch, use the RSPARAM pragram. You may need to crate a
+variant TEST.
+
+BTCTEST can also be used as test program, with output.
+
+#######################################################
+===Define 3 $U Company for development/qualification/operation SAP systems
+===Install one Dollar Universe node and one SAP agent for each SAP system
+===Install Dollar Universe and Sap agent on the same physical server.
+===Install Dollar Universe and SAP agent on the  SAP Central Instance server (that contains CCMS and is generally highly secured).
+NB : installation on the SAP server is mandatory to use the ABAP / copy modes.
+
+#######################################################
+ABAP.  Mode (using Function Modules)
+
+Job set-up definition is stored 
+- in 2 SAP tables brought by the agent in an inter-mandant:
+ZUXTS : job description,
+ZUXTV : variables description for variants.
+- in CCMS when using the copy mode.
+have to edit the ZUXTS table (se16).
+
+Job manipulation is performed through the STARTRFC SAP command that calls
+function modules brought by the agent :
+- Z_UX_F_*
+
+#######################################################
+In ABAP mode, the parameters are stored in the ZUXTS table:
+
+1.  To launch a sap job, in uproc TEST_SAP, specify:
+$UXEXE/uxstr sap jobname=my_job
+
+2.  Through the Agent, in SAP ZUXTS table, 
+ABAP report=my_abap, user=sap_user, language=E,...
+
+3.  Then, in the CCMS,
+my_job active
+
+4.  Then, back in $U ctl,
+TEST_SAP running
+
+#######################################################
+In API mode, the job definition is stored in the $U uproc:
+
+1. In uproc TESTSAPAPI, 
+$UXEXE/uxstr sap api jobname=my_job_api steplist=(sap_user,E,my_abap,...)
+
+2. Through Agent to CCMS:
+my_job_api  active
+
+3. In $U ctl,
+TESTSAPAPI running
+
+
+#######################################################
+SAP agent commands:
+
+To trigger a job :
+uxstr sap :  trigger a job in ABAP mode (creation and execution),
+uxstr sap api : trigger a job in API mode (creation and execution),
+uxcopy_sap : trigger a job in a copy mode (creation and execution),
+uxstr sap rls : to release a Scheduled job in CCMS (execution only).
+
+To manipulate jobs :
+uxshw : to get list of jobs and their characteristics,
+uxsyn : to synchronize on a specific job
+uxquery : to synchronize on a list a jobs previously started or released in
+the same uproc.
+
+#######################################################
+SAP event need to be triggered to fire a job. And the event needs a value the
+same as defined in the job.
+
+/nsm36: to define a background job.
+/nsm37: job monitor
+/nsm21: system log
+/nrz15: logs for calls from SAP manager
+in  uxsaprfc.ini to specify 
+XmiAuditLevel:  3
+will generate more logs in  /nrz15.
+
+
+/nsm62: display/edit events
+/nsm64: trigger events
+/nsmgw: gateway log
+/nsost: SAPconnect: send requests, including failed emails ...
+/nso23: to define or check distribution list
+/nscot: SAPconnect Administration, e.g. to create test route for SMTP
+/nsnote: note assistant 
+/nse38: edit ABAP program
+/nse16: to edit the ZUXTS table 
+/nsm31: to edit table views, T000 the table contain client definitions.
+/nscc4: to create new client.
+/nsbwp: Business workplace, with inbox, outbox, etc. can send email ...
+/nso01: to check inbox in SAP
+/nsp01: output controller: spool request selection 
+/nspam: list support package ->SPAM
+"spam" ; then click on "Package level"
+/nrsa1: to define infopackage
+/nrspc: disply process chain; a patch is needed on the SAP Front-End to run this transaction.
+/nse01: to check transport organizer, imported stuff from patches 
+with DEVK*, released 
+/nsm35: to see all batch input operation 
+/nse37: to list $U (and build) function modules, function builder
+/nse51: screen painter
+/nsu01: to create, display SAP user
+/nsm04: list user
+/nal08: list user in all instances
+/nsearch_sap_menu: to find transaction from stanadard SAP menu
+/nsearch_user_menu
+/nrz11 to display system parameters.
+rdisp/wp_no_dia: No. of DIA work process
+rdisp/wp_no_dup: No. of update work process
+rdisp/wp_no_btc: No. of background process
+
+/nsm51: display all instances
+/nsm66: display only active process
+/nsm50: work process overwiew
+/nal11: browse SAP directories
+/nsm49: to run external commands
+/ndb02: DB proformance
+/ndb13: DB caneldar, to schedule maintenace ...
+/nsm12: list all locks
+/nsm13: update request, to check which update request (to the DB) is running.
+/nstms: transport management 
+/nse09, /nse10: transport organizer to create change request
+/nse93: to define a transaction code, transaction code is saved in table TSTC
+/nsm59: display & create RFC call, to define connection method and user ID, etc.
+/nbapi: to display BAPI functions
+/nrz20: CCMS
+/nsm02: define system message, banner
+/npfcg: maintain role
+/nst22: display abap short dump
+/nspad: spool admin
+/nse80: object navigator
+/nscc4: to display and maintain clients 
+/nrz04: maintain operation modes and instances; before define a instance, its operation mode must be defined 
+/nrz10: edit profile; to modify the number of work process in profile
+/nrz03: display operation modes 
+
+RFC connection error, could be wrong user, maybe be wrong 
+TargetClient:   800
+like different areas.
+
+#######################################################
+manager 4.0 + FX24238b + FX24341 = manager 4.2
+
+#######################################################
+add this to the $U uxsrsrv.alias file
+TST511_SAP_* _SAP_
+
+#######################################################
+When launching in the ABAP mode, if the ACCOUNT in SAP is not properly specified, the history will look like the following, and not job log created: 
+
+
+==================================================
+##################################################
+==================================================
+
+_!================================================
+_!**
+$!** PROCEDURE .. : SAPABAPTST
+$!** EXECUTION .. : 0005573
+$!** M.U. ....... : DA_US_U_07
+_!================================================
+
+ 05/04/2006 11:18:07 Start Condition Check
+                    The rerun was requested by operator :
+????????????????????
+                    Processing Date 00/00/0000
+ 05/04/2006 11:18:07 Submitted in BATCH Q: SYS_BATCH
+                    under ENTRY N.  : 5573
+
+ Failed to create sub-process
+
+ 05/04/2006 11:18:07 *** TASK ENDED ABNORMALLY  ***
+
+==================================================
+##################################################
+==================================================
+
+
+ABAP mode use account defined in uxsaprfc.ini if no ACCNOUT variable is specified
+
+%UXEXE%\uxstr sap jobname="%JOBNAME%" account="%ACCOUNT%"
+set resexe= %ERRORLEVEL%
+##################################################################
+##################################################################
+SAP manager polling cycle to the SAP server, defined in exec/SAP.def
+UXSAP_AGT_CYCLE
+##################################################################
+##################################################################
+To define the auto trigged provoked task with SAP job status changes, interception
+using XBP2
+In both the exec/SAP.def and uxsetenv.bat
+UXSAP_AUTOPATH define the location of the file u_sappar
+And define this to YES
+UXSAP_AUTO_MODE         YES
+
+depends on the polling cycle, some status of the SAP job (within SAP).
+In u_sappar:
+| UNIV56 | X | W_WINDOWS1 | SAP_USER_DOLLARACCESS | * | * | P | vmw2k_01 | SAP_USR1 | 000 |           |     |
+| UNIV56 | X | W_WINDOWS1 | SAP_USER_DOLLARACCESS | * | * | R | vmw2k_01 | SAP_USR1 | 000 |           |     |
+| UNIV56 | X | W_WINDOWS1 | SAP_USER_DOLLARACCESS | * | * | * | vmw2k_01 | SAP_USR1 | 000 |           |     |
+The following the uproc is trigged with P, R and all status.
+
+P = scheduled
+S = released
+R = running
+F = finished
+A = aborted
+However, for now, it seems the P won't trigger the uproc.
+In the uproc, they do:
+uxstr SAP rls jobname=SAP_USER_DOLLARACCESS
+
+The workaround is to use "*", then,
+##############
+if %JOBSTATUS% == F goto END
+%UXEXE%\uxstr SAP rls jobname=%JOBNAME% jobcount=%JOBCOUNT%
+
+:END
+set resexe=%ERRORLEVEL%
+##############
+##################################################################
+##################################################################
+Please proceed to the following test:
+- set following environment variable in uxsetenv_ksh_agtsap file (SAP.def for
+  windows)
+U_AGT_LOG_LEVEL = 2,AUTO,CYCL,SAP,REQ
+- stop the SAP manager
+- rename or move the log of sap manager
+- restart the sap manager
+- launch again the SAP job to be intercepted which has the issue
+
+
+
+SAP_TRACE_RFC="Y"
+export SAP_TRACE_RFC
+
+To trace every transaction between SAP Manager and SAP system. 
+
+##################################################################
+##################################################################
+<< 2006-07-04 12:01:22 0001532/Dollar_Universe /u_api_call_agtsap_gu/000000000 - Warning: SAP agent node not found (mat status [50]). Assume node of the request []
+<< 2006-07-04 12:01:23 0001532/Dollar_Universe /u_api_call_agtsap_gu/000000000 - Network error sending data to Dollar Universe Manager for SAP port=0 host=: (WinSock): Connection refused (connect returns error)
+<< 2006-07-04 12:01:23 0001532/Dollar_Universe /u_api_agentsap_sapta/000000000 - fails in communication with SAP agent [-1]
+
+This error in the universe.log in the GCO node, means the uxsapagt.host is not
+properly defined.
+
+e.g.:
+#Companie/Area/MU:              Node
+#TST511/X/USSDMDA007:                   USSDMDA007
+SUP500/X/*:                   DA_US_W_07
+SUP500/S/*:                   DA_US_W_07
+SUP500/I/*:                   DA_US_W_07
+SUP500/A/*:                   DA_US_W_0
+##################################################################
+##################################################################
+To get temporary minisap license go to
+http://www.sap.com/platform/netweaver/minisap.epx
+
+use: "saplicense.exe -get" to get the Hardware key.  
+Then use "saplicense.exe -install" to install the license.
+##################################################################
+##################################################################
+The entry showed in the "Managers for SAP" is defined in the uxsapage.host
+file, on the node that the "SAP Manager" icons attached to.  
+##################################################################
+##################################################################
+This variable is wrong
+?? AGTSAP_TRACE_DEVTRC=Y
+
+ON Unix, in the directory where the SAP manager started.
+dev_rfc.trc
+On Windows, will be in 
+system32/drivers
+
+//frwpmffr
+=> references for SAP notes from FFR
+##################################################################
+##################################################################
+UXSAP_HST_ACTIVE
+The variable to enable the "SAP Job History" in the GCO:
+defined in the SAP manager env.
+##################################################################
+##################################################################
+all Dollar Universe function in SAP start with Z_UX ... 
+##################################################################
+##################################################################
+In RZ15,  BAPI_XBP_JOB_JOBLOG_READ means job completed.
+BAPI_XBP_JOB_START_ASAP job start
+The following is defining a job
+BAPI_XBP_JOB_OPEN
+BAPI_XBP_JOB_ADD_ABAP_STEP
+BAPI_XBP_JOB_CLOSE
+##################################################################
+##################################################################
+Do not are are the variables can change?
+
+U_REPORT_DEFAULT	Default ABAP program name.	sap.def and
+uxsetenv.bat on windows, uxsetenv_ksh_agtsap on UNIX
+U_VARIANT_DEFAULT	Default variant name.	sap.def and uxsetenv.bat on
+windows, uxsetenv_ksh_agtsap on UNIX
+
+##################################################################
+##################################################################
+SAP partner support:
+user : S0000497523
+pass : INITPASS
+
+service.sap.com/patches
+service.sap.com
+or
+https://websmp104.sap-ag.de/swdc
+##################################################################
+##################################################################
+Creating a Distribution List in the Distribution List Search
+
+...
+
+       1.      In the Business Workplace (Ctrl + F12), choose This graphic is explained in
+the accompanying text Distribution lists.
+
+       2.      The distribution list search screen is displayed.
+
+In the frame Find distribution lists, select whether you want to create a
+private or a shared distribution list.
+
+       3.      Choose This graphic is explained in the accompanying text .
+
+The distribution list maintenance screen appears on the tab page Attributes.
+
+       4.      Specify the attributes of the distribution list.
+
+       5.      Switch to the tab page Distribution list content.
+
+       6.      Specify the recipient addresses and for each one the
+corresponding recipient type.
+
+       7.      In addition, you can assign the send attributes Express, Copy
+and Blind copy to each recipient. When sending to an external address, you can
+also specify that documents are to be sent to another address from the address
+management rather than to the standard address.
+
+       8.      Choose This graphic is explained in the accompanying text .
+Result
+
+The distribution list is created and can be used on the send screen, for
+example, or in other places in the SAP system where a specific user group has
+to be specified.
+
+####################################################### 
+####################################################### 
+SAP Manager using the following functions from XBP 2.0 API:
+
+BAPI_XMI_LOGON
+BAPI_XBP_JOB_OPEN
+BAPI_XBP_JOB_ADD_ABAP_STEP
+
+SWO_INVOKE  is used to send the "recipient" info to SAP.
+
+#######################################################
+#######################################################
+To open a SAP case:
+service.sap.com ->Problem Solving -> Create Customer Messages -> SAP Message Wizard.
+
+To get side-effect report:
+Log in "http://service.sap.com/patches" with:
+user : S0000497523
+pass : INITPASS
+Then, go to the "Problem Solving" tab -> "Side-Effects of SAP Notes"
+Fill in the required information, the report will be send to you in a few
+hours. You may need to change the target email address.
+#######################################################
+#######################################################
+AGTSAP_TRACE_DEVTRC="3"
+export AGTSAP_TRACE_DEVTRC
+
+To write down all of the transactions between SAP manager and the SAP system.
+The file name will be like:
+rfc23876_00258.trc : containing the process ID.
+
+
+Use this variable to trace the RFC communication between the manager and SAP
+(BAPI_XBP function module calls): normal mode: without trace: 0 (default),
+trace mode: 1 to 3.
+This is a SAP audit trail. It writes to the file dev_trc.trc for the main
+thread and rfcxxxx_yyyy.trc for other threads (xxxx and yyyy are numbers
+linked to the thread). On Windows the files are found in C:\winnt\system32 and
+on Unix in AGTSAP/mgr, the directory from which the Manager is started.
+
+
+For devnt17:
+root user: GMA  /  password: marti
+std user: ORSYP / password: universe
+#######################################################
+#######################################################
+ABAP hello world:
+
+report zbctcb98.
+write: / 'hello world'.
+#######################################################
+#######################################################
+The following error in the job log could means the SAP user used in the uxsaprfc.ini is locked in SAP.
+
+client (version 3.0) release Jan 27 2006
+
+ ================ ERROR ====================== 
+[uxsap_connect] can not create connexion
+ =============================================== 
+Message code unknown : (20)  
+
+The following error will show in the SAP manager log.
+2006-12-09 20:00:01 # uxsap_open_comm           # RfcOpenEx fails. SAP error:
+key [RFC_ERROR_LOGON_FAILURE] message [User is locked. Please notify the person responsible                                                ] 
+#######################################################
+#######################################################
+for poseidon:
+user: DDIC
+pass: UNIVERSE
+or
+user: ORSYP
+pass: orsyp
+#######################################################
+#######################################################
+Defining a job in ZUXTS table, so the job can be launched in ABAP mode,
+e.g.:
+$UXEXE/uxstr sap jobname="ZWA_XXLSTEST" account="ORSYP"
+
+You need at lease the following entry in the table:
+~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+SAP clinet 		000
+Extern job name 	ZWA_XXLSTEST
+Step number 		1
+SAP job name		TEST(or anything)
+SAP report name 	XXLSTEST
+SAP variant		
+SAP user 		ORSYP
+Step language		E
+
+To specify a shared distribution list in the ZUXTS table, fill the following entry: 
+
+Recipient 		TSTZWA
+Recipient Type		C
+
+However, the table column names are displayed differently between in display mode and in edit mode.
+#######################################################
+#######################################################
+
+The following error message in job log could mean something wrong with the ZUXTS table, invalid entries, corrupted, wrong versin...
+
+ ============ RFC ERROR ====================== 
+Group       Error group 104
+Key         RFC_ERROR_SYSTEM_FAILURE
+Message     RFC_ERROR_SYSTEM_FAILURE
+ ============ END OF RFC ERROR ================ 
+Message code unknown : (20)                                                     
+
+For complete list of RFC error in ABAP mode, check the DOC SapF50_en.pdf
+#######################################################
+#######################################################
+On posidon BW, we have the following error when trying to display infopackage for process chain, we have the following error,
+"The SAP BW system must not be operated in client 000"
+
+The answer from the web,
+
+Make sure that the default client is configured to 100 (in your case). For that, use RZ10 and edit the instance profile to change parameter "login/system_client" to 100 instead of 000. If after bouncing the BW instance you still have problems, please see note 122679
+#######################################################
+#######################################################
+To check whether XBP 2.0 exists in your system, check in se38 whether the ABAP
+program INITXBP2 exists. If it exists, XBP 2.0 is in your system. 
+
+Here is the list of SAP system/patch level supporting XBP 2.0 interface : 
+
+- version SAP Basis + Support Package 
+
+4.6C + SAPKB46C41 
+4.6D + SAPKB46D34 (SAPKB46D35) 
+610  + SAPKB61027 (SAPKB61028) 
+620  + SAPKB62017 
+
+For further details please refer to the SAP note 604496. 
+
+- Minimum version of SAP manager (JCS) + minimum patch level
+4.0 + FX24341
+
+- Minimum version of Dollar Universe company: 
+5.0 + FX24334C
+If you only wish to use the command "uxupd sap", v5.0 + FX24269 is sufficiant. 
+
+- the variable U_AGTSAP_VERSION_REQUEST=Y must be set in $U environement
+  files. 
+
+- uxsaprfc.ini should have following entry: 
+XmiVersion: 2.0
+
+
+#######################################################
+#######################################################
+Optimization of functions linked to SAP
+
+This concerns only XBP 2.0 systems.
+When the Manager submits jobs to SAP (via the uxstr command from a uproc), requests to retrieve the lists of SAP jobs have been optimized (higher performance) by the use of the new XBP 2.0 APIs.
+
+In the XBP 1.0, a request has to be made for each job status, whereas in the XBP 2.0 one request retrieves a list of all job statuses.
+
+• for n jobs submitted on an XBP 2.0 system, there will be n status requests every Manager cycle.
+• whereas on an XBP 1.0 system, there will be only 1 status request per cycle.
+
+The XBP2.0 API allow:
+• new information fields in the queries (with default values),
+• multiple queries: to get several job statuses in one query.
+#######################################################
+#######################################################
+Set this variable to display parameter name and value defined in XPB2 and "uxstr sap api" job 
+U_TRC_STRSAP=Y
+export U_TRC_STRSAP
+The same info displayed in the uxshw upr command
+#######################################################
+#######################################################
+SAP variables:
+
+There are 2 types of variables in SAP, if divide them by there location. 
+1). The variables of variants of ABAP programs
+2). The variables in the TVARV table. It is possible there are other table for the same purpose. Like the customer case 52201.
+
+We can consider the variables inside a ABAP program/report as private variables; and the variables in TVARV global variable.
+Type "s" (selection): [low, high], for date
+Type "P" (parameter): could be different type of data
+
+The vaiable in a report can also use the variables in the TVARV table. In this case, the type is "t". It is pointing to the same memory slot as the variable in the TVARV table. A TVARV variable can not be updated with the "uxupd sap" command, considering that the same variable may be used also by other report.
+
+The VARID table contains all of the ABAP programs and their variants.
+#######################################################
+#######################################################
+In the ABAP mode SAP uproc for batch input, the creation step, the syntax is different on Windows and Unix.
+The following command will work on Windows and not Unix.
+
+$UXEXE/uxstr sap jobname="BI_CREATE_ZWA" account="gma"
+The "account" parameter can not be used if the SAP Manager is on UNIX.
+$UXEXE/uxstr sap jobname="BI_CREATE_ZWA" 
+
+Pay attention to the SAP user defined in the ZUXTS table for creation and
+execution steps. They may require different users.
+#######################################################
+#######################################################
+batch input only works in ABAP mode now.
+
+...........in the ZUXTS table for creation step:
+The creation step is "job type" 1.
+
+...........in the ZUXTS executionn step:
+"Flag BDC error -> job error": X
+If this field is checked the $U job will abort if the execution ABAP program fails, e.g. an error status in the sm35. If not checked, the ABAP program fails will not cause the $U job to fail. 
+
+The execution step is "job type" 2; and "BDC execution type" 2
+
+"BDC session number" variable T_QID. 
+This variable is defined in the TVARV table. 
+This variable is also necessary for the variant, for example TEST_ZWA, of execution ABAP program, for example, RSBDCBTC. It is a T type variable for the variant. 
+A T type variable is created in a variant by selecting "L" in the "Field name" column.
+
+#######################################################
+#######################################################
+Batch input procedure:
+
+1. Creation
+In the creation ABAP program, need to specify the following variables in the variant:
+FILENAME: an accessible text file  
+GROUP: the folder name, GID
+USER: GMA
+KEEP: X (check it to keep the folder until the date below)
+HOLDDATE: the date, can be empty
+NODATA: "/"
+
+After launch the ABAP creation job, the following will be saved into the APQI table
+
+GID, folder name 
+QID,
+status
+user
+creater
+...
+
+
+In our test, we use ABAP program ZDEV_ZZBIDFAB_NEW and variant TEST.
+After the creation step the QID/GID will be saved in the uxsapjnl.dat file. 
+
+2. Execution
+
+#######################################################
+#######################################################
+2 ways to save QID in the SAP Manager uxsapjnl
+1). 
+add the ORSYP function Z_UX_F_SET_ZUXTQ function to the creation ABAP program, the QID/GID will be saved into ZUXTQ table. The ZUXTQ table is specially for the purpose.
+
+2).
+With the SAP message 008FB (or 508ME), QID/GID will be written into the job log.
+#######################################################
+#######################################################
+To launch infopackage and process chain job from command line.
+uxstr SAP IPACK INFOPACKAGE=My_Info_Package_30_characters_
+uxstr SAP PCHAIN PROCESSCHAIN=My_Process_Chain nobatch
+
+nobatch: Optional flag. By default the process chain is submitted in a "background work process". If the flag NOBATCH is indicated, the process chain will be submitted in a "dialog work process".  Dollar Universe does not control contents of the process chain. The user must check that the process does not contain any specific schedule date.  
+
+To release a job
+uxstr SAP RLS
+#######################################################
+#######################################################
+From the Philips case 52241, the SAP XBP API does not send the spool list recipient (in this case, shared distribution list) to SAP. So, a job scheduled from $U can not send job report to the recipients after complete in SAP.
+The SAP note 967787 can fix it. The following is from the note:
+
+.......................................................
+After you import the Support Packages described in Note 723902 Jobs that are scheduled using the XBP interface lose their spool list recipient.
+Other terms
+
+BAPI_XBP_JOB_CLOSE
+Reason and Prerequisites
+
+This is due to a program error.
+Solution
+
+Import the Support Package or implement the correction instructions.
+.......................................................
+#######################################################
+#######################################################
+The note 946481 is used to fix the saplogon issue when using \nrspc.
+2 dll and updates in registry are needed. 
+#######################################################
+#######################################################
+ABAP program, that will write 23 lines output. Note, the "write: /" means write into a new line
+
+REPORT ZWA_WRITE1000LINES .
+
+    DATA: SEARCH_ME TYPE I,
+          MIN       TYPE I VALUE 0,
+          MAX       TYPE I VALUE 1000,
+          NUMBER    TYPE I.
+    SEARCH_ME = 23.
+    NUMBER = 0.
+    WHILE NUMBER < SEARCH_ME.
+      ADD 1 TO NUMBER.
+      write: / 'Line No.', NUMBER.
+    ENDWHILE.
+
+
+Note, the column names are all start with the table name, e.g.  ZUXTS-UX_JOBNAME,
+
+REPORT ZWA_SELECT_ZUXTS .
+
+TABLES ZUXTS.
+
+SELECT * FROM ZUXTS
+	WHERE
+	JOBNAME  = 'XXLSTEST' 
+	ORDER BY PRIMARY KEY.
+	WRITE: / ZUXTS-UX_JOBNAME, ZUXTS-JOBSTEP, ZUXTS-JOBNAME,
+ZUXTS-ABAPNAME, ZUXTS-VARIANTE, ZUXTS-SAPUSER .
+ENDSELECT.
+#######################################################
+#######################################################
+To put 1000 lines in to the SAP job log: 
+
+
+do 10 times.
+message I121(44).
+enddo.
+
+
+I: means Information
+W: warning
+E: error 
+
+I121(44): information message 121 class 44.
+
+Another example:
+
+*&---------------------------------------------------------------------*
+*& Report  JOB_LOG                                                     *
+*& controlled by variants                                              *
+*&---------------------------------------------------------------------*
+*& This report does nothing but write lines into a job log             *
+*&                                                                     *
+*&---------------------------------------------------------------------*
+
+REPORT  job_log                          .
+PARAMETERS: p_anz TYPE i DEFAULT '1000000'.
+data: rec(128),
+      tabix(12).
+DO p_anz TIMES.
+  move sy-index to tabix.
+  concatenate tabix 'TEST TEST'
+              into rec separated by space.
+  MESSAGE i435(00) with rec.
+  clear rec.
+ENDDO.
+#######################################################
+#######################################################
+To make an ABAP program abort.
+CALL FUNCTION 'DOES_NOT_EXIST'.
+#######################################################
+#######################################################
+The API mode seems does not work with Windows SAP manager. The model uproc won't work.
+#######################################################
+#######################################################
+To download the latest SAPGUI
+https://www.sdn.sap.com/irj/sdn/downloaditem?rid=/library/uuid/cfc19866-0401-0010-35b2-dc8158247fb6
+#######################################################
+#######################################################
+The following command can reinitialize the uxsaphst.dat file:
+D:\uxsapmgr4.0\exec>uxhstpurge.exe USSDMDA007 13252 D:\uxsapmgr4.0\exec\uxsaphst.bkp
+
+The last part is the name of the backup.
+#######################################################
+#######################################################
+UXSAP_HST_FILE_RESET=Y
+
+If the variable UXSAP_HST_FILE_RESET is defined to "Y" in the SAP Manager environment (both uxsetenv.bat and SAP.def), the uxsaphst.dat will be reinitialized each time the SAP Manager restarted.
+
+
+ 
+#######################################################
+#######################################################
+To update a S type variable:
+
+uxupd sap report=ZVARI variant=VAR2 variable=DATE low=20040926 high=20040927
+#######################################################
+#######################################################
+Functionalities that can be switched on are switched off initially. With XBP
+2.0, you can switch the new functions globally on and off with the ABAP
+program INITXBP2.
+XBP 2.0 also offers functions to access the parent/child data of jobs.
+
+Remember to run INITXBP2 before using the job interception function and the parent/child functionalitiy.
+##################################################################
+##################################################################
+External management systems are able to call XBP interface using RFC (Remote
+Function Call).
+
+The range of interfaces, under the name XM (eXternal SAP R/3 Management),
+consists at present of the following individual components:
+* XBP eXternal Interface for Background Processing
+* XBR eXternal Interface for Backup & Recovery (so far called: BRI or Backint)
+* XMB eXternal Interface for Monitoring Basics
+* XMI eXternal Monitor Interface
+* XOM eXternal Interface for Output Management
+
+One thing which all of these RFC interfaces have in common is that their
+function modules call exactly the same function pools as the internal SAP R/3
+operations.
+
+##################################################################
+##################################################################
+Thus function modules for the XM-interface family have the prefix BAPI, an identification for the actual interface and arising from the target object and the intended action.  Syntactic structure for a function module name: BAPI_<SS>_<Object>_<Action>
+Example of the naming convention: BAPI_XBP_JOB_OPEN
+
+##################################################################
+##################################################################
+*	 XMI is an interface which logs the activities of users and agent programs each time a function module of an external interface is called. In particular, XMI logs the agent's first access to the function module pool. At this point, the name of the external program is recorded and its version number checked.
+*	 RFC (Remote Function Call) forms the communications platform for direct calls to the function modules which implement the interface on the SAP R/3 side.
+
+##################################################################
+##################################################################
+For developers who want to integrate external tools into CCMS, the XMI
+interface remains almost invisible, appearing only at the beginning and end of
+a CCMS session in the form of two functions:
+*	BAPI_XMI_LOGON: Agent logs on to an external interface
+* 	BAPI_XMI_LOGOFF: External program logs off from an external interface
+You have the option of using further functions from the external tool
+* 	BAPI_XMI_ENTER_LOGMSG: Writes a message to the XMI log
+* 	BAPI_XMI_GET_VERSIONS: Queries the current version of the interface
+* 	BAPI_XMI_SELECT_LOG: Reads the XMI message log
+The information which is logged and collected in the access log can be viewed
+using Transaction RZ15.
+The following is displayed: Name of the agent which tried to make contact with
+the SAP R/3 system, and that of its supplier, the user name (if a user logged
+on) and any changes or attempted changes which were carried out (for example,
+reset alert).
+ 
+##################################################################
+##################################################################
+A function within the SAP system can be called from outside via Remote
+Function Call (RFC), if the function is RFC-enabled. The RFC-enabling is just
+an indicator in the function attributes.
+
+In order to perform calls via RFC, the client needs the RFC library offered by
+SAP. This is a collection of necessary functions, which can be called from
+within C programs.
+
+RFC works in sessions. In other words, the user opens an RFC, carries out RFC
+tasks and then concludes the session. In opening the session, the SAP R/3
+logon procedure, with user ID and password, must be carried out. The user must
+be identifiable to and authorized by the SAP R/3 system.
+
+
+An RFC session contains one or more XMI sessions. Each XMI session contains a
+series of function calls to the individual interface function module.
+
+Open RFC session 			Authorization from SAP R/3
+	Open XMI session for XBP 	Identification of XM
+		Call XBP functions 	Identification of agent user
+	Open XMI session for XMB 	Identification of XM
+		Call XMB functions 	Identification of agent user
+		Call XBP functions 	Identification of agent user
+	Close XMI session
+Close RFC session
+
+############################################
+############################################
+As explained in the section above, an external interface is a collection of
+RFC-enabled functions. The XBP interface is an external interface to the SAP
+background processing system.
+
+Note: The XBP interface must not be confused with the ¡®normal¡¯ batch API,
+which is a collection of non RFC-enabled functions. The ¡®normal¡¯ batch API
+is an internal ABAP-API to the SAP background processing system.
+
+Any critical changes to SAP R/3 jobs (creation, editing, deletion etc) are
+recorded in the XMI log in the SAP R/3 system. You can display entries in this
+log using Transaction RZ15.
+
+XBP is a sub-set of BAPI, a RFC enabled BAPI.
+############################################
+############################################
+Before you call a function module in the XBP interface for the first time, it
+is important that:
+* 	the external job management system logs onto the SAP R/3 system first,
+* 	using an SAP R/3 user name and password. (C function RfcOpen).
+*	 the external job management system is authenticated by the CCMS
+*	 external interface administration using the function module
+*	 BAPI_XMI_LOGON:
+
+The logon will only be successful if you assign the following authorization
+values to the user for the SAP R/3 authorization object S_XMI_PROD:
+* 	Name of the company which supplies the external job management system
+* 	Program name of the external job management system
+*	Name of the interface which the user wants to work with
+
+############################################
+############################################
+"/o" in the SAP GUI to run a transaction in a new window
+"/i" to close the window
+"/nend" to close window 
+"/nex" to exit without save
+############################################
+############################################
+default SAP user
+SAP* : 06071992
+DDIC : 19920706
+#######################################################
+#######################################################
+RSPO0041: the ABAP program that maintain job records.
+RSBTCDEL: the ABAP program that clean the SM37 records.
+#######################################################
+#######################################################
+For batch input, when using ZUXTQ table, it might be necessary to clean old records in ZUXTQ. 
+When the JOBCOUNT and JOBNAME are "similar" ("same"), the new batch input may not be able to find the proper QID.
+#######################################################
+#######################################################
+In 4.0 SAP manager, this link /usr/lib/libux_p_v501_sbw is not necessary, and can be deleted.
+#######################################################
+#######################################################
+To specify recipient (shared/private distribution list) in API mode: 
+$UXEXE/uxstr sap api RECTYPE=C REC=ZWA_BCUSER jobname="${JOBNAME}" ${SCHEDULE} ${APP_SERVER} ${SPOOL} steplist="(($USER,$LANGUAGE,$PROGRAM,$VARIANT))"
+#######################################################
+#######################################################
+- SAP host: The SAP default execution host server. 
+This field is optional except for step number 1. By default, the SAP scheduler
+will run the job on the least loaded server. 
+- SAP application server: This field allows the target application server to
+  be forced 
+Optional. If supplied, it must be in first step of the job. If not supplied,
+the job is distributed by SAP load balancing. 
+
+#######################################################
+#######################################################
+The following table shows the print parameters supported by BAPI XBP 1.0.
+
+Print Parameter 	3.1x 	4.0x 	4.5x and later
+
+output device 		X 	X 	X
+print immediately 	X 	X 	X
+delete after output 	X 	X 	X
+number of copies 	X 	X 	X
+archiving mode 		X 	X 	X
+authorization 		X 	X 	X
+selection cover page 	x 	X 	X
+sap cover page 		X 	X 	X
+spool retention period 	X 	X 	X
+recipient 		x 	x 	X
+lines 			x 	x 	X
+columns 		x 	x 	X
+#######################################################
+#######################################################
+spool control is defined within steplist. 
+not sure===It can be different for each step?
+
+When SPOOLLIST is set to "Y" in the uproc variable, the spool info will be printed in the job log.
+#######################################################
+#######################################################
+DIA and BGD processes are inter-changeable. 
+You can use the system administration functions to switch a work process between dialog and background modes while the system is still running. 
+#######################################################
+#######################################################
+To modify the number of work process, use /nrz04
+#######################################################
+#######################################################
+uxjobend will connect to the SAP manager to get the job status and remove the record from SAP manager memory. If too many uxjobend failed, the SAP manager may crash, too many records in memory?
+#######################################################
+#######################################################
+In old version of SAP,the login user's password is alwasy in upper case. If
+you set it in lower case in uxjcs.ini, the password in SAP may still need to
+be in upper case.
+The error message could be:
+2010-28-06 14:20:01 # uxsap_open_comm           # SAP system [WBDEV1/X/*]:
+RfcOpenEx fails
+2010-28-06 14:20:01 # uxsap_connect             # uxsap_open_comm error:
+unable to open the RFC handle
+2010-28-06 14:20:01 # uxsap_bapi_connect        # unable to connect to SAP
+system [WBDEV1/X/*]: uxsap_connect returned error -1
+#######################################################
+
+We have found the following solution to your request # 93555:
+
+In the 'sapjcs.log' file, the following errors messages have been written in
+on August 5th, 2010, from 10:37:59 until 10:46:29 : 
+
+      2010-05-08 10:37:59 # uxsap_open_comm           # SAP system [WBDEV1/X/*]: RfcOpenEx fails
+      2010-05-08 10:37:59 # uxsap_connect             # uxsap_open_comm error: unable to open the RFC handle
+      2010-05-08 10:37:59 # uxsap_bapi_connect        # Unable to connect to SAP system [WBDEV1/X/*]: uxsap_connect returned error -1
+      2010-05-08 10:37:59 # uxsap_bapi_connect        # Trying new connection... Attempt 2/3
+      2010-05-08 10:38:01 # uxsap_open_comm           # SAP system [WBDEV1/X/*]: RfcOpenEx fails
+      2010-05-08 10:38:01 # uxsap_connect             # uxsap_open_comm error: unable to open the RFC handle
+      2010-05-08 10:38:01 # uxsap_bapi_connect        # Unable to connect to SAP system [WBDEV1/X/*]: uxsap_connect returned error -1
+      2010-05-08 10:38:01 # uxsap_bapi_connect        # Trying new connection... Attempt 3/3
+      2010-05-08 10:38:03 # uxsap_open_comm           # SAP system [WBDEV1/X/*]: RfcOpenEx fails
+      2010-05-08 10:38:03 # uxsap_connect             # uxsap_open_comm error: unable to open the RFC handle
+      2010-05-08 10:38:03 # uxsap_bapi_connect        # Unable to connect to SAP system [WBDEV1/X/*]: uxsap_connect returned error -1
+      2010-05-08 10:38:03 # uxsap_bapi_connect        # urfc_RfcCallReceive fails to open a XMI session, look at the log file: dev_rfc
+      2010-05-08 10:38:03 # uxsap_bapi_connect        # Maximum retry connection reached: 3
+      2010-05-08 10:38:03 # uxsap_bapi_connect        # Cannot create connection on SAP system [WBDEV1/X/*]
+      2010-05-08 10:38:03 # uxsap_disconnect          # connection is NULL
+      2010-05-08 10:46:25 # uxsap_open_comm           # SAP system [WBDEV1/X/*]: RfcOpenEx fails
+      2010-05-08 10:46:25 # uxsap_connect             # uxsap_open_comm error: unable to open the RFC handle
+      2010-05-08 10:46:25 # uxsap_bapi_connect        # Unable to connect to SAP system [WBDEV1/X/*]: uxsap_connect returned error -1
+      2010-05-08 10:46:25 # uxsap_bapi_connect        # Trying new connection... Attempt 2/3
+      2010-05-08 10:46:27 # uxsap_open_comm           # SAP system [WBDEV1/X/*]: RfcOpenEx fails
+      2010-05-08 10:46:27 # uxsap_connect             # uxsap_open_comm error: unable to open the RFC handle
+      2010-05-08 10:46:27 # uxsap_bapi_connect        # Unable to connect to SAP system [WBDEV1/X/*]: uxsap_connect returned error -1
+      2010-05-08 10:46:27 # uxsap_bapi_connect        # Trying new connection... Attempt 3/3
+      2010-05-08 10:46:29 # uxsap_open_comm           # SAP system [WBDEV1/X/*]: RfcOpenEx fails
+      2010-05-08 10:46:29 # uxsap_connect             # uxsap_open_comm error: unable to open the RFC handle
+      2010-05-08 10:46:29 # uxsap_bapi_connect        # Unable to connect to SAP system [WBDEV1/X/*]: uxsap_connect returned error -1
+      2010-05-08 10:46:29 # uxsap_bapi_connect        # urfc_RfcCallReceive fails to open a XMI session, look at the log file: dev_rfc
+      2010-05-08 10:46:29 # uxsap_bapi_connect        # Maximum retry connection reached: 3
+      2010-05-08 10:46:29 # uxsap_bapi_connect        # Cannot create connection on SAP system [WBDEV1/X/*]
+      2010-05-08 10:46:29 # uxsap_disconnect          # connection is NULL 
+   At the same time in the file 'dev_rfc.trc' file (SAP librfc trace file), a lot of errors like below have been written in this file : 
+
+   >TS> Thu Aug  5 10:37:59 2010
+     T:27775 ======> Connect to SAP gateway failed Connect_PM
+GWHOST=wbaurr50, GWSERV=sapgw00, ASHOST=wbaurr50, SYSNR=00
+
+    LOCATION    CPIC (TCP/IP) on local host
+    ERROR       max no of 100 conversations exceeded
+ 
+    TIME        Thu Aug  5 10:37:59 2010
+    RELEASE     620
+    COMPONENT   CPIC (TCP/IP)
+    VERSION     3
+    RC          466
+    MODULE      r3cpic_mt.c
+    LINE        10265
+    COUNTER     1
+
+
+#################################
+Enable XBP 2.0 or 3.0 Functionality
+http://help.sap.com/saphelp_nw73/helpdata/en/f1/1cc79e845a4671b32d5fc43a71a33f/content.htm
+#################################
+From SAP manager 441, the variable is supported.
+UXMAXFD = 4096
+#################################
+To increase SAP manager memory on AIX, in uxstartjbs.ksh 
+# ------------------------------------------------------------------
+# SAP Job Control Server start
+# ------------------------------------------------------------------
+echo "Starting SAP Job Control Server for ${UCOMPANY}/${UNODE}"
+export LDR_CNTRL=MAXDATA=0x80000000
+nohup $UXEXE/uxagtsap ${AREA} ${UCOMPANY} ${UNODE} > $UXSAP/log/univmgr_${UCOMPANY}_${UNODE}_${AREA}.log 2>&1 &
+unset LDR_CNTRL
+#################################
+For this error in job log:
+
++++++++++++++++++++++++++++++++
+This script is running on: wbaurp10
++++++++++++++++++++++++++++++++
+============ SUBMISSION ERROR ===========
+agent error message : unable to connect to [WBPROD] [X] [*]
+=========================================
+abort
+Return Code = 1
+
+In the SAP manager log: 
+2011-03-10 00:41:05 # uxsap_open_comm # SAP system [WBPROD/X/*]: RfcOpenEx fails
+2011-03-10 00:41:05 # uxsap_connect # uxsap_open_comm error: unable to open the RFC handle
+2011-03-10 00:41:05 # uxsap_bapi_connect # Unable to connect to SAP system [WBPROD/X/*]: uxsap_connect returned error -1
+2011-03-10 00:41:05 # uxsap_bapi_connect # Trying new connection... Attempt 2/3
+
+And this error in TRC:
+ERROR max no of 100 conversations exceeded
+
+
+It could be an issue on SAP side. Please, check SAP notes : 316877, 314530 with your SAP administrator.
+
+Several SAP variables need to be updated, including: CPIC_MAX_CONV; gw/max_conn; gw/max_sys ...
+
+http://dc191.4shared.com/doc/1L0RKJ6Z/preview.html
+
+http://wiki.sdn.sap.com/wiki/pages/viewpage.action?pageId=103482615
+#################################
+2012-19-09 03:19:21 # uxsap_open_comm           # SAP system [WBPROD/X/*]: RfcOpenEx fails
+2012-19-09 03:19:21 # uxsap_connect             # uxsap_open_comm error: unable to open the RFC handle
+2012-19-09 03:19:21 # uxsap_extract_tab_job     # Unable to open a XMI connection (WBPROD/X/U_AURP10)
+
+T:258 ======> Connect to SAP gateway failed
+Connect_PM  GWHOST=10.145.1.20, GWSERV=3306, SYSNR=06
+
+LOCATION    SAP-Gateway on host wbaurp17 / sapgw06
+ERROR       max no of connections (2500) exceeded
+
+TIME        Wed Sep 19 03:19:21 2012
+RELEASE     720
+COMPONENT   SAP-Gateway
+VERSION     2
+RC          230
+MODULE      gwxxrd.c
+LINE        3455
+COUNTER     3243
+#################################
+Starting $U 6 SAP manager may fail, with these message in universe.log
+RFC_TRACE_DIR set to /apps/du/600/TST600_casplda02/log/log/rfc for uxagtsap
+./uxagtsap: /usr/lib/libstdc++.so.5: version `GLIBCPP_3.2' not found (required
+by /apps/du/600/TST600_casplda02/bin/bin_sap/lib/librfccm.so)
+./uxagtsap: /usr/lib/libstdc++.so.5: version `CXXABI_1.2' not found (required
+by /apps/du/600/TST600_casplda02/bin/bin_sap/lib/librfccm.so)
+
+This is because the specific SAP library "librfccm.so" requires a specific
+version of this library. Even you have a newer version, it won't work.
+lrwxrwxrwx 1 root root 18 Dec 28 15:39 /usr/lib/libstdc++.so.5 ->
+libstdc++.so.6.0.8
+
+After installing an older version of the libstdc++,
+compat-libstdc++-33-3.2.3-61.i386.rpm, the message is gone.
+#################################
+In $U 6004 and 6005, the SAP manager will not start with default setting in the uxjcs.ini.
+The default values for User, Password and XmiCompany are too long:
+| 2012-04-20 12:20:40 |ERROR|X|SAP|pid=9869.4145530560| uxsap_load_sys_file | Syntax error in file /apps/du/600/TST600_casplda02/data/nodefiles/uxjcs.ini (line 6): value SAP_User_Name too long for argument User
+| 2012-04-20 12:20:40 |ERROR|X|SAP|pid=9869.4145530560| uxsap_load_sys_file | Syntax error in file /apps/du/600/TST600_casplda02/data/nodefiles/uxjcs.ini (line 7): value SAP_User_Password too long for argument Password
+| 2012-04-20 12:20:40 |ERROR|X|SAP|pid=9869.4145530560| uxsap_load_sys_file | Syntax error in file /apps/du/600/TST600_casplda02/data/nodefiles/uxjcs.ini (line 11): value DUAS_Company_Name too long for argument XmiCompany
+
+The variable max lengths for "uxjcs.ini":
+TargetHost:     <128 characters>
+TargetServer:   <2 characters>
+TargetClient:   <2 characters>
+User:           <12 characters>
+Password:       <10 characters>
+Langage:        <1 character>
+GatewayHost:    <64 characters>
+GatewayService: <32 characters>
+XmiCompany:     <12 characters>
+XmiProduct:     <12 characters>
+XmiInterface:   <3 characters>
+XmiVersion:     <10 characters>
+XmiAuditLevel:  <1 character>
+XmiExternUser:  <16 characters>
+#################################
+This from V6, could be that the $U was not restarted after configured the JCS.
+| 2013-01-25 09:37:43 |ERROR|X|sap|pid=10813504.1| owls_connect_auth         | error getting port number for [SAP]/[X]
+| 2013-01-25 09:37:43 |ERROR|X|sap|pid=10813504.1| o_io_callsrv_connect_r    | Connection error 0 []
+
+Inside the file .orsyp_installation.log., at the end of the installation process, the SAP Manager has been registered against the UVMS with port number 0 
+<SAP> X = 0
+Although, the values.xml shows
+<item>SAP_X=10609</item>
+############################################
+Normally, a JCS submission user should have the SAP authorization profiles : SAP_ALL & SAP_NEW 
+But, may not always work?
+
+In V6, the SAP job log contains good trace information. For this case, the user BATCHAUTOSYS seems not have enough right. 
+===================== SUBMISSION ERROR ===================== 
+ can't add step [1] [RBDAPP01]
+------------------------------------------------------------ 
+ BAPI error number  : 034
+            id      : XM
+            message : Internal problem (function BAPI_XBP_JOB_ADD_ABAP_STEP)
+            msg v1  : BAPI_XBP_JOB_ADD_ABAP_STEP
+============================================================ 
+	...
+	...
+|08:51:37|UNIVERSE    |SAPMSSY1|EFV|> User BATCHAUTOSYS cannot be scheduled due to its type                                                                                                                                                                   
+|08:51:37|UNIVERSE    |SAPMSSY1|EFN|BP_JOB_EDITOR: Job TESTSAP is invalid.  Reason:                                                                                                                                                                            
+|08:51:37|UNIVERSE    |SAPMSSY1|EFT|> Step 1 contains illegal 
+############################################
+| 2013-01-29 08:45:35 |ERROR|X|SAP|pid=13697134.1| uxsap_trex_get_endian     | urfc_RfcCallReceive fails to call TREX_GET_ENDIAN. RFC ERROR [RFC_ERROR_SYSTEM_FAILURE] [Function module "TREX_GET_ENDIAN" not found.]
+| 2013-01-29 08:45:35 |ERROR|X|SAP|pid=13697134.1| uxsap_bapi_request_get_en | unable to get the endianness for [*] [*] [*]
+Check SAP JCS 6.0 master document.
+
+To remove this error, we need to remove the last line of each block in
+uxjcs.ini.
+
+CLE:*/*/*
+TargetHost:saped1
+TargetServer:00
+TargetClient:100
+User:BATCHAUTOSYS
+Password:
+Langage:E
+GatewayHost:saped1
+GatewayService:sapgw00
+XmiCompany:ORSYP
+XmiProduct:UNIVERSE
+XmiInterface:XBP
+XmiVersion:2.0
+XmiAuditLevel:3
+XmiExternUser:UNI_USER
+Endian:L  <---- remove this line
+
+Then restart DUAS (unistop / unistart from putty connected as universe)
+

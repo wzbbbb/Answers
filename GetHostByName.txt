@@ -1,0 +1,51 @@
+Dollar Unvierse uses the gethostbyname function to get the IP address of a hostname.
+The traces present in the universe.log show us that this function failes on the host abisdva1:
+<< 2003-11-24 12:18:11 0020746/uxord           /u_io_callsrv        /000000000 - u_gethostbyname error : Unknown host (host [abisdva1])
+<< 2003-11-24 12:18:11 0020746/uxord           /CALL_UXIOSRV        /000000000 - (file /dld01/dev/projet/m_v500/uxsrc/os/u_uxiodf.c/line 597) u_io_callsrv(on abisdva1,FDXD01,X) returns -1
+
+-- Please do the following tests to confirm this analysis :
+-.- Test 1
+Please make sure that all the processes of this Dollar Unverse company are stopped.
+
+In the uxsrsrv.sck file of your Dollar Universe company you have : 
+#Add lines
+#LogicalNodeName PhysicalNodeName
+abisdva1 abisdva1
+itowtc03 itowtc03.prod.fedex.com
+itowtc06 itowtc06.prod.fedex.com
+CA7DEV1 dev1.prod.fedex.com
+
+Please update the first line to get this result:
+#Add lines
+#LogicalNodeName PhysicalNodeName
+abisdva1 199.82.235.53
+itowtc03 itowtc03.prod.fedex.com
+itowtc06 itowtc06.prod.fedex.com
+CA7DEV1 dev1.prod.fedex.com
+
+Then please try to restart your Dollar Universe company and check if this issue remains.
+
+If this issue remains please do the Test2:
+Please make sure that all the processes of this Dollar Unverse company are stopped.
+
+In the uxsrsrv.sck file of your Dollar Universe company you have : 
+#Add lines
+#LogicalNodeName PhysicalNodeName
+abisdva1 199.82.235.53
+itowtc03 itowtc03.prod.fedex.com
+itowtc06 itowtc06.prod.fedex.com
+CA7DEV1 dev1.prod.fedex.com
+
+Please update the first line to get this result:
+#Add lines
+#LogicalNodeName PhysicalNodeName
+abisdva1 127.0.0.1
+itowtc03 itowtc03.prod.fedex.com
+itowtc06 itowtc06.prod.fedex.com
+CA7DEV1 dev1.prod.fedex.com
+
+Then please try to restart your Dollar Universe company and check if this issue remains.
+
+In case this issue does not occur after the first or the second test, please check your network configuration with your network administrator.
+In case this issue does occur after the second test, please send us a new result of the uxtrace procedure.
+

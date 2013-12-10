@@ -1,0 +1,1203 @@
+
+procfs persist in /etc/sysctl.conf or /etc/rc.local 
+sysctl operates against a subset of /proc/sys
+
+sysfs persist in /etc/rc.local
+
+procfs is mounted at /proc by default.
+
+sysctl -a  +
+
+The boot process runs /etc/rc.sysinit, which in turn calls the sysctl command to apply the persistent settings from /etc/sysctl.conf. 
+
+sysfs is mounted at /sys by default. There is no API to automatically apply tunables, so it is common to place echo commands in /etc/rc.local. 
+
+Many files simply report kernel state and are read-only. Tunables are generally read-write by root. Some tunables are write-only, meaning that you can not read the state from the file, but echoing date into the file changes kernel state.
+
+Finding the writable files:
+
+find /proc /sys -perm /200 -type f > /tmp/tunables
+
+find /proc /sys -type f -writeable -ls
+
+find /proc /sys -type f -readable \! -writeable -ls
+
+/proc { /proc/sys { sysctl -a } }  ; /sys #/proc and /sys are independent.
+
+#################################
+To find a parameter from kernel-doc -
+
+cd /usr/share/doc/kernel-doc-*/Documentation
+grep -ri zoneinfo *
+
+man 5 proc
+man hier
+
+alias info="pinfo"
+info gprof
+#################################
+Booting sequence  -
+
+Problem stage 		Boot option
+--------------------------------------------
+BIOS			|		
+			| linux rescue
+GRUB			|
+			| grub shell
+kernel or initrd	|
+			| kernel .. root=LABEL=root init=/bin/bash
+init			|
+			| kernel .. root=LABEL=root emergency
+rc.sysinit		|
+			| kernel .. root=LABEL=root single
+rc scripts (K,S)	|
+			| kernel .. root=LABEL=root 1
+rc.local		|
+			V
+################################# 
+yum -y install kernel-doc
+yum -info net-snmp-utils
+yum search snmp
+yum whatprovides '*/snmpget'
+
+#################################
+To enable directory color listing: 
+DIR_COLORS environment vaiable
+
+#################################
+The max PID:
+
+cat /proc/sys/kernel/pid_max 
+or
+sysctl kernel.pid_max
+
+To change it
+
+sysctl -w kernel.pid_max=1024
+
+#################################
+To print PID of ls command as it run
+
+for i in $(seq 1 3000)
+do 
+	ls -ld /proc/self
+done
+#################################
+If the kernel.threads-max is too low, the system can not boot.
+You have to boot into emergency mode and remove the offending sysctl.
+
+#After booting into emergence
+
+mount /proc
+mount -o remount,rw /
+
+Then, modify the /etc/sysctl.conf.
+#################################
+Finding the files in a package 
+
+rpm -qla net-snmp* |grep bin 
+rpm -qca net-snmp*  # to list all config files
+rpm -qda net-snmp*  # to list all doc files
+#################################
+sar is part of sysstat.
+sysstat schedules 2 corn jobs in /etc/corn.d/sysstat:sa1 runs sar once every 10 minutes, and records a second snapshot of system activity in /var/log/sa/saDD (where DD is the date).  
+The second program scheduled is sa2, which runs a sar report at midnight and stores the output in /var/log/sa/sarDD (DD is date).
+
+The sar command calls a process named sadc to access system data.
+
+yum -y sysstat
+
+Using 24-hour time format:
+alias sar="LANG=C sar"
+
+Interpre major:minor device nubers:
+/usr/share/doc/kernel-doc/Documentation/devices.txt
+or
+sar -d -p 1 5
+
+To specify the start and end time of the command:
+sar -s 12:00:00 -e 12:15:00 
+
+You can specify an older file:
+sar -r -f /var/log/sa/sa15
+
+
+disk: sar -d 1 5
+cpu: sar -u 1 5
+memory: sar -r 2 10 
+swap: sar -W 1 5
+network: sar -n DEV 1 5
+
+#################################
+To check /dev/sda over 1 second intervals
+iostat -x sda 1 5
+#################################
+awk
+BEGIN 		{ cmd; .. cmd; } # do before input
+/regex/ 	{ cmd; .. cmd; } # do only on lines
+/regex2/ 	{ cmd; .. cmd; } # where regex matches
+		..
+		..
+		{ cmd; .. cmd; } # do on every line
+END		{ cmd; .. cmd; } # do after last input
+
+The first field is $1, then $2 ... $NF. NF itself is a variable for the total number of fields. 
+
+ps -eo rss |awk '
+BEGIN { printf "Memory consumed by all processes is: " }
+/^ *[0-9]/ { total_rss += $1 }
+END { printf total_rss "KiB\n" } '
+
+uptime | awk '{ printf $1, $(NF-2), $(NF-1), $NF }' | tr -d ',' >>/var/mydata
+
+$FS or -F from command line can specify field separator.
+#################################
+gnuplot  -
+
+-persist option force the graph remains after gnuplot exits.
+uptime | awk '{ printf $1, $(NF-2), $(NF-1), $NF }' | tr -d ',' >>/var/mydata
+Note: the output has 4 fields.
+
+gnuplot - &> /dev/null << EOF
+set term png crop
+set output '/var/www/html/loadavg.png'
+set xdata time
+set timefrmt '%H:%M:%S'
+set xlabel 'time'
+set format x '%H:%M'
+set xtics rotate
+set ylabel 'load average'
+plot [] [0:] \
+'/var/mydata' u 1:2 smooth csplines t '1-min' with lines, \
+'/var/mydata' u 1:3 smooth csplines t '5-min' with lines, \
+'/var/mydata' u 1:4 smooth csplines t '15-min' with lines 
+EOF
+################################# 
+oprofile  -
+low overhead,
+to profile interrupt handlers,
+to profile applications and shared libraries,
+to profile the kernel,
+to profile examine certain hardware events,
+to profile generate instruction level profiles.
+
+It can capture events at specified intervals, but miss intervening events.
+
+To check if the kernel support oprofile
+
+grep -h PROF /boot/config-*
+CONFIG_PROFILING=y
+CONFIG_OPROFILE=m
+
+check basic_profiling.txt in the kernel-doc.
+
+package needed:
+yum -y install oprofile oprofile-gui
+kernel-debuginfo-{version}-{release}
+
+To profile the kernel
+opcontrol --setup --vmlinux=/usr/lib/debug/lib/modules/$(uname -r)/vmlinux
+
+To profile an application
+opcontrol --setup --no-vmlinux
+
+to restrict the scope of profiling
+opcontrol --list-events
+opcontrol --event=CPU_CLK_UNHALTED:400000 
+ --event=DATA_MEM_REFS:10000
+
+ophelp --list : can tell if a CPU support oprofile
+
+To run a test:
+1. 
+opcontrol --reset
+opcontrol --start
+
+2. run test
+
+3. save current data to /var/lib/oprofile/samples/
+opcontrol --dump
+
+4. stop
+control --stop
+
+To shutdown oprofiled daemon:
+opcontrol --shutdown
+
+To check result:
+opreport > /tmp/oprofile.data
+will list number of time an executable has been called and amount CPU time spent running each executable.
+
+For a specify application
+opreport -l /bin/bash >/tmp/oprofile.data
+
+/usr/share/doc/oprofile-*/oprofile.html
+
+#################################
+systemtap -
+captures 100% of events
+
+Package on dev node:
+systemtap
+kernel-debuginfo
+kernel-devel
+gcc
+
+On PROD node
+systemtap-runtime
+
+probe kernel.function("foo")
+probe kernel.function("*").return
+
+/usr/share/doc/systemtap-*/examples
+
+Includable functions
+/usr/share/systemtap/tapset
+
+man -k systemtap
+
+http://sources.redhat.com/systemtap/wiki/
+
+stap:
+1). parse script
+2). resove symbols against matching kernel-debuginfo
+3). translate into C
+4). Build kernel module
+5). Load module, run and unload.
+
+list all kernel functions:
+stap -p2 -e 'probe kernel.function("*") {}' |sort -u
+
+The following script places a probe point on the kernel sys_open() function and prints all callers with the function's arguments:
+
+stap -e 'probe syscall.open {printf ("%s: %s\n', execname(), argstr)}'
+
+execname() is an available function from tapsets.
+
+To generate a module:
+stap -vm csmon.ko -k csmon.stp
+
+It will generate & keep the module in /tmp
+
+then run it on PROD node with staprun
+
+staprun -v ./csmon.ko
+
+
+man stapprobs
+######################
+response time: is how long the user waits for a specific task to complete.
+Think time : is how long a user of an application waits to issue another request.
+
+export TIME="\n%e %S %U"
+
+To calculate queue time: Q = W - (Tsys + Tuser)
+/usr/bin/time tar czf /tmp/demo.tgz /etc/ 2>&1 |tail -1 | 
+awk 'BEGIN { printf "W\tTsys\tTuser\tQ"}
+	{print $1 "\t" $2 "\t" $3 "\t" $1 - $2 - $3}'
+
+3 times are recorded by the time command.
+Real time: how long the program took to complete, if you were looking at your watch.
+
+User time: how many seconds of CPU time the program needed to execute its instructions. Application that uses a lot of user time are using CPU intensively. 
+
+System time: how many seconds of CPU time the program spent executing kernel system call or waiting for IO. Applications that use a lot of system time may be waiting on disk access or for other system services.
+######################
+To summarize system calls and follow forks.
+strace -fc elinks -dump http://6park.com/
+
+To summarize system and library calls and follow forks.
+ltrace -Sfc elinks -dump http://6park.com/
+######################
+Storage density: zoned constant angular velocity (ZCAV) drives
+- Outer tracks contain more linear storage area
+- For a given rotational speed, read more data per second on outer tracks
+- Lower partition numbers are on outside
+
+To bench mark a disk
+
+yum -y install bonnie++
+rpm -qd bonnie+
+useradd zcav; usermod -aG disk zcav
+
+for drive in sdb sdc sdd sde; do
+	su -c "zcav -c1 /dev/$drive" zcav >> /tmp/zcavdata.$drive
+done
+######################
+To query or change parameters for SCSI devices: sg3_utils
+
+for DRIVE in $(sginfo -r); do
+	sginfo -a $DRIVE;
+done
+
+######################
+Turning on write caching can significanly boost disk performance.
+
+High level IO requests, such as a read or write issued by Linux virtual Filesystem layer must be transformed into a block device request.
+The kernel schedules each block device request for processing on a device request queue.
+Each physical block device has its own device request queue.
+The requests that are queued up on the device request queue for a device are actually block device request descriptor data structures.
+
+When a process requests IO from a particular device, a special request structure is placed on the request queue for that device.
+
+Processing an IO request is a cooperative effort. A high-level device driver places an IO request on a request queue.
+
+The basic unit used for IO transfers is a page. Each page of data transfered from disk requires a corresponding page of page cache memory. In /proc/meminfo, you will notice that some memory is being used for page cache and some memory is being used for buffer caches. 
+While the page cache contains file data, the buffer cache is used to cache filesystem metadata. In earlier version of Linux the buffer cache was a separate cache from teh page cache. In the 2.6 Linux kernel, page and buffer cache are combined but the kernel still keeps track of which pages are being used for file data and which pages contain filesystem metadata.
+
+User mode programs do not access the contents of the buffers directly. the buffers that are maintained by the kernel exit in kernel space. The kernel must copy the data in these buffers into the user mode space of the process that requested the file or inode represented by the buffered blocks or page in memory.
+######################
+Kernel automatically reads ahead sequentially
+
+blockdev --getra /dev/sda
+blockdev --setra 512 /dev/sda
+
+- also exposed in /sys/block/sda/queue/read_ahead_kb
+- Tunable sets the max window size
+- Initial read-ahead window is half the tunable
+- Persist in /etc/rc.local
+
+Considerations
+- Fewer seeks, but longer service time per visit
+- Fewer operations issued to disk controller
+- Stopped when random file access is detected
+
+cat /sys/block/sda/queue/read_ahead_kb
+blockdev --report /dev/sda
+######################
+Queue length
+/sys/block/sda/queue/nr_requests
+
+scheduler algorithm
+/sys/block/sda/queue/scheduler
+
+CFQ: completely fair queueing
+
+The default IO scheduler is determined as a kernel compile option.
+
+grep -i cfq /boot/config-*
+CONFIG_IOSCHED_CFQ=y
+CONFIG_DEFAULT_CFQ=y
+CONFIG_DEFAULT_IOSCHED="cfq"
+
+elevator algorithms: /usr/share/doc/kernel-doc-*/Documentation/block/*
+
+The deadline scheduler compromises lower efficiency to gain low wait times. The anticipatory scheduler compromises longer wait times to gain more efficiency. The noop scheduler compromises all but the simplest of the sorting in order to gain CPU cycles. The cfq scheduler attempts to compromise on all points in order to achieve equality.
+######################
+deadline scheduler
+
+echo deadline > /sys/block/sda/queue/scheduler
+
+In /sys/block/sda/queue/iosched/
+read_expire
+write_expire
+
+front_merges
+######################
+echo anticipatory >/sys/block/sda/queue/scheduler
+
+In /sys/block/sda/queue/iosched/
+antic_expire : how long to wait for another, nearby read
+
+read_expire
+write_expire
+######################
+echo noop >/sys/block/sda/queue/scheduler
+
+######################
+echo cfq >/sys/block/sda/queue/scheduler
+
+- class and priority based IO queuing
+- user 64 internal queues
+- fills internal queues using round-robin
+- request are dispatched from non-empty queues
+- sort occurs at dispatch queue
+
+In /sys/block/sda/queue/iosched/
+
+queued :  max requests per internal queue
+quantum : number of requests dispatched to device per cycle
+
+The goal of CFQ IO scheduler is to divide available IO bandwidth equally among all process that are dong IO. 
+IO requests are ordered to minimize seek haed movement when they are placed on the dispatch queue.
+
+Class-based prioritized queuing:
+
+Class 1 (real-time): first-access to disk, can starve other classes 
+- Priorities 0 (most important) - 7
+
+Class 2 (best-effort): round-robin access, the default
+- Priorities 0 (most important) - 7
+
+Class 3 (idle): receives disk IO only if no other request in queue
+- No priorities
+
+example:
+
+ionice -p1
+ionice -p1 -n7 -c2
+ionice -p1
+
+Examples
+
+# ionice -c3 -p89
+Sets process with PID 89 as an idle io process.
+
+# ionice -c2 -n0 bash
+Runs 'bash' as a best-effort program with highest priority.
+
+# ionice -p89
+Returns the class and priority of the process with PID 89.
+######################
+Flush out all data in IO page cache and buffer cache: 
+
+egrep -i 'cache|buffer' /proc/meminfo
+sync
+sysctl -w vm.drop_caches=3
+egrep -i 'cache|buffer' /proc/meminfo
+
+
+To free pagecache:
+
+    * echo 1 > /proc/sys/vm/drop_caches
+
+To free dentries and inodes:
+
+    * echo 2 > /proc/sys/vm/drop_caches
+
+To free pagecache, dentries and inodes:
+
+    * echo 3 > /proc/sys/vm/drop_caches
+
+As this is a non-destructive operation, and dirty objects are not freeable, the user should run "sync" first in order to make sure all cached objects are freed.
+
+This tunable was added in 2.6.16.
+######################
+To copy file in both extension
+
+cp zcav.{dat,out} ~
+######################
+A filesystem is represented in memory using dentries and inodes.  Inodes are
+the objects that represent the underlying files (and also directories).  A
+dentry is an object with a string name (d_name), a pointer to an inode
+(d_inode), and a pointer to the parent dentry (d_parent).
+
+So a tree such as
+
+	/
+	|
+	foo
+	|   \
+	bar  bar2
+
+is represented by four inodes: one each for foo, bar, and bar2, and the root;
+and three dentries: one linking bar to foo, one linking bar2 to foo, and one
+linking foo to the root. 
+######################
+To see which file system drivers are currently in the kernel:
+cat /proc/filesystems
+Each inode is 128 Bytes in size therefore 8 inodes/KiB of disk.
+The block bitmap is the file system block that contains a list of free data blocks in tis block group. 
+The inode bitmap is the block that contains the list of free inodes in its block groups's section of the inode table.
+
+To view fragmentation
+For a file
+filefrag -v /path/to/file
+
+For a mounted file system
+dumpe2fs /dev/sda1
+
+For an unmounted Fs (Boot time)
+fsck /dev/sda1
+######################
+Tuning fragmentation
+
+At FS creation
+mke2fs -m reserved-percentage
+
+after creation
+tune2fs -m reserved-percentage 
+
+tune2fs -r reserved-block-count
+######################
+For ext3, journaling involves two writes to disk
+- wirte modified blocks to journal
+- write modified blocks to file system
+- Discard blocks in journal
+Type of journaling determined at mount time: 
+ordered, journal and writeback.
+######################
+Each time a file is read of written, an access timestamp is updated for tha file which entails a read and write for the metadata for that file.
+Disable the access time update can have significant improve on ext3 performance.
+
+mount -o noattime
+
+To check access time stamp:
+stat /root/install.log
+
+Mount ext3 with longer period between journal commits:
+mount -o commit=15 /dev/sde8 /data
+
+Default is 5 second
+Longer may improve performance but result in more lost data if system crashes.
+######################
+2 types of lock on file, advisory or mandatory.
+Advisory lock rely on other applicatios checking to see if a lock is being held on a file. ADVISORY means that the lock does not prevent other people from accessing the data.
+Mandatory locks are enforced by the kernel. To enable mandatory locking on a file, enable the SGID bit for the file but disable the group execute bit. Still need to use lockf() and fcntl() to lock the file.
+When a program attempts to lock a file with lockf or fcntl that has mandatory locking set, the kernel will prevent all other programs from accessing the file. Processes which use flock will not trigger a mandatory lock.
+
+chmod g+s-x /path/to/file
+
+View current locks held by processes
+[root@CentOS52 ~]# cat /proc/locks
+1: POSIX  ADVISORY  WRITE 4806 fd:00:786450 0 EOF
+2: POSIX  ADVISORY  WRITE 4440 fd:00:1479435 0 EOF
+3: FLOCK  ADVISORY  WRITE 4387 fd:00:1479428 0 EOF
+
+To list major and minor devices 
+
+[root@CentOS52 ~]# cat /proc/partitions
+major minor  #blocks  name
+
+   8     0    8388608 sda
+   8     1     104391 sda1
+   8     2    8281507 sda2
+ 253     0    7733248 dm-0
+ 253     1     524288 dm-1
+
+
+[root@CentOS52 ~]# find / -inum 1479428
+/var/run/crond.pid
+
+The second column refers to the class of lock used, with FLOCK signifying the older-style UNIX file locks from a flock system call and POSIX representing the newer POSIX locks from the lockf system call.
+
+The third column can have two values: ADVISORY or MANDATORY. ADVISORY means that the lock does not prevent other people from accessing the data; it only prevents other attempts to lock it. MANDATORY means that no other access to the data is permitted while the lock is held. 
+
+The fourth column reveals whether the lock is allowing the holder READ or WRITE access to the file. 
+
+The fifth column shows the PID holding the lock. 
+
+The sixth column shows the ID of the file being locked, in the format of MAJOR-DEVICE:MINOR-DEVICE:INODE-NUMBER. 
+
+The seventh column shows the start and end of the file's locked region.
+
+The remaining columns point to internal kernel data structures used for specialized debugging and can be ignored. 
+######################
+To determine average request size (avgrq-sz)
+iostat -x /dev/sda
+sar -d
+######################
+
+
+
+release defunct process with wait?
+######################
+Cache memory is organized into lines. Each line of cache ca be used ot cache a specific location in memory.
+I-cache: for instruction for CPU
+D-cache: for data
+Each CPU has its own cache. If CPU requested address is already in cache, it is cache-hit; otherwise, a cache-miss. To read the main memory and fill in cache is a cache line fill.
+
+Moving data from cahce to RAM: write-through vs write-back (more efficient). 
+
+direct mapped cache: cheap, only cache a specific location in main memory.
+fully associative cache: expensive, can cache any location in main memory.
+set associative cache: in between. n-way set associative.
+
+Multiple level caches: L1, L2, L3 ...
+L2 , L3 often shared by CPUs.
+The further away, the cheaper and larger. 
+
+To check cache:
+getconf -a |grep -i cache
+x86info
+dmesg
+
+Cache misses are expensive. For each memory access at a new location, the CPU must discard current content of cache and do a cache-line fill.
+######################
+To profile cache usage
+
+valgrind --tool=cachegrind program_name
+It create a virtual CPU to test cache utilization.
+specify --I1 --D1 and --L2 to match physical CPU cache
+
+Avoid nested loop to reduce cache miss.
+######################
+each CPU has 2 run queue, active and expired.
+current running process moves to expired queue when preempted.
+active and expired queue switch when active queue empties.
+
+To check how many CPU can be used with the kernel
+grep 'CONFIG.*SMP' /boot/config-*
+grep 'CONFIG_NR_CPUS' /boot/config-*
+######################
+Standard preemption rules
+- CPU receives a hard interrupt
+- process requests IO
+- process voluntarily surrenders the CPU via sched_yield
+- scheduler algorithm determines that process should be preempted
+
+To check and change scheduler policy and priority
+chrt -p pid
+chrt -r 33 /bin/sleep 400
+[root@CentOS52 ~]# ps|egrep "PID"\|'sleep'\|"watch"
+  PID   TID  PPID    VSZ CLS RTPRIO  NI STAT  STARTED     TIME %CPU COMMAND
+    4     4     1      0  FF     99   - S<   14:01:53 00:00:00  0.0 [watchdog/0]
+13935 13935 13597   3704  RR     33   - S    16:49:14 00:00:00  0.0 /bin/sleep 400
+14005 14005 13597   3908  TS      -   0 R+   16:55:46 00:00:00  0.0 egrep PID|sleep|watch
+
+<    high-priority (not nice to other users)
+N    low-priority (nice to other users)
+L    has pages locked into memory (for real-time and custom IO)
+s    is a session leader
+l    is multi-threaded (using CLONE_THREAD, like NPTL pthreads do)
++    is in the foreground process group
+
+chrt -p -r 99 1
+ps -eo pid,command,cls,rtprio,ni
+ps axo pid,comm,rtprio,policy
+
+The init process starts with SCHED_OTHER. each process inherits parients scheduling policy and priority at creation time.
+######################
+dynamic priority	static priority	
+		Low,TS	FF/RR           	High,RT
+		0 	1 	2 	... 	99
+		1
+		2
+		...
+		...
+default  ->	20
+		...
+		...
+		39
+
+Static priority 1-99: SCHED_FIFO and SCHED_RR
+Static priority 0 (dynamic priority 100-139),  SCHED_OTHER and SCHED_BATCH
+
+SCHED_FIFO, 
+- only standard preemption rule apply; 
+- re-insert at the head of its policy queue, 
+- not time slice. When it runs, it can run until it finish.
+chrt -f
+
+SCHED_RR, 
+- with time time slice.
+- Higher priorities have longer time slice.
+- re-insert at the end of its priority queue.
+chrt -r
+
+SCHED_OTHER
+- computes a new internal priority each time a process is preempted
+- internal priority range from 100-139
+- processes with equal priority can preempt current process every 20ms to prevent CPU starvation
+- CPU bound process receive a +5 priority penalty after preemption
+nice
+renice
+
+SCHED_BATCH can only be used at static priority 0. This policy is similar to SCHED_OTHER, except that this policy will cause the scheduler to always assume that the process is CPU-intensive. Consequently, the scheduler will apply a small scheduling penalty so that this process is mildly disfavoured in scheduling decisions.
+
+High sleep average indicate interactive process. Could re-insert into the active queue. Or -5 and put in expired queue. Process which spend most of their time running are penalized with a +5. 
+######################
+to check average run queue size
+[root@CentOS52 ~]# sar -q 1 2
+Linux 2.6.18-92.el5 (CentOS52)  06/20/2009
+
+07:47:40 PM   runq-sz  plist-sz   ldavg-1   ldavg-5  ldavg-15
+07:47:41 PM         0       106      0.14      0.06      0.02
+07:47:42 PM         0       106      0.13      0.06      0.02
+Average:            0       106      0.14      0.06      0.02
+
+plist-sz: Number of processes and threads in the process list.
+######################
+CPU utilization
+[root@CentOS52 tmp]# mpstat 1 2
+Linux 2.6.18-92.el5 (CentOS52)  06/20/2009
+
+07:52:53 PM  CPU   %user   %nice    %sys %iowait    %irq   %soft  %steal   %idle    intr/s
+07:52:54 PM  all    1.00    0.00    0.00    0.00    0.00    0.00    0.00   99.00   1003.00
+07:52:55 PM  all    0.00    0.00    0.98    0.00    0.00    0.98    0.00   98.04   1001.96
+Average:     all    0.50    0.00    0.50    0.00    0.00    0.50    0.00   98.51   1002.48
+[root@CentOS52 tmp]# sar -P ALL 1 2
+Linux 2.6.18-92.el5 (CentOS52)  06/20/2009
+
+07:53:21 PM       CPU     %user     %nice   %system   %iowait    %steal     %idle
+07:53:22 PM       all      0.00      0.00      1.01      0.00      0.00     98.99
+07:53:22 PM         0      0.00      0.00      1.01      0.00      0.00     98.99
+
+07:53:22 PM       CPU     %user     %nice   %system   %iowait    %steal     %idle
+07:53:23 PM       all      1.00      0.00      1.00      0.00      0.00     98.00
+07:53:23 PM         0      1.00      0.00      1.00      0.00      0.00     98.00
+
+Average:          CPU     %user     %nice   %system   %iowait    %steal     %idle
+Average:          all      0.50      0.00      1.01      0.00      0.00     98.49
+Average:            0      0.50      0.00      1.01      0.00      0.00     98.49
+[root@CentOS52 tmp]# iostat -c 1 2
+Linux 2.6.18-92.el5 (CentOS52)  06/20/2009
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           0.26    0.46    1.72    2.17    0.00   95.38
+
+avg-cpu:  %user   %nice %system %iowait  %steal   %idle
+           1.00    0.00    1.00    4.00    0.00   94.00
+
+cat /proc/stat
+
+The system load average is a measure of the numbber of process that re in either the TASK_RUNNABLE stat or the TASK_UNINTERRUPTIBLE stat.
+TASK_RUNNABLE proces are in run queue and may or may not currently have the CPU.
+TASK_UNINTERRUPTIBLE processes are waiting for IO. The load average are time-dependent average.
+
+In steady state the 3 values for load average, 1, 5, 15 minutes, will eventually converge.
+#################################
+RTC: real time clock
+TSC: time stamp counter 
+APIC: advanced programmable interrup controller
+PIC: programmable interrupt counter 
+
+RTC maintains time and date info even when OS is shut down; used to set system time and date on boot up.
+cat /proc/driver/rtc
+
+TSC is a register that is updated at the same frequency as the oscillator that drives the CPU; a very high resolution counter; used along with RTC to calculate time and date.
+
+PIC (or PIT, programmable interval timer), is a timer that can be set to issue interrupts to the kernel after a specified amount time has passed. PIC is used for all general timekeeping activities, including process scheduling.
+
+APIC: include a local CPU timer; to keep track of processes running on th elocal CPU and raise interrupts local to that processor on a multi-processor system.
+
+For 2.6 kernel and later, PIC to issue interrupt at a fixed interval, 1000 Hz, or 1 tick per millisecond. The interval is referred as a tick or a jiffy. 
+######################
+kernel boot parameter
+tick_divider=value
+######################
+- cpuspeed adjusts automatically
+- unused CPU clock sycles raise energy cost
+- can reduce speed without impacting performance
+- start by default via /etc/init.d/cpuspeed
+- not used under Xen
+
+manual config in /etc/sysconfig/cpuspeed
+MAX_SPEED=
+MIN_SPEED=
+
+cpuspeed --help 2>&1 | less
+######################
+IRQ balancing, is done by APIC automatically
+- requires a functional APIC for IRQ routing
+- may move IRQs every 10 seconds
+- to better use cache affinity for CPUs
+- equalize CPU visit count
+
+hard interrupt preempts current process, can help with latency
+
+To check
+procinfo
+cat /proc/interrupts
+
+[root@CentOS52 boot]# grep -i preempt /boot/config-2.6.18-92.el5
+# CONFIG_PREEMPT_NONE is not set
+CONFIG_PREEMPT_VOLUNTARY=y
+# CONFIG_PREEMPT is not set
+CONFIG_PREEMPT_BKL=y
+
+Booting with noapic kernel parameter prevent irqbalance from routing IRQs.
+######################
+IRQ affinity
+
+config irqbalance in /etc/sysconfig/irqbalance
+
+To disable irqbalance
+
+1. chkconfig irqbalance off
+2. set smp_affinity for every IRQ in /etc/rc.local
+echo {cpu_mask} > /proc/irq/<irq_number>/smp_affinity
+
+smp_affinity should be a bitmask expressed in hexadecimal representing valid CPUs. To assign an IRQ to the  1st CPU:
+echo 1 > /proc/irq/<irq_num>/smp_affinity
+
+This can 
+- shield critical CPUs from servicing IRQs
+- explit cache affinity for interrupt handlers, and enhance performance
+
+The kernel should bed compiled with support for IRQ balancing:
+grep -i irqbalance /boot/config-*
+
+The kernel-doc has info in "Documentation/IRQ-affinity.txt" and "Documentation/IRQ.txt"
+######################
+Equalizing CPU visit count
+For hyperthreaded processor, the logical processor uses the same run queue as the physical processor. 
+When a process uses up its time slice on a particular CPU, it is normally scheduled into the expired array for hte same CPU, on which it was running. Therefore, process has a natural processor affinity; they tend to remain on the same processor rather than being rescheduled to run on other processor on the system.
+Normally, this is a desirable behavior. Each CPU has its own cache, therefore the chances are quite good that when a process gets its next time slice, some of the data that it needs will still be in cache.
+If a process constantly bounced from one processor to another processor, performance would suffer due to the need to constantly refill the cache lines on the new CPU with the data for that process.
+The scheduler will rebalance the run queues every 100ms. If the scheduler detects an idle processor, if will check the run queues for the other CPUs every 1ms looking for jobs that can be rescheduled to the idle processor.
+
+The scheduler rebalance run queues
+- every 100ms if all processor are busy
+- every 1ms if a CPU is idle
+
+To view  a specific processes
+
+watch -n.5 'ps axo comm,pid,psr |grep program_name'
+######################
+to pin a task to one or more CPUs
+
+taskset -p 0x00000001 1
+
+taskset -p  -c 0 4874 # to ping pid 4874 to CPU 0
+"-c" to use number for CPU, instead of HEX.
+######################
+Restricting length of a CPU run queue
+1. Isolate a CPU from automatic scheduling in /etc/grub.conf
+isolcpus=cpu_number, ....,cpu_number
+2. Pin tasks to that CPU with taskset
+3. Consider adjusting IRQ affinity
+
+isolcpus boot parameter is documented in /usr/share/doc/kernel-doc-*/Documentation/kernel-parameters.txt
+######################
+hot-plugging CPUs (online disabling/enabling CPUs)
+1. Determining processor number
+grep processor /proc/cpuinfo
+cat /proc/interrupts
+
+2. Dynamically disable CPU 1
+echo 0 > /sys/devices/system/cpu/cpu1/online
+cat /proc/interrupts
+
+3. Re-enabling CPU 1
+echo 1 > /sys/devices/system/cpu/cpu1/online
+cat /proc/interrupts
+
+If /sys/devices/system/cpu/cpu1/online is not present, the CPU can not be dynamically plugged.
+
+To check if a kernel supports it:
+In /boot/config-*:
+CONFIG_HOTPLUG
+CONFIG_SMP
+CONFIG_HOTPLUG_CPU
+CONFIG_APCI_HOTPLUG_CPU
+
+Physical hot plug require BIOS support.
+
+In /usr/share/doc/kernel-doc-*/Documentation/cpu-hotplug.txt
+######################
+scheduler domain
+Group processors into cpusets
+- each cpuset represents a scheduler domain
+- supports both multi-core and NUMA architectures
+- simple management interface through the cpuset virtual file system
+- combine with other tuning techniques
+
+Nestable hierarchy of cpusets
+- root cpuset contains all system resources 
+- child cpusets can be nested
+- each cpuset must contain at least one CPU and one memory zone
+- dynamically attach tasks to a cpuset
+
+grep -i cpuset /proc/filesystems
+grep -i cpuset /boot/config-2.6.18-92.el5
+######################
+Configuring the root cpuset, persist in /etc/fstab
+mkdir /cpusets
+grep cpu /proc/filesystems
+mount -t cpuset nodev /cpusets
+
+- root cpuset contains all system resource by default
+/cpusets/cpus
+/cpusets/mems
+/cpusets/tasks
+
+After mounting the VFS, root cpuset and all of its contents in /cpusets are all automatically created.
+######################
+creating a child cpuset
+1. mkdir /cpusets/rh442
+2. assign resource as a range or comma-separated list
+/bin/echo "0,3" > /cpusets/rh442/cpus
+or
+/bin/echo "0-3" > /cpusets/rh442/cpus
+/bin/echo 0 > /cpusets/rh442/mems
+3 attach one task a time
+for PID in $(pidof sshd); do
+	/bin/echo $PID > /cpusets/rh442/tasks
+done
+4. Persist in /etc/rc.local, or using a customer SysC-style init script, see /usr/share/doc/initscripts-*/sysvinitfiles for sample template.
+
+For x86, there is only one memory zone (0); for NUMA there could be more. To check which memory zone available on system:
+cat /cpusets/mems
+
+To remove a child cpuset, empty the tasks by re-assigning them to the root, then remove the directory. 
+######################
+- Which cpuset is the PID attached?
+cat /proc/PID/cpuset
+
+- To which resources can the PID be scheduled?
+cat /proc/PID/status | grep allowed
+[root@CentOS52 rh442]# cat /proc/21579/status |grep allowed
+Cpus_allowed:   00000001
+Mems_allowed:   1
+
+- Can this CPU belong to multiple, non nested cpusets?
+cat /cpusets/rh442/cpu_exclusive
+
+If cpu_exclusive contains 1, it is exclusive, the cpu in this cpuset can be only assigned to this domain or its parents. 
+
+Enable automatic cleanup
+/cpusets/rh442/notify_on_release
+
+If set to 1, it is enabled to remove the cpuset. Create a script /sbin/cpuset_release_agent, and echo a 1 into notify_on_release. When the last PID is removed from the cpuset, the kernel will run the script /sbin/cpuset_release_agent with the relative pathname of the cpuset as the $1. For example,
+
+/sbin/cpuset_release_agent /rh442  # ? should be ./rh442 ?
+######################
+Virtual CPUs: Can assign more VCPUs than there are physical CPUs
+- test applications in SMP environment
+- virutal run queues compete for physical CPUs
+- All domains have equal access to CPU time by default
+
+Tune VCPUs both statically and dynamically from dom0
+-Dedicate real CPU resources to critical domains
+-Reduce latency for critical domains
+- provide domains different proportions of real CPU cycles
+######################
+Tuning VCPUs at domain creation
+- Static configuration in /etc/xen/domain
+- maximum and starting number of VCPUs
+vcpus=4
+
+-which physical CPU on which to boot
+cpu=0
+
+- allowed physical CPUs for run queue balancing
+cpus=0,2-4
+######################
+Tuning VCPUs dynamically
+- Number of VCPUs can not exceed the initial number from the config
+- from the command line
+virsh setvcpus domain number-of-vcpus
+
+- From virt-manager GUI
+1. right click the domain and select details
+2. click the hardware tab
+3. select processor
+- Note: paravirutal domains only
+######################
+Tuning VCPU affinity
+- Pin VCPUs to physical CPUs
+virsh vcpupin domain|domID VCPU CPU, ...
+
+Consequences
+- improve cache hits (lower service time) for domU
+- assign resource independently
+- control queue length (and therefor latency)
+
+Normally, each virtual CPU in a domU may use cycles from all physical CPUs. The Hypervisor schedules CPU time as needed for each domU. This also means that all domains (including dome0) are competing for the same pool of CPU time.
+
+Also know as setting CPU affinity, CPU pinning allows a domU to be restricted so that it only use on or more designated physical CPUs. Further, each VCPU in a domU is independently pinned, offering flexibility. CPU pinning may be set with either xm or virsh.
+To lock the virtual CPU of domU webserver to use only the second CPU (CPU no. 1), use the followin command:
+
+virsh vcpupin webserver 0 1  #webserver is the domain name
+
+More VCPU tuning command in RH442 book, P242
+######################
+Virtual address space
+- each process has its own linear, contiguous address space
+- addresses range from zero up to maximum address space size 
+ 4GiB on x86
+ 1Tib on x86_64 (256 Gib supported)
+
+physical address space
+- virutal addresses must be translated into physical page frames
+- accomplished through memory management unit on hardware
+-- physical pages may be discontiguous
+-- pages can be in RAM or swap
+-- page frames are mapped to upper portion of virtual address space
+
+Each process has its own page table. Each page table entry or PTE, contains information about one page frame that has been assigned to the process.
+
+Kernel server a portion of memory at boot time for kexec and other internal functions. The amount to reserve is based in part of the number of CPUs that are supported. To check amount of reserved memory:
+
+grep Memory /var/log/dmesg
+######################
+Virutal memory for a linux process is organized into different regions according to how the data in that area are to be used by the program. Each process has the following memory regions:
+
+code: the program code that the process is executing, sometimes referred to as the text area.
+data: the data that is being used by the program, initialized data appears first followed by unitialized data.
+arguments: the lists of arguments that were passwd to the process by its caller
+environment: the environment variables for the process.
+heap: used for dynamic memory allocation, sometimes referred to by the symbol brk
+stack: used for passing arguments between procedures and dynamic memory
+
+If a process does not manage their address space appropriately, it can cause 2 possible scenarios:
+
+heap and stack grow into each other
+memory leak: process fails to free memory that it has already allocated
+
+######################
+viewing process address space
+/proc/PID/status
+/proc/PID/statm
+
+command:
+gnome-system-monitor
+pmap
+memusage (from glibc-utils)
+
+The set of pages a process needs in memory is referred to as the process' working set. The working set for a process constantly changes over the lifetime of the process, as its memory needs change and as the memory needs of other processes on the system change. In order to make room in physical memory for other processes, the kernel constantly trims pages that have not been recently used from a process's working set. If the pages in a process working set contain modified data, those pages must be written to disk.
+
+Thrashing occurs when the system is spending more time moving pages into and out of a process's working set than actually dong useful work. A high rate of page-in's and page-outs may be indicative of thrashing.
+######################
+Tuning process address space
+- Enable constraints using login credentials and pam_limits.so
+ 1. update /etc/security/limit.conf
+bart 		hard as  	15
+@finance 	hard as  	20
+@jre 		hard stack 	100
+
+ 2. logout and log in
+
+- non-privileged users can use ulimit to
+ view their own limits
+ adjust their own soft limits
+
+Privileged user (root) can enfoce per-process memory usage using the pluggable authentication modules (PAM) mechanism. The module /lib/security/pam_limits.so reads limits set by the system administrator in /etc/security/limits.conf. 
+
+######################
+Resident Set Size (rss)is the portion of a process's memory that is held in RAM. The rest of the memory exists in swap or the filesystem (never loaded or previously unloaded parts of the executable).
+######################
+Kernel uses page table entries (PTE) to translate virtual addresses into physical pages.
+PTEs are cached in translation lookaside buffers (TLB)
+
+Determine data and instruction page size
+x86info -c
+dmesg
+getconf -a |grep SIZE
+######################
+Kernel memory is no-pageable (non-swappable)
+
+Keeping trace of in-use pages
+- a page frame refers to a page of RAM
+- the kernel uses page tables to keep track of page frames
+- each process has its own page table structures
+- page table maps virtual addresses to physical address
+
+For efficiency, memory mon computer system is organized into fixed size chunks referred to as pages. The size of a page varies from CPU to CPU; on x86 architectures, the page size is 4KiB or 4096 bytes. 
+A page of data does not necessarily imply a page of date in memory. the RAM on a computer system is divided up into page frames, one page frame of RAM can hold one page of data. when a process needs to access a particular memory location, the linear address must be translated to a reference to the appropriate page frame in memory. If the referenced page of information is not currently in memory, the kernel must locate the page of information an d load it into a page frame.
+Most processor architectures support multiple page sizes. The No. of TLB entries for a processor is fixed. but with a larger page size, a TLB hit is more likely to occur.
+######################
+TLB
+Translating linear addresses into physical addresses takes time, so most processors have a small cache known as a translation lookaside buffer or TLB that sotres the physical addresses associated with the most recently accessed virtual addresses. The size of the TLB cache is limited. The amount of memory which can be accessed by the addresses stored in the TLB is referred to as the TLB space. The TLB space is a product of the size of the TLB and the page size for a processor. For example, the TLB space of a processor with 64 TLB entries and 1 4KiB page size would be 256KiB.
+
+When a kernel needs to access a particular memory word in a particular page frame, it references a virtual address. The virtual address is passed to the memory management unit (MMU) on the processor which refers to the page table for the current process. The virtual address serves as a pointer to a specific PTE in the process's page table. The MMU uses information in the PTE to locate the physical page of memory. In particular, each PTE contains a present bit that is used to indicate whether the page is actually in memory (assigned to a page frame) or has been swapped out to disk.
+
+Linear (logical) address space (RH442 text book, P250)
+_______________________________________________
+	3G			|	1G (For kernel)
+-----------------------------------------------
+	|
+	|
+	v	In TLB
+	TLB -------------------------> 	|RAM |  
+	|				|... |
+	| Not in TLB			|... |
+	|				|SWAP|
+	v
+	MMU      			  ^
+__________________________________        |
+31				0|        |
+----------------------------------        |
+10 bits| 10 bits|	 |12 bits|        |
+----------------------------------        |
+			     |            |
+			     v            |
+			  |-----_|        |
+			  |      |        |
+			  |PTE   |------- |
+			  |      |
+######################
+Kernel maps the 1st GiB of physical memory into the last GiB of process address space
+
+  1024 MiB direct-mapped memory
+-  128 MiB for mapping memory above 1GiB (page able for ZONE_HIGHMEM)
+-----------------------------------------------------
+   896 MiB for ZONE_NORMAL
+-    1 MiB for BIOS and IO devices
+-   16 MiB for ZONE_DMA to SUPPORT ISA limitations
+-----------------------------------------------------
+   879 MiB usable memory for ZONE_NORMAL on 32-bit
+
+ZONE_NORMAL: memory used by the kernel, must be in low memory
+
+ZONE_HIGHMEM: all memory above 896 MiB on 32-bit
+- PAE support is required to access more than 4GiB memory (X86)
+- always zero on 64-bit
+
+On 32-bit x86 platforms, Linux kernel maps all memory up to 896MiB into the 4th GiB of linear address space. This allows the kernel to directly access memory below 896MiB by looking up the linear address in the kernel page tables. 
+
+PAE: Physical address extensions
+######################
+Overview of memory allocation
+
+1. Process forks or execs child process
+- Child process uses parent process's page frames until a write access is made
+- This is referred to as copy on write
+2. New process requests memory
+- kernel commits additional virtual address space to process
+3. New process uses memory
+- Trigger a page fault exception
+-- Minor: kernel allocates a new page frame with help from MMU
+-- Major: kernel blocks process while page is retrieved from disk (from swap?)
+To check page faults:
+ps axo pid,comm,min_flt,maj_flt <pid>
+4. process free memory
+- kernel reclaims pages
+######################
+THE OOM KILLER
+oom killer triggered if:
+- After running out of memory and swap spaces
+- No pages are available in ZONE_NORMAL (kernel memory space) 
+- No memory is available for page table mappings
+
+To invoke oom-kill manually:
+
+echo f > /proc/sysrq-trigger
+
+- Does not kill processes if memory is available 
+- Output verbose memory information in /var/log/messages
+
+######################
+- /proc/PID/oom_score: Display current oom-killer score
+Higher the score, more likely being killed by the oom-killer.
+The oom score is passed from parent process to child process during fork() operations.
+
+- /proc/PID/oom_adj: Adjust the oom-killer score
+oom_score gets multiplied by 2^n
+Child processes inherit oom_adj from parent.
+
+######################
+The scoring algorithm as of 2.6.22, follows (Please comment if something here is not correct):
+
+   1. Take the number of bytes of virtual memory the process uses, plus half of the bytes of the children.
+   2. Divide by sqrt(cpu time seconds)
+   3. Divide by sqrt(run time seconds - time since the program started)
+   4. Multiply by two, if process is nice (nice>0)
+   5. Divide by four if it¡¯s owned by root
+   6. Divide by four if it¡¯s accessing hardware
+   7. Divide by eight if the process¡¯ memory does not overlap <- I¡¯m not sure about that, I think it¡¯s SMP-related.
+   8. Shift by oomkilladj (explanation follows)
+
+######################
+oom_adj valid values : [-17:15] 
+
+Example: "echo 15 > proc/<pid>/oom_adj" significantly increase the likelyhood that process <pid> will be OOM killed.
+
+Example: "echo -16 > proc/<pid>/oom_adj" significantly decrease the likelyhood that process <pid> will be OOM killed.
+
+Example: "echo -17 > /proc/<pid>/oom_adj" will disable OOM killing for process <pid> totally.
+
+The oom score is passed from parent process to child process during fork() operations.
+
+######################
+Disable oom-kill in /etc/sysctl.conf
+vm.panic_on_oom=1
+
+[root@frstlsup20 TST511]# cat /proc/29605/oom_score
+624
+[root@frstlsup20 TST511]# cat /proc/29605/oom_adj
+0
+
+- grep -i OOM /var/log/messages -> 
+

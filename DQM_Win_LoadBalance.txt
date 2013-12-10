@@ -1,0 +1,76 @@
+Configuring DQM load balancing on Windows
+
+
+
+
+3. Load balancing 
+
+3.1 Prerequisite
+DQM server can balance load amoung a set of predefined nodes:
+
+3.1.1 DQM servers are installed and started on every node.
+3.1.2 Queues are created and started. See the next section for more details.
+3.1.3 Having the same  Dollar Universe Company name. 
+3.1.4 Using the same TCP ports.
+3.1.5 Having the same directory structure.
+3.1.6 Having all the Uprocs, Sessions stored locally under the same directory structure.
+
+U_DQM_DISPATCH is not used after SPRE0025. 
+
+define the variable U_DQM_DISPATCH to enable the dispatch mode.  If set to “Y” dispatching is enabled. Otherwise the default mode is used. The default mode is to launch to the second physical queue only when the 1st one is full. 
+
+
+After SPRE0025, the logical queue will automatically assign jobs to different physical queue according to their response time. So, as far as the local queue is not too loaded, it wiil always response first and get the jobs.
+
+3.3 Balancing load with DQM servers
+
+After all above steps, load balanceing amoung DQM servers on different Windows nodes becomes easy. You just submit jobs to the logical queue you have created. The local DQM server will automatically assign the jobs to the attached physical queues according to their load.
+You can fine tune the amount of load assigned to each physical queue by adjusting their parameters, such as "Max No. executions", "Priority", etc. For more details, please refer to the DQM Manual.
+
+3.3.1 Global availability
+However, all of the tasks, sessions and uprocs, which could be launched on remoted nodes, have to be stored locally to every load balancing node and under the idential directory structure. Otherwise, remote DQM servers won't be able to find them. 
+
+3.3.2 Accessing the job log of remote launched job
+One environment variable has to be defined before you can access remotely launched jobs' logs. 
+In %UXMGR%/uxsetenv.bat, add: 
+
+set DQM_COPY_LOG=Y
+
+In %UXEXE%/UNIVERSE.def and  %UXEXE%/[CompanyName].def add:
+
+set DQM_COPY_LOG=Y
+
+Then restart the $U Company.
+
+3.3.3 Management criteria: displaying the real launch location
+After the launcher submits a job to the DQM, the $U Company has no control over the job any more. The DQM server will select a physical queue (local or remote)to launche the job. The $U Company only knows that the job was submitted to a logical queue. Therefore, in the job monitor, it will show the job is launched locally to the logical queue, although the job may be run on the remote node. 
+It is possible to find out where the job is run from the job log. However, to check the job log of each uproc is not so efficient. Management criteria can be used to display the real physical queue and node name in the job monitor. 
+We will not explain detailly how it works in this artical (maybe in another tip doc?). Just play with it, you will find out.
+Here, we provide an example of how it can be done. You can always customize it to your own way. 
+
+Find this file u_ffcg42.txt in you $U Company root directory and modify it to the following. It needs to be defined on both the GCO node and the DQM node. Then, in GCO job monitor, select column to add the 2 new columns.
+
+CRITERE1:NOM=PHY_QUEUE,Libelle=Physical queue,LG=200
+CRITERE2:NOM=NODE,Libelle=Node,LG=200
+
+Create a Uproc containing the following lines:
+
+%UXEXE%\uxset mgt name=PHY_QUEUE value=%DQM_QUEUE%
+%UXEXE%\uxset mgt name=NODE value=%S_NOEUD%
+set resexe=0
+
+The first two lines of this script will set the management criteria information for this uproc, then will be displayed in the job monitor.
+Trun on the management criteria in the job monitor; launch this Uproc to a remote physical queue; and check the result.
+
+
+3.4 The check list 
+
+3.4.1 Uproc, sessions and tasks copies everywhere
+3.4.2 The same directory structure 
+3.4.3 All DQM servers are using the TCP port
+3.4.4 Define the variable to receive remote job logs 
+3.4.5 Setup the management criteria information to display the remote queue and node name in the job monitor
+
+
+
+

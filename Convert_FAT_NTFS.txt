@@ -1,0 +1,11 @@
+A: Standard Windows utility that is called CONVERT serves this purpose
+
+Just go to the Command Prompt and execute the command: 
+
+	C:\> CONVERT  C:  /fs:ntfs
+
+Where C: is a name of the drive you want to convert. 
+
+After machine re-boot conversion process will start and you'll have your FAT32 converted to NTFS without of data loss. 
+
+

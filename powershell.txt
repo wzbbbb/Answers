@@ -1,0 +1,785 @@
+.................................
+PS (1) > $i=0
+PS (2) > while ($i++ -lt 10) { if ($i % 2) {"$i is odd"}}
+1 is odd
+3 is odd
+5 is odd
+7 is odd
+9 is odd
+PS (3) >
+.................................
+PS (2) > get-process | sort -desc ws | select -first 3
+
+PS (1) > dir | sort -desc length | select -first 3
+.................................
+if (condition) {code block}
+elseif (condition) {code block}
+else (condition) {code block}
+
+For the condition operator it is the same as KSH, except that for string it is also using the following. By default, when comparing string, it is not case-sensitive. The string must be in ""
+-eq
+-lt
+-gt
+-ge
+-le
+-ne
+
+-not 	Not
+! 	Not
+-and 	And
+-or 	Or
+
+switch (expression)
+{
+  (test) {code block}
+  value {code block}
+  default {code block}
+}
+.................................
+PS (27) > $total = 0
+PS (28) > dir | foreach-object {$total += $_.length }
+PS (29) > $total
+308
+.................................
+PS (25) > $a = dir | sort -property length -descending |
+>> select-object -first 1 |
+>> foreach-object { $_.DirectoryName }
+>>
+PS (26) > $a
+C:\files
+.................................
+get-mailboxstatistics | sort -desc TotalItemSize | select –first 3
+.................................
+PS (4) > get-wmiobject win32_logicaldisk |
+>> sort -desc freespace | select -first 3 |
+>> format-table -autosize deviceid, freespace
+>>
+deviceid freespace
+-------- ---------
+C: 97778954240
+T: 31173663232
+D: 932118528
+
+.................................
+end-of- parameters parameter: --
+PS (3) > write-output -- -inputobject
+-inputobject
+.................................
+PS (1) > dir -recurse -filter c*d.exe c:\windows
+.................................
+
+PS (1) > get-command dir
+CommandType Name Definition
+----------- ---- ----------
+Alias dir Get-ChildItem
+.................................
+PS Z:\> Get-Alias
+.................................
+backquot to escape a space " "
+PS (6) > cd c:\program` files
+PS (7) > pwd
+Path
+----
+C:\Program Files
+
+PS (10) > $v = "files"
+PS (16) > write-output "`$v is $v"
+$v is files
+.................................
+...........`n
+The sequence `n in a string, either single-quoted or double-quoted, will be replaced by a newline character. We can write the example with value of $v on a separate line as follows:
+It seems only double quote "" allow the special strings, eg. `n, works.
+
+PS (19) > "The value of `$v is:`n$v"
+The value of $v is:
+Files
+.................................
+Escape Sequence Corresponding Special Character
+
+`n Newline
+`r Carriage return
+`t Horizontal tab
+`a Alert
+`b Backspace
+`' Single quote
+`" Double quote
+`0 Null
+`` A single backtick
+.................................
+PowerShell has built-in facilities for debugging the parameter binding process that can be accessed through the Trace-Command cmdlet. (Trace-Command is covered in detail in chapter 9.) Here is an example showing how to use this cmdlet:
+
+trace-command -name ParameterBinding -Option All `
+-Expression { 123 | write-output } -PSHost
+.................................
+.................................  format command:
+ft: Format-Table
+fl: Format-List
+
+PS Z:\> get-command format-*|format-table
+
+CommandType     Name                                                Definition
+-----------     ----                                                ----------
+Cmdlet          Format-Custom					 Format-Custom [[-Property] <Object[]>] [-Depth <...
+Cmdlet          Format-List 					Format-List [[-Property] <Object[]>] [-GroupBy <...
+Cmdlet          Format-Table 					Format-Table [[-Property] <Object[]>] [-AutoSize...
+Cmdlet          Format-Wide 					Format-Wide [[-Property] <Object>] [-AutoSize] [...
+
+
+.................................  -AutoSize
+PS Z:\> get-command format-*|format-table -AutoSize
+
+CommandType Name          Definition
+----------- ----          ----------
+Cmdlet      Format-Custom Format-Custom [[-Property] <Object[]>] [-Depth <Int32>] [-GroupBy <Object>] [-View <String...
+Cmdlet      Format-List   Format-List [[-Property] <Object[]>] [-GroupBy <Object>] [-View <String>] [-ShowError] [-D...
+Cmdlet      Format-Table  Format-Table [[-Property] <Object[]>] [-AutoSize] [-HideTableHeaders] [-Wrap] [-GroupBy <O...
+Cmdlet      Format-Wide   Format-Wide [[-Property] <Object>] [-AutoSize] [-Column <Int32>] [-GroupBy <Object>] [-Vie...
+
+.................................
+................................. use , to specify mutiple parameters 
+PS (3) > get-item c:\,d:\ | fl
+Directory:
+Name : C:\
+CreationTime : 2/26/2001 3:38:39 PM
+LastWriteTime : 6/21/2006 1:20:06 PM
+LastAccessTime : 6/21/2006 9:14:46 PM
+Name : D:\
+CreationTime : 12/31/1979 11:00:00 PM
+LastWriteTime : 12/31/1979 11:00:00 PM
+LastAccessTime : 12/31/1979 11:00:00 PM
+.................................
+................................. -column
+6 column each row 
+PS Z:\> gps U*|fw -Column 6
+
+
+uniservcal          UniServIO           UniServIO           UniServIO         UniServOrd          UniServSur
+UniServU            UniServUniverse     UniServUniverse     UniServUniverse   UniServUser         UniServUser
+UniServUser         UniServUser         UniServUser         UniServUser       usnsvc
+
+display ID instead of process name
+PS Z:\> gps U*|fw -Column 6 id
+
+
+5800                4568                5456                5876         6096                5224
+1112                1212                1480                1752         1904                2068
+2100                2116                2128                2140         2652
+
+................................. fc -depth 1
+getting details of a obj
+
+PS (10) > get-item c:\ | format-custom -depth 1
+class DirectoryInfo
+{
+PSPath = Microsoft.PowerShell.Core\FileSystem::C:\
+PSParentPath =
+PSChildName = C:\
+PSDrive =
+class PSDriveInfo
+{
+CurrentLocation =
+Name = C
+Provider = Microsoft.PowerShell.Core\FileSystem
+Root = C:\
+Description = C_Drive
+Credential = System.Management.Automation.PSCredential
+}
+.................................
+................................. output target
+PS Z:\> Get-Command out-* |ft -AutoSize name , definition
+
+Name        Definition
+----        ----------
+Out-Default Out-Default [-InputObject <PSObject>] [-Verbose] [-Debug] [-ErrorAction <ActionPreference>] [-ErrorVaria...
+Out-File    Out-File [-FilePath] <String> [[-Encoding] <String>] [-Append] [-Force] [-NoClobber] [-Width <Int32>] [-...
+Out-Host    Out-Host [-Paging] [-InputObject <PSObject>] [-Verbose] [-Debug] [-ErrorAction <ActionPreference>] [-Err...
+Out-Null    Out-Null [-InputObject <PSObject>] [-Verbose] [-Debug] [-ErrorAction <ActionPreference>] [-ErrorVariable...
+Out-Printer Out-Printer [[-Name] <String>] [-InputObject <PSObject>] [-Verbose] [-Debug] [-ErrorAction <ActionPrefer...
+Out-String  Out-String [-Stream] [-Width <Int32>] [-InputObject <PSObject>] [-Verbose] [-Debug] [-ErrorAction <Actio...
+
+................................. output-null
+Piping to Out-Null is essentially equivalent to doing redirecting to $null. So
+
+mkdir foo | out-null
+
+is equivalent to
+
+mkdir foo > $null
+................................. -encoding
+To find out what encoding type available
+PS C:\Documents and Settings\zwa> Out-File -Encoding blah
+Out-File : Cannot validate argument "blah" because it does not belong to the
+set "unicode, utf7, utf8, utf32, ascii,
+gendianunicode, default, oem".
+At line:1 char:19
++ Out-File -Encoding  <<<< blah
+.................................
+................................. out-host
+In theory, the host could be any application. It could be Visual Studio, it could one of the Microsoft Office applications, or it could be a custom third-party application.
+In practice, since the only host that’s shipped with version 1 of PowerShell is a console host, this means that Out-Host renders its output on the screen.
+Out-Default delegates the actual work of outputting to the screen to Out-Host.
+.................................
+.................................out-string
+The Out-String cmdlet formats its input and sends it as a string to the next cmdlet in the pipeline.
+if you do want the output as a series of
+strings, use the -stream switch parameter. When this parameter is specified, the output will be broken into lines and streamed one at a time.
+.................................
+.................................subexpression
+The expression in the $( ... ) sequence in the string is replaced by the result of evaluating the expression.
+PS (1) > "2+2 is $(2+2)"
+2+2 is 4
+PS (2) > $x=3
+PS (3) > "$x * 2 is $($x * 2)"
+3 * 2 is 6
+PS (4) >
+
+PS (1) > "Numbers 1 thru 10: $(for ($i=1; $i -le 10; $i++) { $i })."
+Numbers 1 thru 10: 1 2 3 4 5 6 7 8 9 10.
+PS (2) >
+.................................
+.................................
+PS (1) > $x=0
+PS (2) > $a = "x is $($x++; $x)"
+PS (4) > 1..3 | foreach {$a}
+x is 1
+x is 1
+x is 1
+
+The $a is assigned its value once, so x is still 1
+
+PS (5) > 1..3 | foreach {"x is $($x++; $x)"}
+x is 2
+x is 3
+x is 4
+
+
+There actually is a way to force a string to be re-expanded if you really need to do it. You can do this by calling $ExecutionContext.InvokeCommand.ExpandString( 'a is $a' ). This method will return a new string with all of the variables expanded.
+.................................
+................................. here-string
+
+PS (1) > $a = @"
+>> Line one
+>> Line two
+>> Line three
+>> "@
+>>
+PS (2) > $a
+Line one
+Line two
+Line three
+
+Here-strings start with @<quote><newline> and end with <newline><quote>@.
+
+PS (1) > $a = @"
+>> One is "1"
+>> Two is '2'
+>> Three is $(2+1)
+>> The date is "$(get-date)"
+>> "@ + "A trailing line"
+>>
+PS (2) > $a
+One is "1"
+Two is '2'
+Three is 3
+The date is "1/8/2006 9:59:16 PM"A trailing line
+PS (3) >
+
+.................................
+.................................hashtable
+PS (26) > $user = @{ FirstName = "John"; LastName = "Smith";
+>> PhoneNumber = "555-1212" }
+PS (27) > $user
+Key Value
+--- -----
+LastName Smith
+FirstName John
+PhoneNumber 555-1212
+
+PS (3) > $user.firstname
+John
+PS (4) > $user.lastname
+Smith
+
+PS (5) > $user["firstname"]
+John
+PS (6) > $user["firstname","lastname"]
+John
+Smith
+
+PS (7) > $user.keys
+LastName
+FirstName
+PhoneNumber
+
+PS (8) > $user[$user.keys]
+Smith
+John
+555-1212
+
+PS C:\Documents and Settings\zwa> $user.values
+new ber!
+hou pi
+wwwwwwwwwwwwwww
+
+PS (5) > $user.city = "Detroit"
+PS (6) > $user
+Key Value
+--- -----
+city Detroit
+LastName Smith
+date 1/15/2006 12:01:10 PM
+FirstName John
+PhoneNumber 555-1212
+
+PS (3) > $user["city"] = "Seattle"
+PS (4) > $user
+Key Value
+--- -----
+city Seattle
+LastName Smith
+date 1/15/2006 12:01:10 PM
+FirstName John
+PhoneNumber 555-1212
+
+.................................
+................................. hashtable functions
+PS (7) > $user.remove("city")
+PS (8) > $user
+Key Value
+--- -----
+LastName Smith
+date 1/15/2006 12:01:10 PM
+FirstName John
+PhoneNumber 555-1212
+
+PS (1) > $newHashTable = @{}
+PS (2) > $newHashTable
+PS (3) > $newHashTable.one =1
+PS (4) > $newHashTable.two = 2
+PS (5) > $newHashTable
+Key Value
+--- -----
+two 2
+one 1
+.................................
+.................................array
+By defalut, everything is array. To add an element
+
+$a=1,2,3
+$a += "big news", 22
+
+PS C:\Documents and Settings\zwa> $a
+1
+2
+3
+big news
+22
+PS C:\Documents and Settings\zwa> "$a"
+1 2 3 big news 22 44 55
+
+Hashtable in general, including array, is reference type. When assign a value, the reference is passed, eg. $a = $b, if one changed, the other will also change, eg. $a changed, $b will also changed, since they are the same memory.
+However, the add item operation will de-couple $a and $b, since the add operation:                
+
+• First PowerShell creates a new array large enough to hold the total number of elements.
+• Then it copies the contents of the original array into the new one.
+• Finally it copies the new elements into the end of the array.
+We didn’t add any elements to the original array after all. Instead we created a new, larger one.
+
+So, after adding one or more items, $a and $b will be using different reference (pointing to different memory). 
+
+.................................
+.................................single, empty array
+PS (1) > , 1
+1
+PS (2) > (, 1).length
+1
+
+PS (3) > @()
+PS (4) > @().length
+0
+PS (1) > @(1)
+1
+PS (2) > @(1).length
+1
+PS (3) > @(1)[0]
+1
+PS (1) > 1,2,3
+1
+2
+3
+PS (2) > (1,2,3).Length
+3
+PS (3) > ( , (1,2,3) ).Length   #<-- the element 0 is an array
+1
+PS (4) > ( @( 1,2,3 ) ).Length
+3
+
+.................................
+................................. type casting
+$i = [int] "123"
+or
+$i = [System.Int32] "123"
+
+To make it an array
+$i = [int[]][object[]] "123"
+
+First, change it from a scalar to an array; then, change the element to int
+
+.................................
+................................. type aliases
+Table 3.4 PowerShell type aliases and their corresponding .NET types
+PowerShell Type Alias	 Corresponding .NET Type
+[int]			 System.Int32
+[int[]]			 System.Int32[]
+[long]			 System.Int64
+[long[]]		 System.Int64[]
+[string]		 System.String
+[string[]]		 System.String[]
+[char]			 System.Char
+[char[]]		 System.Char[]
+[bool]			 System.Boolean
+[bool[]]		 System.Boolean[]
+[byte]			 System.Byte
+[byte[]]		 System.Byte[]
+[double]		 System.Double
+[double[]]		 System.Double[]
+[decimal]		 System.Decimal
+[decimal[]		 System.Decimal[]
+[float]			 System.Single
+[single]		 System.Single
+[regex]			 System.Text.RegularExpressions.Regex
+[array]			 System.Array
+[xml]			 System.Xml.XmlDocument
+[scriptblock]		 System.Management.Automation.ScriptBlock
+[switch]		 System.Management.Automation.SwitchParameter
+[hashtable]		 System.Collections.Hashtable
+[psobject]		 System.Management.Automation.PSObject
+[type]			 System.Type
+[type[]]		 System.Type[]
+
+............................................
+............................................ static member of .NET classes
+PS (1) > [string] | get-member -static
+TypeName: System.String
+Name MemberType Definition
+---- ---------- ----------
+Compare Method static System.Int32 Compare(String...
+CompareOrdinal Method static System.Int32 CompareOrdinal...
+Concat Method static System.String Concat(Object...
+Copy Method static System.String Copy(String str)
+Equals Method static System.Boolean Equals(Strin...
+Format Method static System.String Format(String...
+Intern Method static System.String Intern(String...
+IsInterned Method static System.String IsInterned(St...
+IsNullOrEmpty Method static System.Boolean IsNullOrEmpt...
+Join Method static System.String Join(String s...
+op_Equality Method static System.Boolean op_Equality(...
+op_Inequality Method static System.Boolean op_Inequalit...
+ReferenceEquals Method static System.Boolean ReferenceEqu...
+Empty Property static System.String Empty {get;set;}
+
+Using the join function:
+
+PS (2) > $s = "one","two","three"
+PS (3) > [string]::join(' + ', $s)
+one + two + three
+
+
+PS (1) > [math] | get-member -static
+TypeName: System.Math
+Name MemberType Definition
+---- ---------- ----------
+Abs Method static System.Single Abs(Single va...
+Acos Method static System.Double Acos(Double d)
+Asin Method static System.Double Asin(Double d)
+Atan Method static System.Double Atan(Double d)
+Atan2 Method static System.Double Atan2(Double ...
+:
+:
+Sqrt Method static System.Double Sqrt(Double d)
+Tan Method static System.Double Tan(Double a)
+Tanh Method static System.Double Tanh(Double v...
+Truncate Method static System.Decimal Truncate(Dec...
+E Property static System.Double E {get;}
+PI Property static System.Double PI {get;}
+
+PS (2) > [math]::Pi
+3.14159265358979
+PS (3) > [math]::e
+2.71828182845905
+
+PS (4) > [math]::sin(22)
+-0.00885130929040388
+PS (5) > [math]::cos(22)
+-0.999960826394637
+............................................
+............................................ type conversion
+PS (2) > [int] [char]"a"
+97
+
+PS (3) > [int[]] [char[]] "Hello world"
+72
+101
+108
+108
+111
+32
+119
+111
+114
+108
+100
+The string was split into an array of characters, then that array of characters was converted into an array of integers, and finally displayed as a list of decimal numbers.
+
+To display in HEX
+PS (4) > "0x{0:x}" -f [int] [char] "a"
+0x61
+
+$OFS : (Output Field Separator)
+PS (1) > $data = 1,2,3,4,5,6,7,8,9,10
+
+PS (2) > [string] $data
+1 2 3 4 5 6 7 8 9 10
+
+PS (3) > "$data"
+1 2 3 4 5 6 7 8 9 10
+
+Now change $OFS to be the plus operator (“+”), and then display the data.
+PS (4) > $OFS='+'
+PS (5) > "$data"
+1+2+3+4+5+6+7+8+9+10
+
+To run this string:
+PS (6) > invoke-expression "$data"
+55
+................................. +
+................................. +
+
+This is the uproc:
+cd /d H:
+
+call H:\appdata\Admin\scripts\DeleteOldLogsAndSnapshots\delete_translogs.cmd
+
+executing the uproc results in an aborted status with the following error message:
+
+File H:\APPDATA\Admin\scripts\DeleteOldLogsAndSnapshots\delete_old_trans_logs.ps1 cannot be loaded because the execution of scripts is disabled on this system.  Please see "get-help about_signing" for more details.  
+At line:1 char:72
++ H:\APPDATA\Admin\scripts\DeleteOldLogsAndSnapshots\delete_old_trans_logs <<<<
+
+
+That is because of the powershell execution policies. 
+http://technet.microsoft.com/en-us/library/ee176949.aspx
+http://www.hanselman.com/blog/SigningPowerShellScripts.aspx
+Changing Execution Policy
+
+Run the following from a PowerShell prompt (AllSigned is an example):
+
+Set-ExecutionPolicy AllSigned    --
+
+or
+
+powershell.exe -executionpolicy ByPass  dir
+or
+
+Set-ExecutionPolicy Unrestricted -Scope CurrentUser
+This will set the execution policy for the current user (stored in HKEY_CURRENT_USER) rather than the local machine (HKEY_LOCAL_MACHINE).
+
+To run a powershell script within a $U uproc script:
+
+powershell.exe -executionpolicy ByPass d:\temp\powershell_test.ps1
+set resexe=%errorlevel%
+#################################
+It can run in CMD like
+powershell.exe  ./powershell_test.ps1
+#################################
+-whatif and -confirm keyword
+For example:
+get-process | stop-process -whatif
+#################################
+PS C:\Users\zwa> Get-EventLog -LogName application -UserName orsyp\zwa -Newest 2 -Verbose
+
+   Index Time          EntryType   Source                 InstanceID Message
+   ----- ----          ---------   ------                 ---------- -------
+   13850 Feb 28 03:18  Information Microsoft-Windows...        10002 The fol...
+   13849 Feb 28 03:17  Information Microsoft-Windows...        10002 The fol...
+############################################
+get-command -verb read
+############################################
+get-process -cn (cat c:\ComputerName.txt)
+
+-cn : ComputerName
+To get process on all the servers listed in the ComputerName.txt file.
+The "()" is like `` in UNIX.
+############################################
+read file: get-content (gc, cat, type)
+Add to a file: Add-Content (ac)
+#################################
+For history, get-history, or h
+then run command No. 98:
+r 98
+#################################
+"notepad","calc" | ForEach-Object {Start-Process $_}
+$_ is the passed variable in each loop
+#################################
+Get-Process notepad |Wait-Process ;ls
+Will wait for the notepad process to finish before running "ls"
+
+get-process | where {$_.pm -gt 20MB}
+get-process | where {$_.cpu -gt 10}
+Get-Process | sort processname -Unique
+
+Get-EventLog -LogName application -EntryType error
+Get-EventLog -LogName application -EntryType error| measure
+Get-EventLog -LogName application -EntryType error| sort source
+Get-EventLog -LogName application -EntryType error| sort source|group source
+Get-EventLog -LogName application -EntryType error| sort sour ce|group source |sort count -Descending
+
+############################################
+measure-command {Get-EventLog -LogName application } 
+
+To check the execution time of a command
+ 
+-Autosize to reduce the size between the columns.
+Format-table should always at the end of the pipeline.
+
+get-process|Format-Table name, id -groupby name -AutoSize
+
+Format-list to display all info of objects
+get-service |Format-wide -Column 4
+#################################
+get-process|format-table name,id -Autosize |out-file c:\process_tab.txt
+gps|select name,id|export-csv -path c:\processCSV.csv -NoTypeInformation
+gps|export-clixml -path c:\proc.xml
+$a=Import-clixml c:\proc.xml
+
+#################################
+dir -recurse
+It is like dir /s
+#################################
+Regular variable can be called like
+$a
+Environment variable is called like:
+$env:tst_env
+#################################
+ls |where {$_.lastwritetime -gt [datetime]"02/02/2012"}
+ls -force
+To list only directory
+dir -force |where {$_.mode -match '^d'}
+or
+ls |where {$_.psiscontainer}
+#################################
+Or to use
+variable:
+clear-variable
+get-variable
+new-veriable
+remove-variable
+set-variable
+
+Alias:
+export-alias
+get-alias
+import-alias
+new-alias
+set-alias
+#################################
+To get all commands for variable
+ Get-Command -Noun variable
+#################################
+A PS drive is like a link, to get quick access to regirstry or directories.
+The PS drives created will be removed after the powershell exit.
+To create it every time, add them to the profile.
+New-PSDrive -name HKCR -PSProvider registry -Root HKEY_CLASSES_ROOT
+New-PSDrive -name hsg -PSProvider filesystem -Root e:\data 
+
+To see if a profile is defined
+
+Test-Path $profile
+
+Create new profile
+ new-item $PROFILE -ItemType file -force
+#################################
+$a=get-random -Maximum 6500 -Minimum 900
+$port_=$a*10
+#################################
+All command arguments is in built-in variable array $args[$arg], example:
+
+write-host "number of args: " $args.length 
+foreach ($arg in $args) {
+	write-host the arg is $arg
+}
+
+Or define with "param", in command line put a - in front of a "param"  
+---- Begin script foo.ps1 ----
+param([string]$foo = "foo", [string]$bar = "bar")
+Write-Host "Arg: $foo"
+Write-Host "Arg: $bar"
+----  End script foo.ps1  ----
+PS C:\> .\foo.ps1 -foo "foo" -bar "bar"
+Arg: foo
+Arg: bar
+#################################
+function () {}
+
+To call a function with parameter:
+input_box $dir_dufiles $dir_template $dir_v6kit $dir_install $node_ $company_ ;
+
+
+To update a script scopt variable within a fuction, use: 
+$script:dir_template=$objTextBox_template.Text;
+#################################
+scriptblock
+it is a function or block of code that is assigned to a variable.
+$a={Write-Host "hello!" }
+$a.GetType()
+
+PS D:\apps\powershell> $a.Invoke()
+hello!
+
+PS D:\apps\powershell> $a
+Write-Host "hello!"
+
+To invoke the block of code, use &
+PS D:\apps\powershell> & {Write-Host "hello!" }
+hello!
+#################################
+To throw away all output
+2>&1 > $null
+netstat -an|findstr $port_  2>&1 > $null
+#################################
+
+To exit powershell form with cancel button, use [environment]::exit(0) 
+#################################
+To pop up message box:
+[System.Windows.Forms.MessageBox]::Show("Please fill in all fields.", "Error")
+#################################
+To use path as variable value:
+$fullpath = "D:\mydir\myfile.txt"
+$path = "D:\mydir"
+$share = "\\myserver\myshare"
+write-host ($fullpath -replace [regex]::Escape($path), $share)
+#################################
+To avoid the following error: Set-Content : The process cannot access the file because it is being used by another process.. In order to avoid this you can complete the read operation before you start writing as following:
+
+(Get-Content d:\apps\powershell\current_template.iss )|foreach {$_ -replace [regex]::Escape("c:\ORSYP\DUAS\TMP600_VM2K8R2001"), "c:\ORSYP\DUAS\TMP600_calpmzwa"} |set-content d:\apps\powershell\current_template.iss
+#################################
+use += to join string
+#################################
+Use void to avoid displaying messages on console, where the powershell script started.
+[void]$Form.ShowDialog()
+#################################
+get-date or date
+PS pj32:\> date -f yyyy-MM-dd_HH-mm
+2013-03-05_09-26
+#################################
+To run batch command in powershell
+1. use .exe extenstion
+2. cmd \c
+#################################
+To run a command in background, this won't work. With start-job, the variable defined in the script won't be avaiable.
+start-job -scriptblock {cmd /c "$UXMGR\uxsetenv & %UXEXE%\uxlst atm > d:\temp\uxlst_atm.txt"}
+#################################
+Use PowerShell to find out which process locks a file:
+$lockedFile="C:\Windows\System32\wshtcpip.dll"
+Get-Process | foreach{$processVar = $_;$_.Modules | foreach{if($_.FileName -eq $lockedFile){$processVar.Name + " PID:" + $processVar.id}}}
+

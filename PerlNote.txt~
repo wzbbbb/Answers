@@ -1,0 +1,11 @@
+cpan>i /yahoomessenger/ 	#search for a module
+cpan>install [Dist]	#
+cpan>o conf
+cpan>o conf init 	#reinitialized the conf, like add more rullist
+cpan>h
+
+ActivePerl:
+PPM>query *	#list all installed modules
+PPM>search yahoomessenger 	#search online
+PPM>help
+PPM>install Net-YahooMessenger

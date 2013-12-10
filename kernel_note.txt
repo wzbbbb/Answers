@@ -1,0 +1,783 @@
+RHEL comes with 2 logging daemons. klogd logs kernel message and events, syslogd logs all other process activity.
+Both started from /etc/init.d/syslog. 
+syslogd uses /etc/syslog.conf
+To config log rotation: /etc/logrotate.conf
+############################################
+############################################
+suid
+A process executing a file normally keeps the User ID (UID ) of the process
+owner. However, if the executable file has the suid flag set, the process gets
+the UID of the file owner.
+
+sgid
+A process executing a file keeps the user group ID of the process group.
+However, if the executable file has the sgid flag set, the process gets the
+user group ID of the file.
+
+sticky
+An executable file with the sticky flag set corresponds to a request to the
+kernel to keep the program in memory after its execution terminates.[*]
+############################################
+############################################
+opening a file
+
+    fd = open(path, flag, mode)
+
+This system call creates an "open file" object and returns an identifier
+called a file descriptor. An open file object contains:
+
+Some file-handling data structures, such as a set of flags specifying how the
+file has been opened, an offset field that denotes the current position in the
+file from which the next operation will take place (the so-called file
+pointer), and so on.
+
+Some pointers to kernel functions that the process can invoke. The set of
+permitted functions depends on the value of the flag parameter.
+
+A file descriptor represents an interaction between a process and an opened
+file, while an open file object contains data related to that interaction. The
+same open file object may be identified by several file descriptors in the
+same process.
+
+Several processes may concurrently open the same file. In this case, the
+filesystem assigns a separate file descriptor to each file, along with a
+separate open file object. When this occurs, the Unix filesystem does not
+provide any kind of synchronization among the I/O operations issued by the
+processes on the same file. However, several system calls such as flock( ) are
+available to allow processes to synchronize themselves on the entire file or
+on portions of it (see Chapter 12).
+
+############################################
+Regular Unix files can be addressed either sequentially or randomly, while
+device files and named pipes are usually accessed sequentially. (including
+hard drive?)
+
+
+When a file is opened, the kernel sets the file pointer to the position of the
+first byte in the file (offset 0).
+To modify the value, a program must explicitly invoke the lseek( ) system
+call. 
+
+    newoffset = lseek(fd, offset, whence);
+
+whence
+
+Specifies whether the new position should be computed by adding the offset
+value to the number 0 (offset from the beginning of the file), the current
+file pointer, or the position of the last byte (offset from the end of the
+file)
+
+    nread = read(fd, buf, count);
+
+buf
+
+Specifies the address of the buffer in the process's address space to which
+the data will be transferred
+
+
+
+count
+
+Denotes the number of bytes to read
+
+
+
+ res = close(fd);
+
+
+which releases the open file object corresponding to the file descriptor fd.
+When a process terminates, the kernel closes all its remaining opened files.
+
+	Renaming and deleting a file
+
+To rename or delete a file, a process does not need to open it. Indeed, such
+operations do not act on the contents of the affected file, but rather on the
+contents of one or more directories. For example, the system call:
+
+    res = rename(oldpath, newpath);
+
+
+changes the name of a file link, while the system call:
+
+    res = unlink(pathname);
+
+
+decreases the file link count and removes the corresponding directory entry.
+The file is deleted only when the link count assumes the value 0.
+############################################
+
+Kernel thread
+
+Unix systems include a few privileged processes called kernel threads with the
+following characteristics:
+
+They run in Kernel Mode in the kernel address space.
+
+They do not interact with users, and thus do not require terminal devices.
+
+They are usually created during system startup and remain alive until the
+system is shut down.
+
+############################################
+Process descriptor
+Kernel saves a process's status into several CPU registers before stops it.
+Each process is represented by a process descriptor that includes information
+about the current state of the process.
+When the kernel stops the execution of a process, it saves the current
+contents of several processor registers in the process descriptor. These
+include:
+
+The program counter (PC) and stack pointer (SP) registers
+
+The general purpose registers
+
+The floating point registers
+
+The processor control registers (Processor Status Word) containing information
+about the CPU state
+
+The memory management registers used to keep track of the RAM accessed by the
+process
+
+When the kernel decides to resume executing a process, it uses the proper
+process descriptor fields to load the CPU registers. Because the stored value
+of the program counter points to the instruction following the last
+instruction executed, the process resumes execution at the point where it was
+stopped.
+
+When a process is not executing on the CPU, it is waiting for some event. Unix
+kernels distinguish many wait states, which are usually implemented by queues
+of process descriptors ; each (possibly empty) queue corresponds to the set of
+processes waiting for a specific event.
+
+############################################
+Reentrant Kernels
+
+All Unix kernels are reentrant. This means that several processes may be
+executing in Kernel Mode at the same time. Of course, on uniprocessor systems,
+only one process can progress, but many can be blocked in Kernel Mode when
+waiting for the CPU or the completion of some I/O operation. For instance,
+after issuing a read to a disk on behalf of a process, the kernel lets the
+disk controller handle it and resumes executing other processes. An interrupt
+notifies the kernel when the device has satisfied the read, so the former
+process can resume the execution.
+
+A kernel control path denotes the sequence of instructions executed by the
+kernel to handle a system call, an exception, or an interrupt.
+
+Process Address Space
+Each process runs in its private address space. A process running in User Mode
+refers to private stack, data, and code areas. When running in Kernel Mode,
+the process addresses the kernel data and code areas and uses another private
+stack.
+
+Processes also can share parts of their address space as a kind of
+interprocess communication, using the "shared memory" technique introduced in
+System V and supported by Linux.
+
+
+Finally, Linux supports the mmap( ) system call, which allows part of a file
+or the information stored on a block device to be mapped into a part of a
+process address space. Memory mapping can provide an alternative to normal
+reads and writes for transferring data. If the same file is shared by several
+processes, its memory mapping is included in the address space of each of the
+processes that share it.
+
+When the outcome of a computation depends on how two or more processes are
+scheduled, the code is incorrect. We say that there is a race condition.
+
+############################################
+Synchronization 
+Semaphores
+A widely used mechanism, effective in both uniprocessor and multiprocessor
+systems, relies on the use of semaphores . A semaphore is simply a counter
+associated with a data structure; it is checked by all kernel threads before
+they try to access the data structure. Each semaphore may be viewed as an
+object composed of:
+
+An integer variable
+
+A list of waiting processes
+
+Two atomic methods: down( ) and up( )
+
+The down( ) method decreases the value of the semaphore. If the new value is
+less than 0, the method adds the running process to the semaphore list and
+then blocks (i.e., invokes the scheduler). The up( ) method increases the
+value of the semaphore and, if its new value is greater than or equal to 0,
+reactivates one or more processes in the semaphore list.
+
+Each data structure to be protected has its own semaphore, which is
+initialized to 1. When a kernel control path wishes to access the data
+structure, it executes the down( ) method on the proper semaphore. If the
+value of the new semaphore isn't negative, access to the data structure is
+granted. Otherwise, the process that is executing the kernel control path is
+added to the semaphore list and blocked. When another process executes the up(
+) method on that semaphore, one of the processes in the semaphore list is
+allowed to proceed.
+
+
+Spin locks
+multiprocessor operating systems use spin locks . A spin lock is very similar
+to a semaphore, but it has no process list; when a process finds the lock
+closed by another process, it "spins" around repeatedly, executing a tight
+instruction loop until the lock becomes open.
+
+
+deadlocks
+Processes or kernel control paths that synchronize with other control paths
+may easily enter a deadlock state. The simplest case of deadlock occurs when
+process p1 gains access to data structure a and process p2 gains access to b,
+but p1 then waits for b and p2 waits for a. Other more complex cyclic waits
+among groups of processes also may occur. Of course, a deadlock condition
+causes a complete freeze of the affected processes or kernel control paths.
+
+############################################
+Signals and Interprocess Communication
+
+Unix signals provide a mechanism for notifying processes of system events.
+Each event has its own signal number, which is usually referred to by a
+symbolic constant such as SIGTERM. There are two kinds of system events:
+
+
+
+Asynchronous notifications
+
+For instance, a user can send the interrupt signal SIGINT to a foreground
+process by pressing the interrupt keycode (usually Ctrl-C) at the terminal.
+
+
+
+Synchronous notifications
+
+For instance, the kernel sends the signal SIGSEGV to a process when it
+accesses a memory location at an invalid address.
+
+The POSIX standard defines about 20 different signals, 2 of which are
+user-definable and may be used as a primitive mechanism for communication and
+synchronization among processes in User Mode. In general, a process may react
+to a signal delivery in two possible ways:
+
+Ignore the signal.
+
+Asynchronously execute a specified procedure (the signal handler).
+
+If the process does not specify one of these alternatives, the kernel performs
+a default action that depends on the signal number. The five possible default
+actions are:
+
+Terminate the process.
+
+Write the execution context and the contents of the address space in a file
+(core dump) and terminate the process.
+
+Ignore the signal.
+
+Suspend the process.
+
+Resume the process's execution, if it was stopped.
+
+Kernel signal handling is rather elaborate, because the POSIX semantics allows
+processes to temporarily block signals. Moreover, the SIGKILL and SIGSTOP
+signals cannot be directly handled by the process or ignored.
+
+############################################
+Process Management
+
+Parents and children can find one another because the data structure
+describing each process includes a pointer to its immediate parent and
+pointers to all its immediate children.
+
+The _exit( ) system call terminates a process. The kernel handles this system
+call by releasing the resources owned by the process and sending the parent
+process a SIGCHLD signal, which is ignored by default.
+
+Zombie processes
+The wait4( ) system call allows a process to wait until one of its children
+terminates; it returns the process ID (PID) of the terminated child.
+
+When executing wait4( ), the kernel checks whether a child has already
+terminated. A process remains in zombie state until its parent process
+executes a wait4( ) system call on it. The system call handler extracts data
+about resource usage from the process descriptor fields; the process
+descriptor may be released once the data is collected. 
+
+If the wait4( ) system call is executed, and the child process has not terminated, the kernel  ---
+usually puts the process in a wait state until a child terminates. ---
+
+Many kernels also implement a waitpid( ) system call, which allows a process
+to wait for a specific child process. Other variants of wait4( ) system calls
+are also quite common.
+
+When a parent process terminated before the child process, for example the
+background processes and daemons, kernel change their parent PID to the init
+process, which is 1 normally. The init process will routinely issue wait4( )
+system call to remove all orphaned zombies.
+
+Zombies are still taking memory to keep info. They need to be collected by
+wait4( ).
+############################################
+process groups and login sessions
+
+Modern Unix operating systems introduce the notion of process groups to
+represent a "job" abstraction. For example, in order to execute the command
+line:
+
+    $ ls | sort | more
+
+
+a shell that supports process groups, such as bash, creates a new group for
+the three processes corresponding to ls, sort, and more. In this way, the
+shell acts on the three processes as if they were a single entity (the job, to
+be precise). Each process descriptor includes a field containing the process
+group ID . Each group of processes may have a group leader, which is the
+process whose PID coincides with the process group ID. A newly created process
+is initially inserted into the process group of its parent.
+
+All processes started after a user login belong to a login session.
+When a background process tries to access the terminal, it receives a SIGTTIN
+or SIGTTOUT signal. In many command shells, the internal commands bg and fg
+can be used to put a process group in either the background or the foreground.
+############################################
+Virtual memory
+Virtual memory acts as a logical layer between the application memory requests
+and the hardware Memory Management Unit (MMU).
+Virtual memory has many purposes and advantages:
+
+Several processes can be executed concurrently.
+
+It is possible to run applications whose memory needs are larger than the available physical memory.
+
+Processes can execute a program whose code is only partially loaded in memory.
+
+Each process is allowed to access a subset of the available physical memory.
+
+Processes can share a single memory image of a library or program.
+
+Programs can be relocatable that is, they can be placed anywhere in physical memory.
+
+Programmers can write machine-independent code, because they do not need to be concerned about physical memory organization.
+
+The main ingredient of a virtual memory subsystem is the notion of virtual
+address space. The set of memory references that a process can use is
+different from physical memory addresses. When a process uses a virtual
+address,[*] the kernel and the MMU cooperate to find the actual physical
+location of the requested memory item.
+
+[*] These addresses have different nomenclatures, depending on the computer
+architecture. As we'll see in Chapter 2, Intel manuals refer to them as
+"logical addresses."
+'
+The available RAM is partitioned into page frames typically 4 or 8 KB in
+lengthand a set of Page Tables is introduced to specify how virtual addresses
+correspond to physical addresses. A request for a block of contiguous virtual addresses can be
+satisfied by allocating a group of page frames having noncontiguous physical
+addresses.
+
+One major problem that must be solved by the virtual memory system is memory
+fragmentation. The kernel is often forced to use physically contiguous memory
+areas. Hence the memory request could fail even if there is enough memory
+available, but it is not available as one contiguous chunk.
+ 
+############################################
+Kernel memory allocator
+The Kernel Memory Allocator (KMA) is a subsystem that tries to satisfy the
+requests for memory areas from all parts of the system. Some of these requests
+come from other kernel subsystems needing memory for kernel use, and some
+requests come via system calls from user programs to increase their processes'
+address spaces. '
+############################################
+Process virtual address space handling
+The address space of a process contains all the virtual memory addresses that
+the process is allowed to reference. The kernel usually stores a process
+virtual address space as a list of memory area descriptors . For example, when
+a process starts the execution of some program via an exec( )-like system
+call, the kernel assigns to the process a virtual address space that comprises
+memory areas for:
+
+The executable code of the program
+
+The initialized data of the program
+
+The uninitialized data of the program
+
+The initial program stack (i.e., the User Mode stack)
+
+The executable code and data of needed shared libraries
+
+The heap (the memory dynamically requested by the program)
+
+All recent Unix operating systems adopt a memory allocation strategy called
+demand paging . With demand paging, a process can start program execution with
+none of its pages in physical memory. As it accesses a nonpresent page, the
+MMU generates an exception; the exception handler finds the affected memory
+region, allocates a free page, and initializes it with the appropriate data.
+In a similar fashion, when the process dynamically requires memory by using
+malloc( ), or the brk( ) system call (which is invoked internally by malloc(
+)), the kernel just updates the size of the heap memory region of the process.
+A page frame is assigned to the process only when it generates an exception by
+trying to refer its virtual memory addresses.
+
+Virtual address spaces also allow other efficient strategies, such as the Copy
+On Write strategy mentioned earlier. For example, when a new process is
+created, the kernel just assigns the parent's page frames to the child address    
+space, but marks them read-only. An exception is raised as soon the parent or
+the child tries to modify the contents of a page. The exception handler
+assigns a new page frame to the affected process and initializes it with the
+contents of the original page.
+
+############################################
+Caching
+A good part of the available physical memory is used as cache for hard disks
+and other block devices.
+As a general rule, one of the policies already implemented in the earliest
+Unix system is to defer writing to disk as long as possible. As a result, data
+read previously from disk and no longer used by any process continue to stay
+in RAM.
+The sync( ) system call forces disk synchronization by writing all of the
+"dirty" buffers (i.e., all the buffers whose contents differ from that of the
+corresponding disk blocks) into disk. To avoid data loss, all operating
+systems take care to periodically write dirty buffers back to disk.
+############################################
+When a process is created, it is almost identical to its parent. It receives a
+(logical) copy of the parent's address space and executes the same code as the '
+parent, beginning at the next instruction following the process creation
+system call. Although the parent and child may share the pages containing the
+program code (text), they have separate copies of the data (stack and heap),
+so that changes by the child to a memory location are invisible to the parent
+(and vice versa).
+
+Threads on Linux are like 2 processes sharing the same memory address space, files...
+
+Linux uses lightweight processes to offer better support for multithreaded
+applications. Basically, two lightweight processes may share some resources,
+like the address space, the open files, and so on. Whenever one of them
+modifies a shared resource, the other immediately sees the change. Of course,
+the two processes must synchronize themselves when accessing the shared
+resource.
+
+In Linux a thread group is basically a set of lightweight processes that
+implement a multithreaded application and act as a whole with regards to some
+system calls such as getpid( ) , kill( ) , and _exit( ) .
+############################################
+Process Descriptor
+To manage processes, the kernel must have a clear picture of what each process
+is doing. It must know, for instance, the process's priority, whether it is  '
+running on a CPU or blocked on an event, what address space has been assigned
+to it, which files it is allowed to address, and so on. This is the role of
+the process descriptor a task_struct type structure whose fields contain all
+the information related to a single process
+
+Process state
+As its name implies, the state field of the process descriptor describes what
+is currently happening to the process. It consists of an array of flags, each
+of which describes a possible process state. In the current Linux version,
+these states are mutually exclusive, and hence exactly one flag of state
+always is set; the remaining flags are cleared. The following are the possible
+process states:
+
+TASK_RUNNING
+
+The process is either executing on a CPU or waiting to be executed.
+
+
+TASK_INTERRUPTIBLE
+
+The process is suspended (sleeping) until some condition becomes true. Raising
+a hardware interrupt, releasing a system resource the process is waiting for,
+or delivering a signal are examples of conditions that might wake up the
+process (put its state back to TASK_RUNNING).
+
+
+TASK_UNINTERRUPTIBLE
+
+Like TASK_INTERRUPTIBLE, also sleeping process. Delivering a signal to the sleeping
+process can not change its state. It is valuable under certain conditions, for example, 
+a process must wait until a given event occurs without being interrupted.  
+For instance, this state may be used when a process opens a device file and
+the corresponding device driver starts probing for a corresponding hardware
+device. The device driver must not be interrupted until the probing is
+complete, or the hardware device could be left in an unpredictable state.
+
+
+TASK_STOPPED
+
+Process execution has been stopped; the process enters this state after
+receiving a SIGSTOP, SIGTSTP, SIGTTIN, or SIGTTOU signal.
+
+TASK_TRACED
+
+Process execution has been stopped by a debugger. When a process is being
+monitored by another (such as when a debugger executes a ptrace( ) system call
+to monitor a test program), each signal may put the process in the TASK_TRACED
+state.
+
+EXIT_ZOMBIE
+
+Process execution is terminated, but the parent process has not yet issued a
+wait4( ) or waitpid( ) system call to return information about the dead
+process.[*] Before the wait( )-like call is issued, the kernel cannot discard
+the data contained in the dead process descriptor because the parent might
+need it.
+
+EXIT_DEAD
+
+This is after EXIT_ZOMBIE state.
+The final state: the process is being removed by the system because the parent
+process has just issued a wait4( ) or waitpid( ) system call for it. Changing
+its state from EXIT_ZOMBIE to EXIT_DEAD avoids race conditions due to other
+threads of execution that execute wait( )-like calls on the same process 
+
+############################################
+Identifying a Process
+each thread has its own process descriptor. 
+As a general rule, each execution context that can be independently scheduled
+must have its own process descriptor; therefore, even lightweight processes,
+which share a large portion of their kernel data structures, have their own
+task_struct structures.
+
+there is an upper limit on the PID values; when the kernel reaches such
+limit, it must start recycling the lower, unused PIDs. By default, the maximum
+PID number is 32,767 (PID_MAX_DEFAULT - 1); the system administrator may
+reduce this limit by writing a smaller value into the /proc/sys/kernel/pid_max file 
+In 64-bit architectures, the system administrator can enlarge the maximum PID
+number up to 4,194,303.
+
+The POSIX 1003.1c standard states that all threads of a multithreaded
+application must have the same PID. 
+To comply with this standard, Linux makes use of thread groups. The identifier
+shared by the threads is the PID of the thread group leader , that is, the PID
+of the first lightweight process in the group;
+All threads of the same group has the same PID, but different LWP.
+[univa@casdlsup06 mgr]$ ps -efL
+UID        PID  PPID   LWP  C NLWP STIME TTY          TIME CMD
+univa    26679     1 26679  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26707  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26710  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26715  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26726  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26751  0   16 May08 ?        00:10:56 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26763  0   16 May08 ?        00:00:27 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26776  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26789  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 26834  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 28266  0   16 May08 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 19240  0   16 May11 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 21889  0   16 May11 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 21890  0   16 May11 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 21891  0   16 May11 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+univa    26679     1 21892  0   16 May11 ?        00:00:00 ./uxioserv TST530 X casdlsup06
+
+So, a kill on a PID will stop the whole group of threads.
+
+############################################
+The trick used to achieve the scheduler speedup consists of splitting the
+runqueue in many lists of runnable processes, one list per process priority.
+If the process priority is equal to k (a value ranging between 0 and 139), the
+run_list field links the process descriptor into the list of runnable
+processes having priority k. Furthermore, on a multiprocessor system, each CPU
+has its own runqueue, that is, its own set of lists of processes. This is a
+classic example of making a data structures more complex to improve
+performance: to make scheduler operations more efficient, the runqueue list
+has been split into 140 different lists!
+
+Relationships Among Processes
+Processes created by a program have a parent/child relationship. When a
+process creates multiple children , these children have sibling relationships. 
+Processes 0 and 1 are created by the kernel; as we'll see later in the  
+chapter, process 1 (init) is the ancestor of all other processes.
+
+############################################
+How Processes Are Organized
+The runqueue lists group all processes in a TASK_RUNNING state. 
+
+Processes in a TASK_STOPPED, EXIT_ZOMBIE, or EXIT_DEAD state are not linked in
+specific lists. There is no need to group processes in any of these three
+states, because stopped, zombie, and dead processes are accessed only via PID
+or via linked lists of the child processes for a particular parent.
+
+Processes in a TASK_INTERRUPTIBLE or TASK_UNINTERRUPTIBLE state are subdivided
+into many classes, each of which corresponds to a specific event. In this
+case, the process state does not provide enough information to retrieve the
+process quickly, so it is necessary to introduce additional lists of
+processes. These are called wait queues and are discussed next.
+
+
+Wait queues implement conditional waits on events: a process wishing to wait
+for a specific event places itself in the proper wait queue and relinquishes
+control. Therefore, a wait queue represents a set of sleeping processes, which
+are woken up by the kernel when some condition becomes true.
+
+There are two kinds of sleeping processes: exclusive processes (denoted by the
+value 1 in the flags field of the corresponding wait queue element) are
+selectively woken up by the kernel, while nonexclusive processes (denoted by
+the value 0 in the flags field) are always woken up by the kernel when the
+event occurs.
+############################################
+Creating Process
+Modern Unix kernels solve this problem by introducing three different
+mechanisms:
+
+The Copy On Write technique allows both the parent and the child to read the
+same physical pages. Whenever either one tries to write on a physical page,
+the kernel copies its contents into a new physical page that is assigned to
+the writing process. The implementation of this technique in Linux is fully
+explained in Chapter 9.
+
+Lightweight processes allow both the parent and the child to share many
+per-process kernel data structures, such as the paging tables (and therefore
+the entire User Mode address space), the open file tables, and the signal
+dispositions.
+
+The vfork( ) system call creates a process that shares the memory address
+space of its parent. To prevent the parent from overwriting data needed by the
+child, the parent's execution is blocked until the child exits or executes a
+new program. We'll learn more about the vfork( ) system call in the following
+section.
+
+############################################
+Lightweight processes are created in Linux by using a function named clone( )
+
+############################################
+Kernel thread
+In Linux, kernel threads differ from regular processes in the following ways:
+
+Kernel threads run only in Kernel Mode, while regular processes run
+alternatively in Kernel Mode and in User Mode.
+
+Because kernel threads run only in Kernel Mode, they use only linear addresses
+greater than PAGE_OFFSET. Regular processes, on the other hand, use all four
+gigabytes of linear addresses, in either User Mode or Kernel Mode.
+
+ Process 0
+The ancestor of all processes, called process 0, the idle process, or, for
+historical reasons, the swapper process, is a kernel thread created from
+scratch during the initialization phase of Linux (see Appendix A). This
+ancestor process uses the following statically allocated data structures (data
+structures for all other processes are dynamically allocated)
+
+
+The newly created kernel thread has PID 1 and shares all per-process kernel
+data structures with process 0. When selected by the scheduler, the init
+process starts executing the init( ) function.
+
+After having created the init process, process 0 executes the cpu_idle( )
+function, which essentially consists of repeatedly executing the hlt assembly
+language instruction with the interrupts enabled (see Chapter 4). Process 0 is
+selected by the scheduler only when there are no other processes in the
+TASK_RUNNING state.
+
+In multiprocessor systems there is a process 0 for each CPU. Right after the
+power-on, the BIOS of the computer starts a single CPU while disabling the
+others. The swapper process running on CPU 0 initializes the kernel data
+structures, then enables the other CPUs and creates the additional swapper
+processes by means of the copy_process( ) function passing to it the value 0
+as the new PID. Moreover, the kernel sets the cpu field of the tHRead_info
+descriptor of each forked process to the proper CPU index.
+
+In multiprocessor systems there is a process 0 for each CPU. Right after the
+power-on, the BIOS of the computer starts a single CPU while disabling the
+others. The swapper process running on CPU 0 initializes the kernel data
+structures, then enables the other CPUs and creates the additional swapper
+processes by means of the copy_process( ) function passing to it the value 0
+as the new PID. Moreover, the kernel sets the cpu field of the tHRead_info
+descriptor of each forked process to the proper CPU index.
+
+A few examples of kernel threads (besides process 0 and process 1) are:
+
+keventd (also called events)
+Executes the functions in the keventd_wq workqueue (see Chapter 4).
+kapmd
+Handles the events related to the Advanced Power Management (APM).
+
+kswapd
+Reclaims memory, as described in the section "Periodic Reclaiming" in Chapter
+17.
+
+pdflush
+Flushes "dirty" buffers to disk to reclaim memory, as described in the section
+"The pdflush Kernel Threads" in Chapter 15.
+
+kblockd
+Executes the functions in the kblockd_workqueue workqueue. Essentially, it
+periodically activates the block device drivers, as described in the section
+"Activating the Block Device Driver" in Chapter 14.
+
+ksoftirqd
+Runs the tasklets (see section "Softirqs and Tasklets" in Chapter 4); there is
+one of these kernel threads for each CPU in the system.
+
+############################################
+############################################
+Swapping
+Swapping has been introduced to offer a backup on disk for unmapped pages.
+Like demand paging, swapping must be transparent to programs.
+
+The main features of the swapping subsystem can be summarized as follows:
+
+Set up "swap areas" on disk to store pages that do not have a disk image.
+
+Manage the space on swap areas allocating and freeing "page slots" as the need
+occurs.
+
+Provide functions both to "swap out" pages from RAM into a swap area and to
+"swap in" pages from a swap area into RAM.
+
+Make use of "swapped-out page identifiers" in the Page Table entries of pages
+that are currently swapped out to keep track of the positions of data in the
+swap areas.
+
+############################################
+############################################
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+############################################
+############################################
+Runqueue Balancing in Multiprocessor Systems
+We have seen in Chapter 4 that Linux sticks to the Symmetric Multiprocessing
+model (SMP ); this means, essentially, that the kernel should not have any
+bias toward one CPU with respect to the others.
+As we have seen in the previous section, the schedule( ) function picks the
+new process to run from the runqueue of the local CPU. Therefore, a given CPU
+can execute only the runnable processes that are contained in the
+corresponding runqueue. On the other hand, a runnable process is always stored
+in exactly one runqueue: no runnable process ever appears in two or more
+runqueues. Therefore, until a process remains runnable, it is usually bound to
+one CPU.
+Therefore, the kernel periodically checks whether the workloads of the
+runqueues are balanced and, if necessary, moves some process from one runqueue
+to another. However, to get the best performance from a multiprocessor system,
+the load balancing algorithm should take into consideration the topology of
+the CPUs in the system. Starting from kernel version 2.6.7, Linux sports a
+sophisticated runqueue balancing algorithm based on the notion of "scheduling
+domains." Thanks to the scheduling domains, the algorithm can be easily tuned
+for all kinds of existing multiprocessor architectures (and even for recent
+architectures such as those based on the "multi-core" microprocessors).
+
+System Calls Related to Scheduling
+

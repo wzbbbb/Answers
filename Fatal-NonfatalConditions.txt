@@ -1,0 +1,2 @@
+If the fatal condition not met, the launch will trun to LAUNCH_REFUSED right away, does not wait until the launch window expired.
+If it is not a fatal condition, the launch will wait till the launch window expired and turn into a TIME OVERRUN.

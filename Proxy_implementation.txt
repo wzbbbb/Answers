@@ -1,0 +1,44 @@
+0) Open a MS-DOS window and load the env variables with mgr\uxsetenv
+ 
+A) Declare a file where the proxy information should be stored:
+A1) In %UXMGR%\uxsetenv.bat, add the following lines
+ 
+set U_PROXY_FILE=c:\universe\FDXD01\mgr\u_ioproxy.dta
+set U_IO_PROXY_FILE=c:\universe\FDXD01\mgr\u_ioproxy.dta
+ 
+I am supposing a company FDXD01 installed in c:\universe\FDXD01, please update this with your own information.
+ 
+ 
+ 
+A2) The same information should be added with a different syntax at the end of both files %UXEXE%\UNIVERSE.def and %UXEXE%\FDXD01.def (or %UXEXE%\FDXP01.def depending on the company name...), for example:
+ 
+
+U_PROXY_FILE c:\universe\FDXD01\mgr\u_ioproxy.dta
+U_IO_PROXY_FILE c:\universe\FDXD01\mgr\u_ioproxy.dta
+ 
+ 
+ 
+B) Configuring proxy policy
+ 
+Reload the mgr\uxsetenv you updated
+ 
+We are now declaring a default policy, as in Unix:
+ 
+%UXEXE%\setproxy * * * * *SAME
+%UXEXE%\setproxy UNX * * * *SAME
+%UXEXE%\setproxy WEB * * * *SAME
+%UXEXE%\setproxy W32 * * * *SAME
+%UXEXE%\delproxy * * * *
+ 
+
+C) Load the PROXIES now on all 4 areas (needs to have IO server running!)
+%UXEXE%\loadproxy_io %S_NOEUD% %S_SOCIETE% X
+%UXEXE%\loadproxy_io %S_NOEUD% %S_SOCIETE% S
+%UXEXE%\loadproxy_io %S_NOEUD% %S_SOCIETE% I
+%UXEXE%\loadproxy_io %S_NOEUD% %S_SOCIETE% A
+ 
+D) Restart the $Universe company
+ 
+E) Check
+%UXEXE%\lstproxy
+

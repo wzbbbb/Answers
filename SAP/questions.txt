@@ -1,0 +1,4 @@
+1. How to do import?
+2. What need to be done to maintain a SAP installation? or a miniSAP?
+3. How to apply patches on SAP?
+4. Is there miniBW, like miniSAP, for BW? 

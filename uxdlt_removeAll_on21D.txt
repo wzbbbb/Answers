@@ -1,0 +1,97 @@
+-- 20C patch level :
+E:\SUP500\exec>uxlst fla exp
+ Command : uxlst fla exp inf
+
+ SESSION    UPROC      MU         STATE                   NSEQ
+ -------------------------------- ------------------------------
+            TC27236U01 DA_US_W_04 LAUNCH WAIT            0000009
+            TC27236U02 DA_US_W_04 LAUNCH WAIT            0000010
+            TC27236U03 DA_US_W_04 LAUNCH WAIT            0000011
+
+E:\SUP500\exec>uxdlt fla exp nseq=0000009 upr=* ses=* mu=*
+ Command : uxdlt fla exp nseq=0000009 upr=* ses=* mu=* vses=000 vupr=000
+
+
+E:\SUP500\exec>uxlst fla exp
+ Command : uxlst fla exp inf
+
+ SESSION    UPROC      MU         STATE                   NSEQ
+ -------------------------------- ------------------------------
+            TC27236U02 DA_US_W_04 LAUNCH WAIT            0000010
+            TC27236U03 DA_US_W_04 LAUNCH WAIT            0000011
+
+E:\SUP500\exec>uxversion
+
+E:\SUP500\exec>echo PATCH RE0020C (1/10/2003 5:19p)
+PATCH RE0020C (1/10/2003 5:19p)
+
+
+
+
+-- 21D patch level :
+Environment of the company QCL500
+Version of the company:
+Start of installation of SPRE0021D (08/26/2003 4:49p )
+End of installation of SPRE0021D (08/26/2003 4:55p )
+E:\>
+E:\>uxlst fla
+ Command : uxlst fla inf
+
+ SESSION    UPROC      MU         STATE                   NSEQ
+ -------------------------------- ------------------------------
+            IU_PUR     DA_US_W_01 LAUNCH WAIT            0000055
+            IU_PUR     DA_US_W_01 TIME_OVERRUN           0000042
+            IU_PUR     DA_US_W_01 TIME_OVERRUN           0000043
+            IU_PUR     DA_US_W_01 TIME_OVERRUN           0000045
+            IU_PUR     DA_US_W_01 TIME_OVERRUN           0000046
+            IU_PUR     DA_US_W_01 TIME_OVERRUN           0000053
+
+E:\>uxdlt fla nseq=0000055
+In ' the current line '
+Line :  1161808
+Error :  uxdlt fla nseq=0000055  : missing one or more ' Mandatory Qualifier ' which are  mu, nseq, upr, vupr,
+
+E:\>uxdlt fla nseq=0000055 mu=* upr=* vupr=*
+ Command : uxdlt fla nseq=0000055 mu=* upr=* vupr=* ses=" " vses=000
+/etc/daenv/du/StopDu
+
+E:\>uxlst fla
+ Command : uxlst fla inf
+
+ SESSION    UPROC      MU         STATE                   NSEQ
+ -------------------------------- ------------------------------
+
+
+-- 24039C patch level : issue corrected :
+# uxdlt fla mu=* upr=* vupr=* nseq=0000005
+ Command : uxdlt fla mu=* upr=* vupr=* nseq=0000005 ses=" " vses=000
+
+#  uxlst fla
+ Command : uxlst fla inf
+
+ SESSION    UPROC      MU         STATE                   NSEQ
+ -------------------------------- ------------------------------
+            TC26769U01 DA_US_U_03 TIME_OVERRUN           0000004
+            TC26739U01 DA_US_U_03 TIME_OVERRUN           0000009
+            TC26739U01 DA_US_U_03 TIME_OVERRUN           0000208
+# uxversion
+Version v500 (2008/08/2001)
+Start of update RE0021D installation  (20030826141350)
+End of update RE0021D installation  (20030826141350)
+Start of update IU0022A installation  (20030826141628)
+End of update IU0022A installation  (20030826141628)
+Start of update 24018A installation  (20030826141711)
+End of update 24018A installation  (20030826141711)
+Start of update 24019 installation  (20030826141737)
+End of update 24019 installation  (20030826141737)
+Start of update 24022 installation  (20030826141756)
+End of update 24022 installation  (20030826141756)
+Start of update 24013A installation  (20030826141816)
+End of update 24013A installation  (20030826141816)
+Start of update 24017 installation  (20031114154527)
+End of update 24017 installation  (20031114154527)
+Start of update 24026 installation  (20031114154629)
+End of update 24026 installation  (20031114154629)
+Start of update 24039C installation  (20031114154818)
+End of update 24039C installation  (20031114154818)
+

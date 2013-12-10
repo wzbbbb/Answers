@@ -1,0 +1,15 @@
+To enable php
+yum install php
+/sbin/service httpd restart
+
+in /etc/httd/conf/httpd.conf
+
+add:
+AddType application/x-httpd-php .php
+AddType application/x-httpd-php .html
+
+LoadModule php5_module modules/libphp5.so
+
+<FilesMatch \.php$>
+    SetHandler application/x-httpd-php
+</FilesMatch>

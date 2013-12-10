@@ -1,0 +1,27 @@
+
+When NODE is not specified, the operation is committed to (a) local queue(s).
+
+$UXDQM/uxshwque QUEUE=Q  NODE=N1
+
+This command returns the state of logical or physical queue, their definition and the jobs list that is in the queue (executing or pending).
+To check all queues use the command:
+$UXDQM/uxshwque QUEUE=*
+e.g.
+$UXDQM/uxshwque queue=* node=N1
+
+
+$UXDQM/uxstrque QUEUE=Q NODE=N1
+
+This command starts a physical or a logical queue. 
+This command must be done after creating a queue (created in the "stopped" state).
+The queue must exist.
+e.g. 
+$UXDQM/uxstrque queue=Q node=N1
+
+
+$UXDQM/uxstpque QUEUE=Q NODE=N1
+
+This command stopps a physical or a logical queue. 
+e.g.
+$UXDQM/uxstpque queue=Q node=N1
+

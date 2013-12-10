@@ -1,0 +1,10 @@
+When Dollar Universe submits a job, the launcher or the dqm server executes the following command :
+su - "Submission account" ${UXEXE}/u_batch "Additionnal parameters"
+
+The presence of the - in the su command asks unix to login to the submission account and load it's profile environment (.profile or .login depending on the shell of the user).
+
+Some problems may happend if this file is not available or if the deamon which manages the su - process is overloaded.
+But except that, there are no known problem regarding this submission process.
+
+You may want to ask the some more information about the jobs which aborts and the symptoms etc ....
+

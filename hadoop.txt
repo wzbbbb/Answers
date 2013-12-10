@@ -1,0 +1,1557 @@
+pig -x local ; -- local mode
+
+pig
+or
+pig -x mapreduce -- distributed mode, hadoop mode
+
+grunt> set debug on
+
+grunt> set job.name 'my job' ; -- the name defined will show in ambari
+
+
+help
+quit
+kill 'jobid'
+set debug [on|off]
+set job.name 'jobname'
+cat, cd, copyFromLocal, copyToLocal, cp, ls, mkdir, mv, pwd, rm, rmf, exec, run
+
+The "exec" command executes a Pig script in a separate space from the Grunt shell. Aliases defined in the script aren.t visible to the shell and vice versa. 
+The command "run" executes a Pig script in the same space as Grunt (also known as interactive mode). It has the same effect as manually typing in each line of the script into the Grunt shell.
+
+
+grunt> log = LOAD 'tutorial/data/excite-small.log' AS (user, time, query); -- "AS" is for schema
+
+grunt> lmt = LIMIT log 4; -- 4 random records, not ordered
+grunt> DUMP lmt;
+
+
+alias = LOAD 'file' [USING function] [AS schema];
+ Load data from a file into a relation. Uses the PigStorage load function as
+default unless specified otherwise with the "USING" option. The data can be
+given a schema using the AS option.
+
+DUMP alias; -- write output on screen
+
+STORE alias INTO 'directory' [USING function]; -- "alias" is the target directory to save the output files.
+
+Store data from a relation into a directory. The directory must not exist when
+this command is executed. Pig will create the directory and store the relation
+in files named part-nnnnn in it. Uses the PigStorage store function as default
+unless specified otherwise with the USING option.  
+
+
+grunt> log = LOAD 'tutorial/data/excite-small.log'  AS (user:chararray, time:long, query:chararray); ---
+grunt> grpd = GROUP log BY user;
+grunt> cntd = FOREACH grpd GENERATE group, COUNT(log); ----
+grunt> STORE cntd INTO 'output';
+
+
+grunt> DESCRIBE log; ----
+log: {user: chararray,time: long,query: chararray}
+
+grunt> DESCRIBE grpd;
+grpd: {group: chararray,log: {user: chararray,time: long,query: chararray}}
+
+grunt> DESCRIBE cntd;
+cntd: {group: chararray,long}
+
+You can expose Pig''s schema for any relation with the DESCRIBE command.
+
+ILLUSTRATE  ----
+does a sample run to show a step-by-step process on how Pig would compute the
+relation.
+
+grunt> ILLUSTRATE cntd;
+#################################
+Once the data is already loaded in the HCatalog with "using".
+a = LOAD 'nyse_stocks' USING org.apache.hcatalog.pig.HCatLoader();
+b = FILTER a BY stock_symbol=='IBM' ;
+c = group b all; 
+d = FOREACH c GENERATE avg(b.stock_volume);
+dump d;
+#################################
+You can see the logical and physical plans created by Pig using the
+EXPLAINcommand on a relation (EXPLAIN max_temp;for example).
+EXPLAIN will also show the MapReduce plan, which shows how the
+physical operators are grouped into MapReduce jobs. This is a good
+way to find out how many MapReduce jobs Pig will run for your query.
+################################# -
+Hortonworks sandbox: root:hadoop
+#################################
+Installation
+
+n the distribution, edit the file "conf/hadoop-env.sh" to define at least JAVA_HOME to be the root of your Java installation.
+
+Try the following command:
+$ bin/hadoop   --
+This will display the usage documentation for the hadoop script.
+
+Now you are ready to start your Hadoop cluster in one of the three supported modes:
+
+Local (Standalone) Mode ; default --
+Hadoop is configured to run in a non-distributed mode, as a single Java process. For debugging.
+Pseudo-Distributed Mode --
+Hadoop can also be run on a single-node in a pseudo-distributed mode where each Hadoop daemon runs in a separate Java process.
+Configuration, ---
+use the following: 
+conf/core-site.xml: ----
+set default FS for Hadoop to HDFS, hdfs daemons will use this to find the namenode and the port. The default port is 8020.
+<configuration>
+     <property>
+         <name>fs.default.name</name>
+         <value>hdfs://localhost:9000</value> -- better change to 8020
+     </property>
+</configuration>
+
+conf/hdfs-site.xml: ----
+This define the HDFS to duplicate filesystem blicks by only 1 factor. On single node HDFS can not duplicate to 3 datanodes.
+<configuration>
+     <property>
+         <name>dfs.replication</name>
+         <value>1</value>
+     </property>
+</configuration>
+
+conf/mapred-site.xml: ----
+<configuration>
+     <property>
+         <name>mapred.job.tracker</name>
+         <value>localhost:9001</value>
+     </property>
+</configuration>
+Setup passphraseless ssh ---
+Now check that you can ssh to the localhost without a passphrase:
+$ ssh localhost
+
+If you cannot ssh to localhost without a passphrase, execute the following commands:
+$ ssh-keygen -t dsa -P '' -f ~/.ssh/id_dsa 
+$ cat ~/.ssh/id_dsa.pub >> ~/.ssh/authorized_keys
+Execution ---
+bin/hadoop namenode -format
+bin/start-all.sh -- first need to chmod +x to all of the sub scripts.
+bin/stop-all.sh
+
+To check ---
+NameNode - http://localhost:50070/
+JobTracker - http://localhost:50030/
+
+Fully-Distributed Mode --
+#################################
+For namenode:
+The usual configuration choice is to write to local disk as well as a remote NFS mount.
+Run a secondary namenode,its main role is to periodically merge the namespace image with the edit log to prevent the edit log from becoming too large. 
+
+The usual operation after a namenode crash is to copy the namenode's metadata files that are on NFS to the secondary and run it as the new primary.
+################################# -
+hadoop fs -copyFromLocal input/docs/quangle.txt hdfs://localhost/user/tom/quangle.txt
+hadoop fs -ls hdfs://localhost/user/*
+hadoop fs -copyFromLocal input/docs/quangle.txt /user/tom/quangle.txt
+the hdfs://localhost/ can be omitted, since it is configured in the /etc/hadoop/core-site.xml
+
+hadoop fs -mkdir books
+
+# hadoop fs -ls
+Found 4 items
+drwxr-xr-x   - root supergroup          0 2013-06-14 17:54 /user/root/books
+-rw-r--r--   1 root supergroup         36 2013-06-14 15:54 /user/root/input
+-rw-r--r--   1 root supergroup        461 2013-06-14 17:45 /user/root/orsyp_upgrade.log.temp.23523
+drwxr-xr-x   - root supergroup          0 2013-06-14 15:59 /user/root/output
+
+the "1" in second column is the replicat factor of the file.
+################################# -
+
+To list file in root directory of the local file system
+
+ hadoop fs -ls file:///
+
+################################# -
+Accessing HDFS over HTTP directly
+Directory listings are served by the namenode¡¯s embedded web server (which runs on port 50070) formatted in XML or JSON, while file data is streamed from datanodes by their web servers (running on port 50075).
+
+################################# -
+Hadoop Archives, or HAR files, are a file archiving facility that packs files into HDFS blocks more efficiently, thereby reducing namenode memory usage while still allowing transparent access to files. In particular, Hadoop Archives can be used as input to MapReduce.
+
+A Hadoop Archive is created from a collection of files using the archivetool.  The tool runs a MapReduce job to process the input files in parallel, so to run it, you need a "MapReduce cluster" running to use it. 
+
+% hadoop fs -lsr /my/files
+-rw-r--r-- 1 tom supergroup 1 2009-04-09 19:13 /my/files/a
+drwxr-xr-x - tom supergroup 0 2009-04-09 19:13 /my/files/dir
+-rw-r--r-- 1 tom supergroup 1 2009-04-09 19:13 /my/files/dir/b
+
+
+hadoop archive -archiveName files.har /my/files /my  -- target file name, source files, target directory.
+
+% hadoop fs -ls /my
+Found 2 items
+drwxr-xr-x - tom supergroup 0 2009-04-09 19:13 /my/files
+drwxr-xr-x - tom supergroup 0 2009-04-09 19:13 /my/files.har
+% hadoop fs -ls /my/files.har
+Found 3 items
+-rw-r--r-- 10 tom supergroup 165 2009-04-09 19:13 /my/files.har/_index
+-rw-r--r-- 10 tom supergroup 23 2009-04-09 19:13 /my/files.har/_masterindex
+-rw-r--r-- 1 tom supergroup 2 2009-04-09 19:13 /my/files.har/part-0
+
+The directory listing shows what a HAR file is made of: "two index files and a collection of part files"¡ªjust one in this example. The part files contain the contents of a number of the original files concatenated together, and the indexes make it possible to look up the part file that an archived file is contained in, and its offset and length.  
+
+% hadoop fs -lsr har:///my/files.har    ----
+drw-r--r-- - tom supergroup 0 2009-04-09 19:13 /my/files.har/my
+drw-r--r-- - tom supergroup 0 2009-04-09 19:13 /my/files.har/my/files
+-rw-r--r-- 10 tom supergroup 1 2009-04-09 19:13 /my/files.har/my/files/a
+drw-r--r-- - tom supergroup 0 2009-04-09 19:13 /my/files.har/my/files/dir
+-rw-r--r-- 10 tom supergroup 1 2009-04-09 19:13 /my/files.har/my/files/dir/b
+
+% hadoop fs -lsr har:///my/files.har/my/files/dir
+% hadoop fs -lsr har://hdfs-localhost:8020/my/files.har/my/files/dir  ----
+The above green line could be used on a remote/different FS.
+
+Notice in the second form that the scheme is still har to signify a HAR filesystem, but "the authority is hdfs to specify the underlying filesystem's scheme", followed by a dash and the HDFS host (localhost) and port (8020). We can now see why HAR files have to have a .har extension. The HAR filesystem translates the harURI into a URI for the underlying filesystem, by looking at the authority and path up to and including the component with the .har extension. In this case, it is  hdfs://localhost:8020/my/files .har. The remaining part of the path is the path of the file in the archive: /my/files/dir.  
+
+To delete a HAR file, you need to use the recursive form of delete, since from the underlying filesystem¡¯s point of view the HAR file is a directory: % hadoop fs -rmr /my/files.har ----
+################################# -
+
+-1 means optimize for speed and -9 means optimize for space. 
+gzip -1 file
+
+To compress the output of a MapReduce job, in the job configuration, set the "mapred.output.compress" property to true and the "mapred.output.compression.codec" property to the classname of the compression codec you want to use.  
+
+
+you can set the  "mapred.output.compression.type" property to control the type of compression to use. The default is  RECORD, which compresses individual records. Changing this to  "BLOCK", which compressesgroups of records, is recommended since it compresses better (see  ¡°The SequenceFile format¡± on page 138).  
+
+
+Property name 			Type 		Default value 					Description
+mapred.output.compress 		boolean 	false 						Compress outputs.
+
+mapred.output.compression.codec Classname 	org.apache.hadoop.io.compress.DefaultCodec 	The compression codec to use for out-puts.
+
+mapred.output.compression.type 	String 		RECORD 						The type of compression to use for Se-quenceFile outputs:  NONE,  RECORD, or BLOCK
+
+Since the map output is written to disk and transferred across the network to the reducer nodes, by using a fast compressor such as LZO or Snappy, you can get performance gains simply because the volume of data to transfer is reduced. +
+
+mapred.compress.map. output 	boolean 	false 						Compress map outputs.  
+mapred.map.output.compression.codec Class 	org.apache.hadoop.io.compress.DefaultCodec 	The compression codec to use for map outputs
+
+################################# -
+"SequenceFiles" also work well as containers for smaller files. HDFS and MapReduce areoptimized for large files, so packing files into a SequenceFilemakes storing and processing the smaller files more efficient.  
+
+A "MapFileis" a sorted  SequenceFilewith an index to permit lookups by key.  MapFilecan be thought of as a persistent form of java.util.Map(although it doesn¡¯t implement this interface), which is able to grow beyond the size of a Mapthat is kept in memory.  
+################################# -
+pig scritp.pig
+or
+pig -e ... 
+
+grunt autocomplete:
+
+You can customize the completion tokens by creating a file named autocompleteand placing it on Pig¡¯s classpath (such as in the confdirectory in Pig¡¯s install directory), or in the directory you invoked Grunt from. 
+No space is allowed in that file.
+################################# -
+
+-- max_temp.pig: Finds the maximum temperature by year
+records = LOAD 'input/ncdc/micro-tab/sample.txt' AS (year:chararray, temperature:int, quality:int);
+filtered_records = FILTER records BY temperature != 9999 AND (quality == 0 OR quality == 1 OR quality == 4 OR quality == 5 OR quality == 9);
+grouped_records = GROUP filtered_records BY year;
+max_temp = FOREACH grouped_records GENERATE group, MAX(filtered_records.temperature); -- The "group" here is "year" 
+DUMP max_temp;
+
+
+grunt> grouped_records = GROUP filtered_records BY year;
+grunt> DUMP grouped_records;
+(1949,{(1949,111,1),(1949,78,1)})
+(1950,{(1950,0,1),(1950,22,1),(1950,-11,1)})
+
+After "group by year", it becomes one year per row/tuple. The first field in each tuple is the field being grouped by (the year); and the second field is a bag of tuples for that years.
+A "bag" is just an unordered collection of tuples, which in Pig Latin is represented using curly braces.
+
+
+grunt> DESCRIBE grouped_records;
+grouped_records: {group: chararray,filtered_records: {year: chararray, temperature: int,quality: int}}
+
+It contains 2 parts, group (year) and filtered_records.
+This tells us that the grouping field is given the alias "group" by Pig, and the second field is the same structure as the  filtered_records relation that was being grouped.
+
+
+grunt> max_temp = FOREACH grouped_records GENERATE group, MAX(filtered_records.temperature);
+
+#################################-
+Table 9-1. Hadoop configuration files
+Filename 			Format 					Description
+hadoop-env.sh 		Bash script 			Environment variables that are used in the scripts to run Hadoop.
+core-site.xml 		Hadoop configuration XML 	Configuration settings for Hadoop Core, such as I/O settings that are common to HDFS and MapReduce.
+hdfs-site.xml 		Hadoop configuration XML 	Configuration settings for HDFS daemons: the namenode, the secondary namenode, and the datanodes.
+mapred-site.xml 	Hadoop configuration XML 	Configuration settings for MapReduce daemons: the jobtracker, and the tasktrackers.
+masters 		Plain text 			A list of machines (one per line) that each run a secondary namenode.
+slaves 			Plain text 			A list of machines (one per line) that each run a datanode and a tasktracker.
+hadoop-metrics.properties Java 				Properties Properties for controlling how metrics are published in Hadoop (see .Metrics. on page 350).
+log4j.properties 	Java Properties 		Properties for system logfiles, the namenode audit log, and the task log for the tasktracker child process (.Hadoop Logs. on page 173).
+
+
+If daemons are started with the "--config" option, it can specify in the location of configuration directory on the local filesystem.
+
+"masters and slaves", each of which contains a list of the machine host-names or IP addresses, one per line. 
+The masters file define the secondary namenode.
+The slaves file lists the machines that the datanodes and tasktrackers should run on.
+These files do not need to be distributed to worker nodes, since they are used only by the control scripts running on the namenode or jobtracker.
+################################# -
+the "start-dfs.shscript", which starts all the HDFS daemons in the cluster, runs the namenode on the machine the script is run on. In slightly more detail, it:
+1. Starts a "namenode" on the local machine (the machine that the script is
+run on)
+2. Starts a "datanode" on each machine listed in the slaves file
+3. Starts a "secondary namenode" on each machine listed in the mastersfile
+There is a similar script called "start-mapred.sh", which starts all the
+MapReduce daemons in the cluster. More specifically, it:
+1. Starts a "jobtracker" on the local machine
+2. Starts a "tasktracker" on each machine listed in the slavesfile
+Note that masters is not used by the MapReduce control scripts.
+
+On a busy cluster running lots of MapReduce jobs, the jobtracker uses
+considerable memory and CPU resources, so it should run on a dedicated node.
+
+Whether the master daemons run on one or more nodes, the following instructions apply:
+? Run the HDFS control scripts from the namenode machine. The masters file
+should contain the address of the secondary namenode.
+? Run the MapReduce control scripts from the jobtracker machine.  When the
+namenode and jobtracker are on separate nodes, their slavesfiles need to be
+kept in sync, since each node in the cluster should run a datanode and a
+tasktracker.
+
+Memory -
+By default, Hadoop allocates 1,000 MB (1 GB) of memory to each daemon it runs.
+This is controlled by the "HADOOP_HEAPSIZE" setting in hadoop-env.sh. In
+addition, the task tracker launches separate child JVMs to run map and reduce
+tasks in, so we need to factor these into the total memory footprint of a
+worker machine.
+
+The maximum number of map tasks that can run on a tasktracker at one time is
+con-trolled by the "mapred.tasktracker.map.tasks.maximum" property, which
+defaults to two tasks. 
+There is a corresponding property for reduce tasks,
+"mapred.tasktracker.reduce.tasks.maximum", which also defaults to two tasks.
+The tasktracker is said to have two map slots and two reduce slots.
+The memory given to each child JVM running a task can be changed by setting
+the "mapred.child.java.opts" property. The default setting is  -Xmx200m, which
+gives each task 200 MB of memory. (Incidentally, you can provide extra JVM
+options here, too. For example, you might enable verbose GC logging to debug
+GC.) The default configura-tion therefore uses 2,800 MB of memory for a worker
+machine (see Table 9-2).
+
+Table 9-2. Worker node memory calculation
+JVM 				Default memory used (MB) 	Memory used
+for 8 processors, 400 MB per child (MB)
+Datanode 			1,000 				1,000
+Tasktracker 			1,000 				1,000
+Tasktracker child map task 	2 ×200 			7 ×400
+Tasktracker child reduce task 	2 ×200 			7 ×400
+Total 				2,800 				7,600
+############################################ -
+
+To run HDFS, you need to designate one machine as a namenode. In this case,
+the property "fs.default.name" is an HDFS filesystem URI, whose host is the
+namenode.s hostname or IP address, and port is the port that the namenode will
+listen on for RPCs.  If no port is specified, the default of 8020 is used.  
+
+The property "dfs.name.dir" specifies a list of directories where the namenode
+stores persistent file-system metadata (the edit log and the filesystem
+image). A copy of each of the metadata files is stored in each directory for
+redundancy. It.s common to configure dfs.name.dir so that the namenode
+metadata is written to one or two local disks, and a remote disk, such as an
+NFS-mounted directory.  
+
+You should also set the "dfs.data.dir" property, which specifies a list of
+directories for a datanode to store its blocks.
+
+For maximum performance, you should mount storage disks with the "noatime"
+option. This setting means that last accessed time information is not written
+on file reads, which gives significant performance gains.  
+
+
+Finally, you should configure where the secondary namenode stores its
+checkpoints of the filesystem. The "fs.checkpoint.dir" property specifies a
+list of directories where the checkpoints are kept. The check pointed
+filesystem image is stored in each checkpoint directory for redundancy.
+
+
+Note that the storage directories for HDFS are under Hadoop.s tempo-rary
+directory by default (the "hadoop.tmp.dir" property, whose default is
+/tmp/hadoop-${user.name}). Therefore, it is critical that these proper-ties
+are set so that data is not lost by the system clearing out temporary
+directories.
+
+
+To run MapReduce, you need to designate one machine as a jobtracker, which on
+small clusters may be the same machine as the namenode. To do this, set the
+"mapred.job.tracker" property to the hostname or IP address and port that the
+jobtracker will listen on. Note that this property is not a URI, but a
+host-port pair, separated by a colon. The port number 8021 is a common choice.  
+
+
+During a MapReduce job, intermediate data and working files are written to
+temporary local files. Since this data includes the potentially very large
+output of map tasks, you need to ensure that the "mapred.local.dir" property,
+which controls the location of local temporary storage, is configured to use
+disk partitions that are large enough. The mapred.local.dirproperty takes a
+comma-separated list of directory names, and you should use all available
+local disks to spread disk I/O. Typically, you will use the same disks and
+partitions (but different directories) for MapReduce temporary data as you use
+for datanode block storage, as governed by the dfs.data.dirproperty, discussed
+earlier.
+
+MapReduce uses a distributed filesystem to share files (such as the job JAR
+file) with the tasktrackers that run the MapReduce tasks. The
+"mapred.system.dir" property is used to specify a directory where these files
+can be stored. This directory is resolved relative to the default filesystem
+(configured in fs.default.name), which is usually HDFS.  
+Finally, you should set the  "mapred.tasktracker.map.tasks.maximum and
+mapred.task tracker.reduce.tasks.maximum" properties to reflect the number of
+available cores on the tasktracker machines 
+and  "mapred.child.java.opts" to reflect the amount of memory available for
+the tasktracker child JVMs.
+
+
+To aid the addition and removal of nodes in the future, you can specify a file
+containing a list of authorized machines that may join the cluster as
+datanodes or tasktrackers.  The file is specified using the "dfs.hosts" (for
+datanodes) and  "mapred.hosts(for tasktrackers)" properties, 
+as well as the corresponding "dfs.hosts.exclude and mapred.hosts.exclude"
+files used for decommissioning.
+
+
+% hadoop fs -mkdir /user/username
+% hadoop fs -chown username:username/user/username
+% hadoop dfsadmin -setSpaceQuota 1t /user/username
+
+
+Under "YARN" you no longer run a jobtracker or tasktrackers. Instead, there is
+a single resource manager running on the same machine as the HDFS namenode
+(for small clusters) or on a dedicated machine, and node managers running on
+each worker node in the cluster.
+
+
+The YARN "start-all.sh" script (in the  bindirectory) starts the YARN daemons
+in the cluster. This script will start a 
+"resource manager" (on the machine the script is run on), 
+and a "node manager" on each machine listed in the slaves file.  
+
+
+Table 9-8. YARN configuration files 
+Filename 	Format 				Description
+yarn-env.sh 	Bash script 			Environment variables that are
+used in the scripts to run YARN.
+yarn-site.xml 	Hadoop configuration XML 	Configuration settings for
+YARN daemons: the resource manager, the job history server, the webapp proxy
+server, and the node managers.
+
+When running MapReduce on YARN the mapred-site.xmlfile is still used for
+general MapReduce properties, although the jobtracker and tasktracker-related
+properties are not used. 
+
+The YARN resource manager address is controlled via
+"yarn.resourcemanager.address", which takes the form of a host-port pair. 
+In a client configuration this property is used to connect to the resource
+manager (using RPC), and in addition the "mapreduce.framework.name" property
+must be set to  yarn for the client to use YARN rather than the local job
+runner.
+
+Although YARN does not honor mapred.local.dir, it has an equivalent property
+called "yarn.nodemanager.local-dirs", which allows you to specify which local
+disks to store intermediate data on. It is specified by a comma-separated list
+of local directory paths, which are used in a round-robin fashion.
+
+YARN doesn.t have tasktrackers to serve map outputs to reduce tasks, so for
+this func-tion it relies on shuffle handlers, which are long-running auxiliary
+services running in node managers. Since YARN is a general-purpose service the
+shuffle handlers need to be explictly enabled in the  yarn-site.xmlby setting
+the "yarn.nodemanager.aux-services" property to "mapreduce.shuffle".
+
+
+Each Hadoop daemon uses 1,000 MB, so for a datanode and a node manager the
+total is 2,000 MB.  Set aside enough for other processes that are running on
+the machine, and the remainder can be dedicated to the node manager.s
+containers, by setting the configuration property
+"yarn.nodemanager.resource.memory-mb" to the total allocation in MB. (The
+default is 8,192 MB.)
+
+................................. -
+
+Generating dedicated key for whirr
+% ssh-keygen -t rsa -P '' -f ~/.ssh/id_rsa_whirr
+
+% export AWS_ACCESS_KEY_ID='...'
+% export AWS_SECRET_ACCESS_KEY='...'
+
+% bin/whirr launch-cluster --config recipes/hadoop-ec2.properties
+% --private-key-file ~/.ssh/id_rsa_whirr
+The  launch-cluster command provisions the cloud instances and starts the
+services running on them, before returning control to the user.
+
+
+In "hadoop-ec2.properties":
+
+whirr.cluster-name=hadoop
+whirr.instance-templates=1 hadoop-namenode+hadoop-jobtracker,5
+hadoop-datanode+hadoop-tasktracker
+
+Try the following:
+bin/whirr
+
+whirr.provider=aws-ec2
+whirr.identity=${env:AWS_ACCESS_KEY_ID}
+whirr.credential=${env:AWS_SECRET_ACCESS_KEY}
+
+whirr.hardware-id=c1.xlarge
+whirr.image-id=us-east-1/ami-da0cf8b3
+whirr.location-id=us-east-1
+
+whirr.private-key-file=/user/tom/.ssh/id_rsa_whirr
+
+
+Running a proxy -
+To use the cluster, network traffic from the client needs to be proxied
+through the master node of the cluster using an SSH tunnel, which we can set
+up using the following command:
+% . ~/.whirr/hadoop/hadoop-proxy.sh  +
+You should keep the proxy running as long as the cluster is running. When you
+have finished with the cluster, stop the proxy with Ctrl-c.
+
+
+When we launched the cluster, Hadoop site configuration files were created in
+the directory  ~/.whirr/hadoop. We can use this to connect to the cluster by
+setting the HADOOP_CONF_DIR environment variable as follows:
+% export HADOOP_CONF_DIR=~/.whirr/hadoop        +
+
+Doing a parallel copy from S3 (see .Hadoop Filesystems.on page 54for more on
+the S3 filesystems in Hadoop) using Hadoop.s distcptool is an efficient way to
+transfer data into HDFS:
+
+% hadoop distcp \                                            +
+-Dfs.s3n.awsAccessKeyId='...' \                              +
+-Dfs.s3n.awsSecretAccessKey='...' \                          +
+is3n://hadoopbook/ncdc/all input/ncdc/all                    +
+
+
+log into the master node (its address is printed to the console during launch)
+with
+% ssh -i ~/.ssh/id_rsa_whirr master_host +
+
+
+After the data has been copied, we can run a job in the usual way:
+% hadoop jar hadoop-examples.jar MaxTemperatureWithCombiner \  +
+/user/$USER/input/ncdc/all /user/$USER/output                  +
+
+Alternatively, we could have specified the output to be on S3, as follows:
+
+% hadoop jar hadoop-examples.jar MaxTemperatureWithCombiner \          +
+/user/$USER/input/ncdc/all s3n://mybucket/output                       +
+
+You can track the progress of the job using the jobtracker.s web UI, found at
+"http://master_host:50030/". To access web pages running on worker nodes, you
+need set up a proxy auto-config (PAC) file in your browser. See the Whirr
+documentation for details on how to do this.
+
+
+
+To shut down the cluster, issue the destroy-clustercommand:
+% bin/whirr destroy-cluster --config recipes/hadoop-ec2.properties
+% +
+################################# -
+
+To get your amazon access key id and secret access key, go to 
+https://portal.aws.amazon.com/gp/aws/securityCredentials
+################################# -
+To merge all the files in the testdir directory into one file merge_output.
+Adding a newline char at the end of each file. The merge_output will be in the
+local directory where you run the hadoop command.
+
+ hadoop fs -getmerge testdir merge_output addnl
+################################# -
+Pig comment
+/* 
+* Description of my program spanning
+* multiple lines.
+*/
+################################# -
+Operator 	Description
+DESCRIBE 	Prints a relation.s schema
+EXPLAIN 	Prints the logical and physical plans
+ILLUSTRATE 	Shows a sample execution of the logical plan, using a generated subset of the input
+
+Statement 	Description
+REGISTER 	Registers a JAR file with the Pig runtime
+DEFINE 		Creates an alias for a macro, a UDF, streaming script, or a command specification
+IMPORT 		Import macros defined in a separate file into a script
+
+Category	Type 		Description 					Literal example
+Numeric 	int 		32-bit signed integer 				1
+			long 		64-bit signed integer 				1L
+			float 		32-bit floating-point number 			1.0F
+			double 		64-bit floating-point number 			1.0
+Text 		chararray 	Character array in UTF-16 format 'a'
+Binary 		bytearray	Byte array 					Not supported
+Complex 	tuple 		Sequence of fields of any type 			(1,'pomegranate')
+			bag 		An unordered collection of tuples, possibly with duplicates {(1,'pomegranate'),(2)}
+			map 		A set of key-value pairs. Keys must be character arrays; values may be any type ['a'#'pomegranate']
+################################# -
+In Pig, if the value cannot be cast to the type declared in the schema, then it will substitute a "null" value.
+To remove invalid records.
+grunt> corrupt_records = FILTER records BY temperature is null;
+grunt> DUMP corrupt_records;
+(1950,,1)
+grunt> grouped = GROUP corrupt_records ALL; --
+grunt> all_grouped = FOREACH grouped GENERATE group, COUNT(corrupt_records);
+grunt> DUMP all_grouped;
+(all,1)
+grunt> SPLIT records INTO good_records IF temperature is not null, bad_records IF temperature is null;
+grunt> DUMP good_records;
+(1950,0,1)
+(1950,22,1)
+(1949,111,1)
+(1949,78,1)
+grunt> DUMP bad_records;
+(1950,,1)
+
+Sometimes corrupt data shows up as smaller tuples since fields are simply missing. You can filter these out by using the SIZE function as follows:
+grunt> A = LOAD 'input/pig/corrupt/missing_fields';
+grunt> DUMP A;
+(2,Tie)
+(4,Coat)
+(3)
+(1,Scarf)
+grunt> B = FILTER A BY SIZE(TOTUPLE(*)) > 1; --
+grunt> DUMP B;
+(2,Tie)
+(4,Coat)
+(1,Scarf)
+
+You can find out the schema for any relation in the data flow using the DESCRIBE operator. If you want to redefine the schema for a relation, you can use the "FOREACH...GENERATE operator with AS clauses" to define the schema for some or all of the fields of the input relation.
+################################# -
+Category 	Function 	Description
+Eval 		AVG 		Calculates the average (mean) value of entries in a bag.
+			CONCAT 		Concatenates byte arrays or character arrays together.
+			COUNT 		Calculates the number of non-null entries in a bag. THIS HAS TO BE CAPITAL.
+			COUNT_STAR 	Calculates the number of entries in a bag, including those that are null
+			DIFF 		Calculates the set difference of two bags. If the two arguments are not bags, then returns a bag containing both if they are equal; otherwise, returns an empty bag.
+			MAX 		Calculates the maximum value of entries in a bag.
+			MIN 		Calculates the minimum value of entries in a bag.
+			SIZE 		Calculates the size of a type. The size of numeric types is always one; for character arrays, it is the number of characters; for byte arrays, the number of bytes; and for containers (tuple, bag, map), it is the number of entries.
+			SUM 		Calculates the sum of the values of entries in a bag.
+			TOBAG 		Converts one or more expressions to individual tuples which are then put in
+a bag.
+			TOKENIZE 	Tokenizes a character array into a bag of its constituent words.
+			TOMAP 		Converts an even number of expressions to a map of key-value pairs.
+			TOP 		Calculates the top ntuples in a bag.
+			TOTUPLE 	Converts one or more expressions to a tuple.
+Filter 		IsEmpty 	Tests if a bag or map is empty.
+Load/Store 	PigStorage 	Loads or stores relations using a field-delimited text format. Each line is broken into fields using a configurable field delimiter (defaults to a tab character) to be stored in the tuple.s fields. It is the default storage when none is specified.
+			BinStorage Loads or stores relations from or to binary files. A Pig-specific format is used that uses Hadoop Writableobjects.
+			TextLoader Loads relations from a plain-text format. Each line corresponds to a tuple
+whose single field is the line of text.
+			JsonLoader, JsonStorage Loads or stores relations from or to a (Pig-defined) JSON format. Each tuple is stored on one line.
+			HBaseStorage Loads or stores relations from or to HBase tables
+################################# -
+To load a macro:
+
+IMPORT './ch11/src/main/pig/max_temp.macro';
+
+Defining a macro as follows:
+
+DEFINE max_by_group(X, group_key, max_field) RETURNS Y {
+A = GROUP $X by $group_key;
+$Y = FOREACH A GENERATE group, MAX($X.$max_field);
+};
+
+You can get Pig to perform macro expansion only (without executing the script) by passing the "-dryrun" argument to pig.
+################################# -
+grunt> STORE A INTO 'out' USING PigStorage(':');
+grunt> cat out
+Joe:cherry:2
+Ali:apple:3
+Joe:banana:2
+Eve:apple:7
+################################# -
+Using FOREACH ... GENERATE to modify columns 
+grunt> DUMP A;
+(Joe,cherry,2)
+(Ali,apple,3)
+(Joe,banana,2)
+(Eve,apple,7)
+grunt> B = FOREACH A GENERATE $0, $2+1, 'Constant';
+grunt> DUMP B;
+(Joe,3,Constant)
+(Ali,4,Constant)
+(Joe,3,Constant)
+(Eve,8,Constant)
+
+-- year_stats.pig
+REGISTER pig-examples.jar;
+DEFINE isGood com.hadoopbook.pig.IsGoodQuality();
+records = LOAD 'input/ncdc/all/19{1,2,3,4,5}0*'
+USING com.hadoopbook.pig.CutLoadFunc('5-10,11-15,16-19,88-92,93-93')
+AS (usaf:chararray, wban:chararray, year:int, temperature:int, quality:int);
+grouped_records = GROUP records BY year PARALLEL 30;
+year_stats = FOREACH grouped_records {
+	uniq_stations = DISTINCT records.usaf;
+	good_records = FILTER records BY isGood(quality);
+	GENERATE FLATTEN(group), COUNT(uniq_stations) AS station_count,
+		COUNT(good_records) AS good_record_count, COUNT(records) AS record_count;
+}
+DUMP year_stats;
+
+Notice the "PARALLEL" key-word for setting the number of reducers to use;
+################################# -
+Pig stream
+Note that the command and its arguments are enclosed in backticks:
+grunt> C = STREAM A THROUGH `cut -f 2`;
+grunt> DUMP C;
+(cherry)
+(apple)
+(banana)
+(apple)
+
+The STREAM operator uses PigStorage to serialize and deserialize relations to and from the program''s standard input and output streams.
+Tuples in A are converted to tab-delimited lines that are passed to the script. The output of the script is read one line at a time and split on tabs to create new tuples for the output relation C.
+################################# -
+inner join: to find the element in common only
+grunt> DUMP A;
+(2,Tie)
+(4,Coat)
+(3,Hat)
+(1,Scarf)
+grunt> DUMP B;
+(Joe,2)
+(Hank,4)
+(Ali,0)
+(Eve,3)
+(Hank,2)
+
+grunt> C = JOIN A BY $0, B BY $1;
+grunt> DUMP C;
+(2,Tie,Joe,2)
+(2,Tie,Hank,2)
+(3,Hat,Eve,3)
+(4,Coat,Hank,4)
+
+OUTER join: to include everything
+
+grunt> C = JOIN A BY $0 LEFT OUTER, B BY $1;
+grunt> DUMP C;
+(1,Scarf,,)
+(2,Tie,Joe,2)
+(2,Tie,Hank,2)
+(3,Hat,Eve,3)
+(4,Coat,Hank,4)
+################################# -
+grunt> DUMP A;
+(2,3)
+(1,2)
+(2,4)
+The following example sorts A by the first field in "ascending" order and by the second field in descending order. Default seems to be ascending. 
+
+grunt> B = ORDER A BY $0, $1 DESC;
+grunt> DUMP B;
+(1,2)
+(2,4)
+(2,3)
+
+Usually, "LIMIT" will select any ntuples from a relation, but when used immediately after an ORDER state-ment, the order is retained
+grunt> D = LIMIT B 2;
+grunt> DUMP D;
+(1,2)
+(2,4)
+################################# -
+grunt> DUMP A;
+(2,3)
+(1,2)
+(2,4)
+grunt> DUMP B;
+(z,x,8)
+(w,y,1)
+grunt> C = UNION A, B;  -- to append B to the end of the A
+grunt> DUMP C;
+(2,3)
+(1,2)
+(2,4)
+(z,x,8)
+(w,y,1)
+################################# -
+-- max_temp_param.pig
+records = LOAD '$input' AS (year:chararray, temperature:int, quality:int);
+filtered_records = FILTER records BY temperature != 9999 AND
+(quality == 0 OR quality == 1 OR quality == 4 OR quality == 5 OR quality == 9);
+grouped_records = GROUP filtered_records BY year;
+max_temp = FOREACH grouped_records GENERATE group,
+MAX(filtered_records.temperature);
+STORE max_temp into '$output';
+
+When running above script, $input and $output can be specified as the follow:
+
+% pig -param input=/user/tom/input/ncdc/micro-tab/sample.txt \
+> -param output=/tmp/out \
+> ch11/src/main/pig/max_temp_param.pig
+
+Or from a shell command output:
+
+% pig -param input=/user/tom/input/ncdc/micro-tab/sample.txt \
+> -param output=/tmp/`date "+%Y-%m-%d"`/out \
+> ch11/src/main/pig/max_temp_param.pig
+################################# -
+PIG example:
+-- Load input from the file named Mary, and call the single 
+-- field in the record 'line'.
+input = load 'mary' as (line);
+
+-- TOKENIZE splits the line into a field for each word.
+-- flatten will take the collection of records returned by
+-- TOKENIZE and produce a separate record for each one, calling the single
+-- field in the record word.
+words = foreach input generate flatten(TOKENIZE(line)) as word;
+
+-- Now group them together by each word.
+grpd  = group words by word;
+
+-- Count them
+cntd  = foreach grpd generate group, COUNT(words);
+-- Print out the results
+dump cntd;
+
+.................................
+-- Load the transactions file, group it by customer, and sum their total purchases
+txns    = load 'transactions' as (customer, purchase);
+grouped = group txns by customer;
+total   = foreach grouped generate group, SUM(txns.purchase) as tp;
+-- Load the customer_profile file
+profile = load 'customer_profile' as (customer, zipcode);
+-- join the grouped and summed transactions and customer_profile data
+answer  = join total by group, profile by customer;
+-- Write the results to the screen
+dump answer;
+.................................
+Users = load 'users' as (name, age);
+Fltrd = filter Users by age >= 18 and age <= 25;
+Pages = load 'pages' as (user, url);
+Jnd   = join Fltrd by name, Pages by user;
+Grpd  = group Jnd by url;
+Smmd  = foreach Grpd generate group, COUNT(Jnd) as clicks;
+Srtd  = order Smmd by clicks desc;
+Top5  = limit Srtd 5;
+store Top5 into 'top5sites';
+################################# -
+PIG gatway machine:
+The only thing Pig needs to know to run on your cluster is where your cluster''s NameNode and JobTracker are located. The NameNode is the manager of HDFS and the JobTracker coordinates MapReduce jobs. 
+In Hadoop 0.20 and later they are in separate files hdfs-site.xml and mapred-site.xml. Those files need to point to the remote cluster, can not be set with localhost.
+Once you have located, copied, or created these files, you will need to tell Pig the directory they are in by setting the PIG_CLASSPATH environment variable to that directory. 
+
+to create a home directory. Pig can do this for you:
+
+PIG_CLASSPATH=hadoop_conf_dir pig_path/bin/pig -e fs -mkdir /username
+
+where hadoop_conf_dir is the directory that your hadoop-site.xml or hdfs-site.xml and mapred-site.xml files are located, pig_path is the path to Pig on your gateway machine, and username is your username on the gateway machine. 
+
+PIG_CLASSPATH=hadoop_conf_dir pig_path/bin/pig -e fs -copyFromLocal NYSE_dividends NYSE_dividends
+
+PIG_CLASSPATH=hadoop_conf_dir pig_path/bin/pig average_dividend.pig
+################################# -
+To access HDFS
+grunt> pwd
+hdfs://localhost:8020/user/root
+
+To access Unix shell
+grunt> sh pwd
+/home/hadoop/warehouse
+
+################################# -
+Since tuples are ordered, it is possible to refer to the fields by position.
+A bag is an unordered collection of tuples. Since it has no order, it is not possible to reference tuples in a bag by position.
+
+When specifying schema to have four fields, if it has more, it will truncate the extra ones. If it has less, it will pad the end of the record with nulls.
+It is also possible to specify the schema without giving explicit datatypes. In this case, the datatype is assumed to be bytearray.
+
+To define schema:
+chararray	chararray	as (a:chararray)
+bytearray	bytearray	as (a:bytearray)
+map	
+map[] or map[type] where type is any valid type. This declares all values in the map to be of this type.	
+as (a:map[], b:map[int])
+
+tuple	
+tuple() or tuple(list_of_fields) where list_of_fields is a comma separated list of field declarations.	
+as (a:tuple(), b:tuple(x:int, y:int))
+
+bag	
+bag{} or bag{t:(list_of_fields)} where list_of_fields is a comma separated list of field declarations. Note that, oddly enough, the tuple inside the bag must have a name, here specified as t, even though you will never be able to access that tuple t directly.	
+as (a:bag{}, b:bag{t:(x:int, y:int)})
+################################# -
+LOAD
+Accessing field with position varialbe. $7 is the 8th field, starting from 0
+--no_schema.pig
+daily = load 'NYSE_daily';
+calcs = foreach daily generate $7 / 1000, $3 * 100.0, SUBSTRING($0, 0, 1), $6 - $3;
+
+--unintended_walks_cast.pig
+player     = load 'baseball' as (name:chararray, team:chararray,
+               pos:bag{t:(p:chararray)}, bat:map[]);
+unintended = foreach player generate (int)bat#'base_on_balls' - (int)bat#'ibbs'; -- cast type int to 2 values
+
+When specifying a "file" to read from HDFS, you can specify multiple directories. PIG will load all files in those directories.
+You can use "globes" to specify target directories..
+
+glob	comment
+?		Matches any single character.
+*		Matches zero or more characters.
+[abc]	Matches a single character from character set (a,b,c).
+
+[a-z]	Matches a single character from the character range (a..z), inclusive.  The first character must be lexicographically less than or equal to the second character.
+
+[^abc]	Matches a single character that is not in the character set (a, b, c).  The ^ character must occur immediately to the right of the opening bracket.
+
+[^a-z]	Matches a single character that is not from the character range (a..z) inclusive. The ^ character must occur immediately to the right of the opening bracket.
+
+\c	Removes (escapes) any special meaning of character c.
+{ab,cd}	Matches a string from the string set {ab, cd}
+############################################ -
+By default, Pig stores your data on HDFS in a tab delimited file using PigStorage[7].
+store processed into '/data/examples/processed';
+store processed into 'processed' using PigStorage(',');
+################################# -
+"foreach" takes a set of expressions and applies them to every record in the data pipeline; hence the name foreach. From these expressions it generates new records to send down the pipeline to the next operator.
+
+In addition to using names and positions, you can refer to all fields using '*' (asterisk). This produces a tuple that contains all the fields. You can also refer to ranges of fields using '..' (two periods).
+
+prices = load 'NYSE_daily' as (exchange, symbol, date, open, high, low, close, volume, adj_close);
+beginning = foreach prices generate ..open; -- produces exchange, symbol, date, open
+middle    = foreach prices generate open..close; -- produces open, high, low, close
+end       = foreach prices generate volume..; -- produces volume, adj_close
+
+Standard arithmetic operators for integers and floating point numbers are supported: + for addition, - for subtraction, * for multiplication, and / for division. These operators return values of their own type, so 5/2 is 2 while 5.0/2.0 is 2.5. In addition, for integers the modulo operator % is supported.  The unary negative operator - is also supported for both integers and floating point numbers.
+
+.................................
+bincond
+2 == 2 ? 1 : 4 --returns 1 , true return 1, the value before :
+2 == 3 ? 1 : 4 --returns 4 , false retrun 4, the value after :
+null == 2 ? 1 : 4 -- returns null
+2 == 2 ? 1 : 'fred' -- type error, both values must be of the same type
+
+Pig also provides a binary condition operator, often referred to as bincond.  It begins with a Boolean test, followed by a ?, then the value to return if the test is true, a :, and finally the value to return if the test is false. 
+.................................
+Map
+To extract data from complex types, use the "projection operators". For maps this is #, the pound or hash, followed by the name of the key as a string. 
+
+bball = load 'baseball' as (name:chararray, team:chararray, position:bag{t:(p:chararray)}, bat:map[]);
+avg = foreach bball generate bat#'batting_average';
+
+Tuple
+Tuple projection is done with ., the dot operator.
+A = load 'input' as (t:tuple(x:int, y:int));
+B = foreach A generate t.x, t.$1;
+
+Bag
+when you project fields in a bag you are creating a new bag with only those fields.
+A = load 'input' as (b:bag{t:(x:int, y:int)});
+B = foreach A generate b.x;
+
+This will produce a new bag whose tuples have only the field x in them. You can project multiple fields in a bag by surrounding the fields with parenthesis and separating them by commas.
+
+A = load 'input' as (b:bag{t:(x:int, y:int)}); 
+B = foreach A generate b.(x, y); --
+
+===========This will not work, since A.y and B.y are bags, can not do "+", but SUM is allowd -
+A = load 'foo' as (x:chararray, y:int, z:int);
+B = group A by x; -- produces bag A containing all the records for a given value of x
+C = foreach B generate SUM(A.y + A.z);
+===========This will not work -
+It should be:
+A = load 'foo' as (x:chararray, y:int, z:int);
+A1 = foreach A generate x, y + z as yz;
+B = group A1 by x;
+C = foreach B generate SUM(A1.yz);
+......................
+Filter with "not"
+-- filter_not_matches.pig
+divs = load 'NYSE_dividends' as (exchange:chararray, symbol:chararray, date:chararray, dividends:float);
+notstartswithcm = filter divs by not symbol matches 'CM.*'; --
+
+a and b or not c is equivalent to (a and b) or (not c).
+null is not true or false.
+If there was a field that had three values 2, null, 4 and you applied a filter x == 2 to it, only the first record where the value is 2 would be passed through the filter. Likewise x != 2 would only return the last record where the value is 4.
+The way to look for null values is to use the "is null" operator, which returns true whenever the value is null. 
+To find values that are not null use "is not null".
+
+...................... -
+The "group" statement collects records with the same key together.
+-- count.pig
+daily = load 'NYSE_daily' as (exchange, stock);
+grpd  = group daily by stock;
+cnt   = foreach grpd generate group, COUNT(daily); -- daily here is the name for the new bag created by group statement 
+
+group on 2 keys
+--twokey.pig
+daily = load 'NYSE_daily' as (exchange, stock, date, dividends);
+grpd  = group daily by (exchange, stock);
+avg   = foreach grpd generate group, AVG(daily.dividends);
+describe grpd;
+grpd: {group: (exchange: bytearray,stock: bytearray),daily: {exchange: bytearray, stock: bytearray,date: bytearray,dividends: bytearray}}
+
+You can also group all of the records in your pipeline together using "all".
+
+--countall.pig
+daily = load 'NYSE_daily' as (exchange, stock);
+grpd  = group daily all;                              --
+cnt   = foreach grpd generate COUNT(daily);
+
+................................. -
+Order by
+
+The order statement sorts your data for you. It produces a total order of your output data. Total order means that not only is the data sorted in each partition of your data, it is also guaranteed that all records in partition n are less than all records in partition n - 1 for all n. When your data is stored on HDFS, where each partition is a part file, this means that cat will output your data in order.
+
+--order2key.pig
+daily          = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+                    date:chararray, open:float, high:float, low:float,
+                    close:float, volume:int, adj_close:float);
+bydatensymbol  = order daily by date, symbol;
+
+--orderdesc.pig
+daily    = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+            date:chararray, open:float, high:float, low:float, close:float,
+            volume:int, adj_close:float);
+byclose  = order daily by close desc, open;
+dump byclose;    -- open still sorted in ascending order
+................................. -
+Distinct
+
+The distinct statement is very simple. It removes duplicate records. It only works on entire records, not on individual fields.
+--distinct.pig
+-- find a distinct list of ticker symbols for each exchange
+-- This load will truncate the records, picking up just the first two fields.
+daily   = load 'NYSE_daily' as (exchange:chararray, symbol:chararray);
+uniq    = distinct daily;
+................................. -
+When those keys are equal, the two rows are joined. Records for which no match is found are dropped.
+
+Add a comment
+--join.pig
+daily = load 'NYSE_daily' as (exchange, symbol, date, open, high, low, close,
+            volume, adj_close);
+divs  = load 'NYSE_dividends' as (exchange, symbol, date, dividends);
+jnd   = join daily by symbol, divs by symbol;
+
+Like foreach, join preserves the names of the fields of the inputs passed to it. It also prepends the name of the relation the field came from, followed by a ::. Adding describe jnd; to the end of the previous example produces: 
+
+jnd: {daily::exchange: bytearray,daily::symbol: bytearray,daily::date: bytearray, daily::open: bytearray,daily::high: bytearray,daily::low: bytearray, daily::close: bytearray,daily::volume: bytearray,daily::adj_close: bytearray, divs::exchange: bytearray,divs::symbol: bytearray,divs::date: bytearray, divs::dividends: bytearray}
+
+The daily:: prefix does not need to be used unless the field name is no longer unique in the record.
+
+
+Pig also supports "outer joins". In outer joins records that do not have a match on the other side are included, with null values being filled in for the missing fields. 
+Outer joins can be "left, right, or full". A left outer join means records from the left side will be included even if they do not have a match on the right side. Likewise a right outer joins means records from the right side will be included even if they do not have a match on the left side.  A full outer join means records from both sides are taken even when they do not have matches.
+
+--leftjoin.pig
+daily = load 'NYSE_daily' as (exchange, symbol, date, open, high, low, close,
+            volume, adj_close);
+divs  = load 'NYSE_dividends' as (exchange, symbol, date, dividends);
+jnd   = join daily by (symbol, date) left outer, divs by (symbol, date);
+
+Multiple inner join:
+A = load 'input1' as (x, y);
+B = load 'input2' as (u, v);
+C = load 'input3' as (e, f);
+alpha = join A by x, B by u, C by e;
+
+Self joins are supported, though the data must be loaded twice.
+...................... -
+In the following example, 0.1 indicates 10%.
+--sample.pig
+divs = load 'NYSE_dividends';
+some = sample divs 0.1;
+...................... -
+Parallel
+The parallel clause can be attached to any relational operator in Pig Latin.  However, it only controls reduce side parallelism. So it only makes sense for operators that force a reduce phase. 
+These are: "group*, order, distinct, join*, limit, cogroup*, and cross". 
+Operators with an * have multiple implementations, some of which force a reduce and some which do not.
+
+--parallel.pig
+daily   = load 'NYSE_daily' as (exchange, symbol, date, open, high, low, close, volume, adj_close);
+bysymbl = group daily by symbol parallel 10;
+average = foreach bysymbl generate group, AVG(daily.close) as avg;
+sorted  = order average by avg desc parallel 2;
+
+--defaultparallel.pig
+set default_parallel 10;
+daily   = load 'NYSE_daily' as (exchange, symbol, date, open, high, low, close, volume, adj_close);
+bysymbl = group daily by symbol;
+average = foreach bysymbl generate group, AVG(daily.close) as avg;
+sorted  = order average by avg desc;
+e..................... -
+Registering UDFs
+ster.pig
+register 'your_path_to_piggybank/piggybank.jar';
+divs      = load 'NYSE_dividends' as (exchange:chararray, symbol:chararray,
+                date:chararray, dividends:float);
+backwards = foreach divs generate
+                org.apache.pig.piggybank.evaluation.string.Reverse(symbol);
+
+
+So if instead of invoking Pig as "pig register.pig" we change our invocation to 
+pig -Dudf.import.list=org.apache.pig.piggybank.evaluation.string register.pig --
+then we can change our script to:
+
+register 'your_path_to_piggybank/piggybank.jar';
+divs      = load 'NYSE_dividends' as (exchange:chararray, symbol:chararray,
+                date:chararray, dividends:float);
+backwards = foreach divs generate Reverse(symbol);
+
+ If we add "-Dpig.additional.jars=/usr/local/pig/piggybank/piggybank.jar" to our
+command line, then the register command is no longer necessary.
+...................... -
+
+--flatten.pig
+
+players = load 'baseball' as (name:chararray, team:chararray,
+            position:bag{t:(p:chararray)}, bat:map[]);     --position is a bag, has 2 members
+pos     = foreach players generate name, flatten(position) as position;
+bypos   = group pos by position;
+
+
+A foreach with a flatten produces a cross product of every record in the bag with all of the other expressions in the generate statement.
+
+Jorge Posada,New York Yankees,{(Catcher),(Designated_hitter)},...
+
+Once this has passed through the flatten statement it will be two records:
+
+Jorge Posada,Catcher
+Jorge Posada,Designated_hitter
+
+If there is more than one bag and both are flattened, then this cross product will be done with members of each bag as well as other expressions in the generate. So rather than getting n rows (where n is the number of records in one bag) you will get n * m rows.  If there had been an entry in baseball with no position, either because the bag is null or empty, then that record would not be contained in the output of flatten.pig. 
+
+
+"flatten" can also be applied to a tuple. In this case it does not produce a cross product. Instead it elevates each field in the tuple to a top level field. Again, empty tuples will remove the entire record.
+
+If the fields in a bag or tuple that is being flattened have names, Pig will carry those names along. As with join, to avoid ambiguity the field name will have the bag''s name and :: prepended to it. As long as the field name is not ambiguous you are not required to use the bagname::.
+
+Note that even inside foreach relational operators can only be applied to relations. They cannot be applied to expressions.  The statement uniq_sym = distinct daily.symbol will produce a syntax error.  daily.symbol is an expression, not a relation. sym is a relation. 
+
+################################# -
+--repljoin.pig
+daily = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+            date:chararray, open:float, high:float, low:float,
+            close:float, volume:int, adj_close:float);
+divs  = load 'NYSE_dividends' as (exchange:chararray, symbol:chararray,
+            date:chararray, dividends:float);
+jnd   = join daily by (exchange, symbol), divs by (exchange, symbol)
+            using 'replicated';
+
+
+The using 'replicated' tells Pig to use the fragment-replicate algorithm to
+execute this join. Since no reduce phase is necessary, this can be done all in
+the map task.
+
+The second input listed in the join (in this case, divs) is always the input
+that is loaded into memory. Pig does not check beforehand that the specified
+input will fit into memory. If Pig cannot fit the replicated input into
+memory, it will issue an error and fail.
+
+################################# -
+Cogroup
+cogroup is a generalization of group. Instead of collecting records of one
+input based on a key, it collects records of n inputs based on a key. The
+result is a record with a key and one bag for each input. Each bag contains
+all records from that input that have the given value for the key.
+
+Add a comment
+A = load 'input1' as (id:int, val:float);
+B = load 'input2' as (id:int, val2:int);
+C = cogroup A by id, B by id;
+describe C;
+
+C: {group: int,A: {id: int,val: float},B: {id: int,val2: int}}
+
+Another way to think of cogroup is as being the first half of a join. The keys
+are collected together, but the cross product is not done. In fact, cogroup
+plus foreach where each bag is flattened is equivalent to join, as long as
+there are no null values in the keys.
+
+--semijoin.pig
+daily = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+            date:chararray, open:float, high:float, low:float,
+            close:float, volume:int, adj_close:float);
+divs  = load 'NYSE_dividends' as (exchange:chararray, symbol:chararray,
+            date:chararray, dividends:float);
+grpd  = cogroup daily by (exchange, symbol), divs by (exchange, symbol);
+sjnd  = filter grpd by not IsEmpty(divs);
+final = foreach sjnd generate flatten(daily);
+
+################################# -
+Union
+
+Sometimes you want to put two data sets together not by joining them, but by
+concatenating them. Pig Latin provides union for this purpose. If you had two
+files you wanted to use for input, and there was no glob that could describe
+them, you could do:
+
+Add a comment
+A = load '/user/me/data/files/input1';
+B = load '/user/someoneelse/info/input2';
+C = union A, B;
+
+Unlike union in SQL, Pig does not require that both inputs share the same
+schema.
+
+Sometimes your data changes over time. If you have data you collect every
+month, you might add a new column this month. Now you are prevented from using
+union because your schemas do not match. If you want to union this data and
+force your data into a common schema, you can add the keyword "onschema" to
+your union statement.
+
+Add a comment
+A = load 'input1' as (w: chararray, x:int, y:float);
+B = load 'input2' as (x:int, y:double, z:chararray);
+C = union onschema A, B;
+describe C;
+
+C: {w: chararray,x: int,y: double,z: chararray}
+################################# -
+Cross
+
+cross matches the mathematical set operation of the same name. 
+--cross.pig
+-- you may want to run this in a cluster, it produces about 3G of data
+daily     = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+                date:chararray, open:float, high:float, low:float,
+                close:float, volume:int, adj_close:float);
+divs      = load 'NYSE_dividends' as (exchange:chararray, symbol:chararray,
+                date:chararray, dividends:float);
+tonsodata = cross daily, divs parallel 10;
+
+cross tends to produce a lot of data. Given inputs with n and m records
+respectively, cross will produce output with n x m records.
+################################# -
+Stream
+
+-- streamsimple.pig
+divs = load 'NYSE_dividends' as (exchange, symbol, date, dividends);
+highdivs = stream divs through `highdiv.pl` as (exchange, symbol, date,
+dividends);
+
+The executable highdiv.pl is invoked once on every map or reduce task. It is
+not invoked once per record. Pig instantiates the executable and keeps feeding
+data to it via stdin. It also keeps checking stdout and passing any results to
+the next operator in your data flow. 
+
+The above example assumes that you already have highdiv.pl installed on your
+grid and runnable from the working directory on the task machines. If that is
+not the case, which it usually will not be, you can ship the executable to the
+grid. To do this you use a define statement.
+
+--streamship.pig
+define hd `highdiv.pl` ship('highdiv.pl');
+divs = load 'NYSE_dividends' as (exchange, symbol, date, dividends);
+highdivs = stream divs through hd as (exchange, symbol, date, dividends);
+
+This define does two things. First, it defines the executable that will be
+used. Now in stream we refer to highdiv.pl by the alias we gave it, hp, rather
+than referring to it directly. Second, it tells Pig to pick up the file
+./highdiv.pl and ship it to Hadoop as part of this job. This file will be
+picked up from the specified location on the machine you launch the job. It
+will be placed in the working directory of the task on the task machines. So
+the command you pass to stream must refer to it relative to the current
+working directory, not via an absolute path. If your executable depends on
+other modules or files, they can be specified as part of the ship clause as
+well. For example, if the highdiv.pl depends on a Perl module "Financial.pm"
+you can send them both to the task machines.
+
+define hd `highdiv.pl` ship('highdiv.pl', 'Financial.pm');
+divs = load 'NYSE_dividends' as (exchange, symbol, date, dividends);
+highdivs = stream divs through hd as (exchange, symbol, date, dividends);
+...................... -
+distributed cache  -- to ship binaries to every working machines 
+ship moves files from the machine you are launching your job from into the
+grid. But sometimes the file you want is already in the grid. If you have a
+grid file that will be accessed by every map or reduce task in your job, the
+proper way to access it is via the distributed cache. The distributed cache is
+a mechanism Hadoop provides to share files. It reduces the load on HDFS by
+pre-loading the file to local disk on the machine that will be executing the
+task. You can use the distributed cache for your executable by using the cache
+clause in define.
+
+crawl      = load 'webcrawl' as (url, pageid);
+normalized = foreach crawl generate normalize(url);
+define blc `blacklistchecker.py` cache('/data/shared/badurls#badurls');
+goodurls   = stream normalized through blc as (url, pageid);
+
+The string before the .#. is the path on HDFS, in this case
+/data/shared/badurls. The string after the .#. is the name of the file as
+viewed by the executable. So Hadoop will put a copy of /data/shared/badurls
+into the task's working directory and call it badurls.
+
+
+So far we have assumed that your executable takes data on stdin and writes it
+to stdout. This may not work, depending on your executable. If your executable
+needs a file to read from or to write to, or both, you can specify that with
+the input and output clauses in the define command. Continuing with our
+previous example, let's say that blacklistchecker.py expects to read its input
+from a file specified by -i on its command line and write to a file specified
+by -o.
+
+crawl      = load 'webcrawl' as (url, pageid);
+normalized = foreach crawl generate normalize(url);
+define blc `blacklistchecker.py -i urls -o good` input('urls') output('good');
+goodurls   = stream normalized through blc as (url, pageid);
+
+Again, file locations are specified from the working directory on the task
+machines. In this example, Pig will write out all the input for a given task
+for blacklistchecker.py to urls, then invoke the executable, and then read
+good to get the results. Again, the executable will only be invoked once per
+map or reduce task, so Pig will first write out all in the input to the file.
+Basically, with the "input and output", pig knows that the blacklistchecker.py
+will only read from the defined input and output (urls and good). So, pig will
+prepare the "urls" first, then read the PY script output from "good".
+################################# -
+Mapreduce
+you can also include MapReduce jobs directly in your data flow with the
+mapreduce command. This is convenient if you have processing that is better
+done in MapReduce than Pig, but that must be integrated with the rest of your
+Pig data flow. It can also make it easier to incorporate legacy processing
+written in MapReduce with newer processing you want to write in Pig Latin.
+################################# -
+Non-Linear Data Flows
+
+wlogs = load 'weblogs' as (pageid, url, timestamp);
+split wlogs into apr03 if timestamp < '20110404',
+          apr02 if timestamp < '20110403' and timestamp > '20110401',
+          apr01 if timestamp < '20110402' and timestamp > '20110331';
+store apr03 into '20110403';
+store apr02 into '20110402';
+store apr01 into '20110401';
+################################# -
+set
+set default_parallel 10;
+set job.name my_job;
+users = load 'users';
+
+set opt.multiquery false;
+set io.sort.mb 2048; --give it 2G
+################################# -
+Pig Latin Preprocessor
+
+Parameter Substitution
+--daily.pig
+daily     = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+                date:chararray, open:float, high:float, low:float,
+close:float,
+                volume:int, adj_close:float);
+yesterday = filter daily by date == '$DATE';
+grpd      = group yesterday all;
+minmax    = foreach grpd generate MAX(yesterday.high), MIN(yesterday.low);
+
+pig -p DATE=2009-12-17 daily.pig  --
+
+You can repeat the -p command line switch as many times as needed. 
+Parameters can also be placed in a file, which is convenient if you have more
+than a few of them. The format of the file is 
+parameter=value, 
+one per line. Comments in the file should be proceeded by a #. You then
+indicate the file to be used with "-m or -param_file".
+
+pig -param_file daily.params daily.pig  --
+
+Parameters passed on the command line take precedence over parameters provided
+in files. This way you can provide all your standard parameters in a file and
+override a few as needed on the command line.
+
+Parameters can contain other parameters. 
+
+#Param file
+YEAR=2009-
+MONTH=12-
+DAY=17
+DATE=$YEAR$MONTH$DAY
+
+If you had a script that ran at the first of every month you could not do the
+following:
+
+wlogs = load 'clicks/$YEAR$MONTH01' as (url, pageid, timestamp);
+
+You can see the results of your parameter substitution and macros by using the
+"-dryrun" flag on the Pig command line. 
+
+You can also define parameters inside your Pig Latin script using "%declare"
+and "%default". %declare allows you to define a parameter in the script
+itself. 
+
+%default parallel_factor 10;
+wlogs = load 'clicks' as (url, pageid, timestamp);
+grp   = group wlogs by pageid parallel $parallel_factor;
+cntd  = foreach grp generate group, COUNT(wlogs);
+###################### -
+Macros
+Macros are declared with the define statement. A macro takes a set of input
+parameters. 
+The output relation name is given in a returns statement.
+--macro.pig
+-- Given daily input and a particular year, analyze how
+-- stock prices changed on days dividends were paid out.
+define dividend_analysis (daily, year, daily_symbol, daily_open, daily_close)
+returns analyzed {
+    divs          = load 'NYSE_dividends' as (exchange:chararray,
+                        symbol:chararray, date:chararray, dividends:float);
+    divsthisyear  = filter divs by date matches '$year-.*';
+    dailythisyear = filter $daily by date matches '$year-.*';
+    jnd           = join divsthisyear by symbol, dailythisyear by
+$daily_symbol;
+    $analyzed     = foreach jnd generate dailythisyear::$daily_symbol,
+                        $daily_close - $daily_open;
+};
+
+daily   = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+            date:chararray, open:float, high:float, low:float, close:float,
+            volume:int, adj_close:float);
+results = dividend_analysis(daily, '2009', 'symbol', 'open', 'close');
+
+It is also possible to have a macro that does not return a relation. In this
+case the returns clause of the define statement is changed to "returns void". 
+Macros cannot be invoked recursively. Macros can invoke other macros, so a
+macro A can invoke a macro B. But A cannot invoke itself. And once A has
+invoked B, B cannot invoke A. Pig will detect these loops and throw an error.
+
+Parameter substitution, the section called .Parameter Substitution. cannot be
+used inside of macros. Parameters should be explicitly passed to macros and
+parameter substitution used only at the top level.
+################################# -
+Import
+"import" is used to include one Pig Latin script in another.
+--main.pig
+import '../examples/ch6/dividend_analysis.pig';
+
+daily   = load 'NYSE_daily' as (exchange:chararray, symbol:chararray,
+            date:chararray, open:float, high:float, low:float, close:float,
+            volume:int, adj_close:float);
+results = dividend_analysis(daily, '2009', 'symbol', 'open', 'close');
+
+Import writes the imported file directly into your Pig Latin script in place
+of the import statement. In the above example the contents of
+dividend_analysis.pig will be placed immediately before the load statement.
+
+To set the searching path
+set pig.import.search.path '/usr/local/pig,/grid/pig';
+import 'acme/macros.pig';
+
+################################# -
+--This will only check the syntax 
+pig -c
+or
+pig -check 
+-- This will put in parameters, load import and expand macros  
+pig -dryrun
+################################# -
+Describe
+describe shows you the schema of a relation in your script. 
+################################# -
+Explain
+To see how Pig is compiling your script into MapReduce jobs.
+
+--explain.pig
+divs   = load 'NYSE_dividends' as (exchange, symbol, date, dividends);
+grpd   = group divs by symbol;
+avgdiv = foreach grpd generate group, AVG(divs.dividends);
+store avgdiv into 'average_dividend';
+
+bin/pig -x local -e 'explain -script explain.pig'
+################################# -
+Illustrate
+Run script with sample data.
+--illustrate.pig
+divs   = load 'NYSE_dividends' as (e:chararray, s:chararray, d:chararray,
+div:float);
+recent = filter divs by d > '2009-01-01';
+trimmd = foreach recent generate s, div;
+grpd   = group trimmd by s;
+avgdiv = foreach grpd generate group, AVG(trimmd.div);
+illustrate avgdiv;
+################################# -
+Pig unit
+################################# -
+Using Compression in Intermediate Results
+To turn compression on set "mapred.compress.map.output to true".
+To use LZO as your codec, set "mapred.map.output.compression.codec to com.hadoop.compression.lzo.LzopCodec".  
+################################# -
+(chararray) STRSPLIT(chararray source, chararray regex)
+Split a chararray by a regular expression
+
+Parameters:
+source chararray to split
+
+regex regular expression to use as delimiter
+
+Returns:
+tuple with one field each section of source
+################################# -
+{(chararray)} TOKENIZE(chararray input)
+Parameters:
+source chararray to split
+
+Returns:
+input split on whitespace, with each resulting value being placed in its own
+tuple and all tuples placed in the bag
+################################# -
+################################# top used OS overall
+rec_b = load 'testdir/123456*' using PigStorage(';') as
+(Company_id:chararray,Node:chararray,Product:chararray,Year:int,Month:int,Date:int,Hour:int,Country:chararray,Region:chararray,City:chararray,OS:chararray,Command:chararray);
+flted_rec = filter rec_b by Command == 'uname -a';
+os = group flted_rec by OS;
+o = foreach os {
+        n = flted_rec.Node;
+        uniq = distinct n;
+        generate group , COUNT(uniq) as num:long;
+}
+h = order o by num desc;
+dump h ;
+################################# top used OS by country
+rec_b = load 'testdir/123456*' using PigStorage(';') as
+(Company_id:chararray,Node:chararray,Product:chararray,Year:int,Month:int,Date:int,Hour:int,Country:chararray,Region:chararray,City:chararray,OS:chararray,Command:chararray);
+flted_rec = filter rec_b by Command == 'uname -a'; -- to remove most records
+gpos =  group flted_rec by (Country,OS) ;
+oc = foreach gpos   {
+        n = flted_rec.Node ;
+        uniq = distinct n; -- count OS used with unique node
+        generate FLATTEN(group) , COUNT(uniq) as num:int;
+}
+h = order oc by Country, num desc;
+dump h;
+################################# top load OS ranking; OS with MAX load, pseudo code +
+rec_load = load 'testdir/123456*' using PigStorage(';') as
+(Company_id:chararray,Node:chararray,Product:chararray,Year:int,Month:int,Date:int,Hour:int,Country:chararray,Region:chararray,City:chararray,OS:chararray,Command:chararray,Content:chararray);
+flt = filter rec_load by Command == 'stat_fmcxV6.sh -t d' ; -- getting only
+the fmcx
+os = group flt by OS;
+ol = foreach os generate group, MAX(flt.Content) as max_load: long;
+h = order ol by max_load desc;
+store h into 'top_os_load.txt';
+################################# macro load_info.macro
+
+IMPORT './ch11/src/main/pig/max_temp.macro';
+-- macro load_info.macro
+DEFINE load_general(file_names)  RETURNS general_info { 
+$general_info = load '$file_names' using PigStorage(';') as
+(Company_id:chararray,Node:chararray,Product:chararray,Year:int,Month:int,Date:int,Hour:int,Country:chararray,Region:chararray,City:chararray,OS:chararray,Command:chararray);
+};
+
+DEFINE load_specific(file_names)  RETURNS specific_info { 
+$specific_info= load '$file_names' using PigStorage(';') as
+(Company_id:chararray,Node:chararray,Product:chararray,Year:int,Month:int,Date:int,Hour:int,Country:chararray,Region:chararray,City:chararray,OS:chararray,Command:chararray,Content:chararray);
+};
+
+rec_g = load_general('testdir/123456*') ;
+rec_s = load_specific('testdir/123456*') ;
+################################# ls -l file analyze
+
+IMPORT '/dev/shm/load_info.macro';
+rec_s = load_specific('hdfs://localhost/user/root/testdir/123456*') ;
+flt = filter rec_s by Content matches '.*fmhs.*' ;
+ls_t = foreach flt {
+	nod = Node;
+	n = STRSPLIT(Content, ' ++');
+	generate nod as node_name:chararray, n.$8 as file_name:chararray, (int)n.$4 as size:int;
+-- to cast it as int.
+}
+dump ls_t;
+o = group ls_t by node_name;
+m = FOREACH o GENERATE group, SUM(ls_t.size);
+dump m;
+#################################

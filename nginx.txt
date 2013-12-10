@@ -1,0 +1,1242 @@
+For ubuntu:
+wget http://nginx.org/download/nginx-1.4.3.tar.gz
+
+apt-get install uwsgi uwsgi-plugin-python
+
+pip install uwsgi
+
+To get PCRE
+# apt-get update
+# apt-get install libpcre3 libpcre3-dev
+............................................
+yum install -y httpd-devel pcre perl pcre-devel zlib zlib-devel GeoIP GeoIP-devel
+
+
+./configure --with-http_ssl_module --without-http_fastcgi_module --without-http_scgi_module 
+make
+make install
+
+To add in the http part of the configuraiotn file.
+ server {
+         listen       80;
+         server_name  192.168.115.51;
+         location / { try_files $uri @app; }
+         location @app {
+             include uwsgi_params;
+             uwsgi_pass unix:/tmp/uwsgi.sock;
+         }
+     }
+
+For some configuration, to start nginx:
+/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
+
+To start uwsgi
+uwsgi -s /tmp/uwsgi.sock --module hello --callable app
+
+Make sure the /tmp/uwsgi.sock is accessible to nginx 
+.................................
+Building nginx
+./configure --user=www-data --group=www-data --with-http_ssl_module
+--with-http_realip_module
+............................................
+1. The Nginx master process, which should be started as root. 
+
+2. The Nginx worker processes, which are started under the account you 
+specified in the configuration file with the userdirective 
+
+............................................
+if the load pattern is CPU intensive.for instance, handling a lot of TCP/IP,
+doing SSL, or compression.the number of nginx workers should match the number
+of CPU cores; if the load is mostly disk I/O bound.for instance, serving
+different sets of content from storage, or heavy proxying.the number of
+workers might be one and a half to two times the number of cores.
+
+ A number of mechanisms and configuration file directives exist to mitigate
+such disk I/O blocking scenarios. Most notably, combinations of options like
+"sendfile" and "AIO" typically produce a lot of headroom for disk performance.
+An nginx installation should be planned based on the data set, the amount of
+memory available for nginx, and the underlying storage architecture.
+
+
+If the temporary files directory for proxying is on another file system, the
+file will be copied, thus it''s recommended to keep both "temporary" and
+"cache directories" on the same file system. 
+
+The "try_files" directive was initially meant to gradually replace conditional
+if configuration statements in a more proper way, and it was designed to
+quickly and efficiently try/match against different URI-to-content mappings.
+Overall, the try_files directive works well and can be extremely efficient and
+useful. It is recommended that the reader thoroughly check the try_files
+directive and adopt its use whenever applicable.
+
+
+Standard name 	Description   ----
+nginx.conf   	Base configuration of the application
+mime.types   	A list of file extensions and their associated MIME types
+fastcgi.conf   	FastCGI-related configuration
+proxy.conf   	Proxy-related configuration
+sites.conf   	Configuration of the websites served by Nginx, also known as virtual hosts. It's recommended to create separate files for each domain.
+
+
+include sites/*.conf;  # one config file for each site. 
+Be careful when including a file.if the specified file does not exist, the
+configuration checks will fail and Nginx will not start. 
+If use "*", nginx will not complain even if no file exists.
+.................................
+To check config:  
+./nginx .t    +
+
+alex@example.com sbin]$ ./nginx .t .c /home/alex/test.conf +
+
+This command will parse /home/alex/test.confand make sure it is a valid Nginx
+configuration file.
+
+
+To load config changes, type:
+ /usr/local/nginx/sbin/nginx -s reload   +
+
+To stop server, type:
+# /usr/local/nginx/sbin/nginx -s stop    +
+
+Restart the nginx:
+# /usr/local/nginx/sbin/nginx -s reload
+
+nginx .s stop Stops the daemon immediately (using the TERM signal)
+nginx .s quit Stops the daemon gracefully (using the QUIT signal)  +
+nginx .s reopen Reopens the log files  +
+nginx .s reload Reloads the configuration
+nginx -v to check built option switches +
+
+killall nginx
+.................................
+
+events {
+    worker_connections 1024;
+}
+
+
+http {
+    server {
+	listen 80;
+	server_name example.com;
+	access_log /var/log/nginx/example.com.log;
+	location ^~ /admin/ {
+	    index index.php;
+	}
+    }
+}
+Within the "http" block, you may declare one or more "server" blocks.
+Aserverblock allows you to configure a virtual host. Theserverblock , in this
+example, contains some configuration that applies to all requests with a Host
+HTTP header exactly matching example.com.  
+
+Within this "server" block, you may insert one or more "location" blocks.
+These allow you to enable settings only when the requested URI matches the
+specified path.  
+
+Configuration is inherited within children blocks. To disable the access_log
+for a specific location: 
+
+	location ^~ /admin/ {
+	    index index.php;
+	    access_log off;
+	}
+
+......................
+k or K: Kilobytes
+m or M: Megabytes
+
+client_max_body_size 2M; #the same as below
+client_max_body_size 2048k;
+
+ms: Milliseconds
+s: Seconds   # default
+m: Minutes
+h: Hours
+d: Days
+w: Weeks
+M: Months (30 days)
+y: Years (365 days)
+
+client_body_timeout 3m; # the 3 are the same
+client_body_timeout 180s;
+client_body_timeout 180;
+......................
+Some directives allows to use variabls, some not.
+[.]
+location ^~ /admin/ {
+    access_log logs/main.log;
+    log_format main '$pid - $nginx_version - $remote_addr';
+}
+[.]
+.................................
+daemon:  to run as daemon  ----
+Accepted values: onor off
+Syntax: daemon on;
+Default value: on
+
+env  : Lets you (re)define environment variables. ----
+env MY_VARIABLE;
+env MY_VARIABLE=my_value;
+
+
+error_log :  ----
+Context: main, http, server, andlocation 
+Syntax:  error_log /file/path level;
+Default value: logs/error.log error.
+Where level is one of the following values: debug, info, notice, warn, error,
+and crit 
+To disable it:
+error_log /dev/null crit;
+
+log_not_found: Enables or disables logging of 404 not foundHTTP errors.  ----
+Context:main, http, server, and location 
+Accepted values: on or off
+log_not_found on;
+Default value: on
+If your logs get filled with 404 errors due to missing favicon.ico or robots.txtfiles, you might want to turn this off.
+
+master_process  : if off, nginx runs as single process, can not take remove
+connection ----
+Accepted values: on or off
+master_process on;
+Default value: on
+
+ssl_engine    ----
+Syntax: Character string
+ssl_engine enginename;
+Default value: None
+Where enginenameis the name of an available hardware SSL accelerator on your
+system. To check for available hardware SSL accelerators, run this command
+from the 
+shell: openssl engine .t
+
+user    ----
+Syntax: user username groupname;
+user username;
+Default value: Defined at compile time. If still undefined, the user and group
+of the Nginx master process are used.  Lets you define the user account and
+optionally the user group used for starting the Nginx "worker processes".  
+
+worker_threads  : no need  ----
+Syntax: Numeric
+worker_threads 8;
+Default value: None
+Defines the amount of threads per worker process.
+
+worker_priority   ----
+Syntax: Numeric
+worker_priority 0;
+Default value: 0
+Defines the priority of the worker processes, from -20(highest) to 19(lowest).
+The default value is 0. Note that kernel processes run at priority level -5,
+so it's not recommended that you set the priority to -5 or less.
+
+worker_processes  ----
+Syntax: Numeric
+worker_processes 4;
+Default value: 1
+Defines the amount of worker processes. Nginx offers to separate the treatment
+of requests into multiple processes. The default value is 1, but it's
+recommended to increase this value if your CPU has more than one core.
+Besides, if a process gets blocked due to slow I/O operations, incoming
+requests can be delegated to the other worker processes.
+
+worker_rlimit_core  ----
+Syntax: Numeric (size)
+worker_rlimit_core 100m;
+Default value: None
+Defines the size of core files per worker process.
+
+worker_rlimit_nofile  ----
+Syntax: Numeric
+worker_rlimit_nofile 10000;
+Default value: None
+Defines the amount of files a worker process may use simultaneously.
+
+working_directory  ----
+Syntax: Directory path
+working_directory /usr/local/nginx/;
+Default value: The prefix switch defined at compile time.
+Working directory used for worker processes; only used to define the location
+of core files. The worker process user account (user directive) must have
+write permissions on this folder in order to be able to write core files.
+
+Events module --
+
+accept_mutex   ----
+Accepted values:onor off 
+accept_mutex on;
+Default value: on
+Enables or disables the use of an accept mutex (mutual exclusion) to open
+listening sockets.
+
+accept_mutex_delay  ----
+Syntax: Numeric (time)
+accept_mutex_delay 500ms;
+Default value: 500 milliseconds
+Defines the amount of time a worker process should wait before 
+trying to acquire the resource again. This value is not used if the
+accept_mutexdirective is set to off.
+
+debug_connection   ----
+Syntax: IP address or CIDR block.
+debug_connection 172.63.155.21;
+debug_connection 172.63.155.0/24;
+Default value: None.
+Writes detailed logs for clients matching this IP address or address block.
+The debug information is stored in the file specified with the
+error_logdirective, enabled with the debug level.
+Note: Nginx must be compiled with the --debugswitch in order to enable this
+feature.
+
+multi_accept   ----
+Syntax: onor off
+multi_accept off;
+Default value: off
+Defines whether or not Nginx should accept all incoming connections from the
+listening queue at once.
+
+worker_connections  ----
+Syntax: Numeric
+worker_connections 1024;
+Default value: None
+Defines the amount of connections that a worker process may treat
+simultaneously.
+
+use   ----
+Accepted values:/dev/poll, epoll, eventport, 
+kqueue, rtsig, or select
+use kqueue;
+Default value: Defined at compile time
+Selects the event model among the available ones (the ones that you enabled at
+compile time), though Nginx automatically selects the most appropriate one.
+The supported models are:
+"select": The default and standard module, it is used if the OS does not
+support a more efficient one (it's the only available method under Windows)
+
+"poll": It is automatically preferred over select, but not available on all
+systems
+
+"kqueue": An efficient method for FreeBSD 4.1+, OpenBSD 2.9+, NetBSD 2.0, and
+MacOS X operating systems
+
+"epoll": An efficient method for Linux 2.6+ based operating systems
+
+"rtsig": Real time signals, available as of Linux 2.2.19, but unsuited for
+high-traffic profiles as default system settings only allow 1,024 queued
+signals
+
+"/dev/poll": An efficient method for Solaris 7 11/99+, HP/UX 11.22+, IRIX
+6.5.15+, and Tru64 UNIX 5.1A+ operating systems
+
+"eventport": An efficient method for Solaris 10, though a security patch is
+required
+
+Configuration module --
+include /file/path.conf;
+include sites/*.conf;
+
+Low-traffic 		----
+CPU: Dual-core
+RAM: 2 GB
+Requests: ~ 1/s
+
+Recommended values
+worker_processes 2;
+worker_rlimit_nofile 1024;
+worker_priority -5;
+worker_cpu_affinity 01 10;
+events {
+    multi_accept on;
+    worker_connections 128;
+}
+setup Standard setup  ----
+CPU: Quad-core
+RAM: 4 GB
+Requests: ~ 50/s
+
+worker_processes 4;
+worker_rlimit_nofile 8192;
+worker_priority 0;
+worker_cpu_affinity 0001 0010 0100 1000;
+events {
+    multi_accept off; 
+    worker_connections 1024;
+}
+High-traffic setup ----
+CPU: 8-core
+RAM: 12 GB
+Requests: ~1000/s
+
+worker_processes 8;
+worker_priority 0;
+events {
+    multi_accept off;
+    worker_connections 8192;
+}
+
+.................................
+listen 192.168.1.1:80;
+listen 127.0.0.1;
+listen 80 default;
+listen [:::a8c9:1234]:80; # IPv6 ad dresses can be put between square brackets
+listen 443 ssl;
+
+server_name:  ----
+Note that this directive accepts wildcards as well as regular expressions (in which case, the hostname should start with the ~character).
+Syntax: server_name hostname1 [hostname2.];
+
+server_name www.website.com;
+server_name www.website.com website.com;
+server_name *.website.com;
+server_name .website.com; # combines both *.website.com and website.com
+server_name *.website.*;
+server_name ~^\.example\.com$;
+
+Note: You may use an empty string as the directive value in order to catch all requests that do not come with a Host header, but only after at least one regular name (or "_" for a dummy host name):
+
+server_name website.com "";
+server_name _ "";
+
+server_name_in_redirect : for internal redirects ----
+Context: http, server, location
+Syntax: on or off
+Default value: server_name_in_redirect on;
+If set to on, Nginx will use the first hostname specified in the server_namedirective. If set to off, Nginx will use the value of the Hostheader from the HTTP request.
+
+server_names_hash_max_size   ----
+Context: http
+This directive defines the maximum size of the server names hash table. If your server uses a total of more than 512 hostnames, you will have to increase this value.
+
+Default value: 512
+server_names_hash_max_size 512;
+
+server_names_hash_bucket_size ----
+Single server name length.
+Default value: 32 (or 64, or 128, depending on your processor cache specifications).
+server_names_hash_bucket_size 32;
+
+port_in_redirect ----
+Context: http, server, location
+In the case of a redirect, this directive defines whether or not Nginx should append the port number to the redirection URL.
+Syntax: onor off
+Default value: on
+port_in_redirect on;
+
+tcp_nodelay ----
+Context: http, server, location
+Enables or disables the TCP_NODELAY socket option for keep-alive connections only.
+Syntax: onor off
+Default value: on
+tcp_nodelay on;
+
+tcp_nopush ----
+Context: http, server, location
+Enables or disables the TCP_NOPUSH (FreeBSD)or TCP_CORK(Linux) socket option. Note that this option only applies if the "sendfile" directive is enabled. If tcp_nopush is set to on, Nginx will attempt to transmit the entire HTTP response headers in a single TCP packet.
+Syntax: on or off
+Default value: off
+tcp_nopush off;
+
+sendfile ----
+Context: http, server, location
+sendfile() copies data between one file descriptor and another. Because this copying is done within the kernel, sendfile() is more efficient than the combination of read(2) and write(2), which would require transferring data to and from user space.
+If this directive is enabled, Nginx will use the sendfile kernel call to handle file transmission. If disabled, Nginx will handle the file transfer by itself. Depending on the physical location of the file being transmitted (such as NFS) this option may affect the server performance.
+Syntax: on or off
+Default value: off
+sendfile off;
+
+sendfile_max_chunk ----
+Context: http, server
+This directive defines a maximum size of data to be used for each call to sendfile(read above).
+Syntax: Numeric value (size)
+Default value: 0
+
+reset_timedout_connection ----
+Context: http, server, location
+When a client connection times out, its associated information may remain in memory depending on the state it was on.  Enabling this directive will erase all memory associated to the connection after it times out.
+Syntax: on or off
+Default value: off
+reset_timedout_connection off;
+
+root  ----
+Context: http, server, location, if
+Variables accepted
+Defines the document root, containing the files you wish to serve to your visitors.
+Syntax: Directory path
+Default value: html
+root /home/website.com/public_html;
+
+alias ----
+Context: location
+Variables accepted
+aliasis a directive that you place in a locationblock only. It assigns a different path for Nginx to retrieve documents for a specific request. As an example, consider this configuration:
+http {
+    server {
+	server_name localhost;
+	root /var/www/website.com/html;
+	location /admin/ {
+	    alias /var/www/locked/;
+	}
+    }
+}
+
+error_page ----
+Context: http, server, location, if
+Variables accepted
+Allows you to affect URIs to HTTP response code and optionally to substitute the code with another.
+Syntax: error_page code1 [code2.] [=replacement code] [=@block | URI]
+Examples :
+error_page 404 /not_found.html;
+error_page 500 501 502 503 504 /server_error.html;
+error_page 403 http://website.com/;
+error_page 404 @notfound; # jump to a named 
+# location block
+error_page 404 =200 /index.html; # in case of 
+# 404 error, redirect to index.html with a 200 OK response code
+
+if_modified_since ----
+Context: http, server, location
+Defines how Nginx handles the If-Modified-SinceHTTP header.  This header is mostly used by search engine spiders (such as Google web crawling bots). The robot indicates the date and time of the last pass; if the requested file was not modified since, the server simply returns a 304 Not Modifiedresponse code with no body.  
+This directive accepts three values:
+
+off: Ignores the If-Modified-Sinceheader.
+
+exact: Returns 304 Not Modifiedif the date and time specified in the HTTP header are an exact match with the actual requested file modification date. If the file modification date is anterior or ulterior, the file is served normally (200 OK response).
+
+before: Returns 304 Not Modifiedif the date and time specified in the HTTP header is anterior or equal to the requested file modification date.  
+
+Syntax: if_modified_since off| exact| before
+Default value: exact
+if_modified_since exact;
+
+index ----
+Context: http, server, location
+Variables accepted
+Defines the default page that Nginx will serve if no filename is specified in the request (in other words, the index page). You may specify multiple filenames; the first file to be found will be served.  If none of the specified files are found, Nginx will either attempt to generate an automatic index of the files, if the "autoindex" directive is enabled (check the HTTP Autoindex module) or return a 403 Forbidden error page.
+Optionally, you may insert an absolute filename (such as /page.html, based from the document root directory) but only as the last argument of the directive.
+
+Syntax: index file1 [file2.] [absolute_file];
+Default value: index.html
+index index.php index.html index.htm;
+index index.php index2.php /catchall.php;
+
+recursive_error_pages ----
+Context: http, server, location
+Sometimes an error page itself served by the error_pagedirective may trigger an error, in which case, the error_pagedirective is used again (recursively). This directive enables or disables recursive error pages.  Syntax: onor off
+Default value: off
+recursive_error_pages off;
+
+try_files  ----
+Context: location
+Attempts to serve the specified files (arguments 1 to N-1), if none of these files exist, jumps to the respective named location block (last argument) or serves the specified URI.
+Syntax: Multiple file paths, followed by a named locationblock or a URI
+
+Example: try file name, + html, + php, +xml and finally @proxy 
+location / {
+    try_files $uri $uri.html $uri.php $uri.xml @proxy;
+}
+# the following is a "named location block"
+location @proxy {
+    proxy_pass 127.0.0.1:8080;
+}
+keepalive_requests ----
+Context: http, server, location
+Maximum amount of requests served over a single keep-alive connection.
+Syntax: Numeric value
+Default value: 100
+keepalive_requests 100;
+
+keepalive_timeout ----
+Context: http, server, location
+This directive defines the amount of seconds the server will wait before closing a keep-alive connection.  
+The second (optional) parameter is transmitted as the value of the Keep-Alive: timeout=HTTP response header; the intended effect is to let the client browser close the connection itself after this period has elapsed. Note that some browsers ignore this setting; Internet Explorer for instance automatically closes the connection after 60-ish seconds.
+
+Syntax: keepalive_timeout time1 [time2];
+Default value: 75
+keepalive_timeout 75;
+keepalive_timeout 75 60;
+
+send_timeout ----
+Context: http, server, location
+The amount of time after which Nginx closes an inactive connection. A connection becomes inactive the moment a client stops transmitting data.  
+Syntax: Time value (seconds)
+Default value: 60
+send_timeout 60;
+
+client_body_in_file_only ----
+Context: http, server, location
+If this directive is enabled, the body of incoming HTTP requests will always be stored into actual files on the disk.  The client bodycorresponds to the client HTTP request raw data, minus the headers (in other words, the content transmitted in POST requests). Files are stored as plain text documents.
+This directive accepts three values:
+"off": Do not store the request body in a file
+"clean": Store the request body in a file and remove the file after a request is processed
+"on": Store the request body in a file, but do not remove the file after the request is processed (not recommended unless for debugging purposes)
+Syntax: client_body_in_file_only on| clean | off
+Default value: off
+client_body_file_only off;
+
+client_body_in_single_buffer ----
+Context: http, server, location
+Defines whether or not Nginx should store the request body in a single buffer in memory
+Syntax: on or off
+Default value: off
+client_body_in_single_buffer off;
+
+client_body_buffer_size ----
+Context: http, server, location
+Specifies the size of the buffer holding the body of client requests. If this size is exceeded, the body (or at least part of it) will be written to the disk. Note that if the client_body_in_file_onlydirective is enabled, request bodies are always stored to a file on the disk, regardless of their size (whether they fit in the buffer or not).
+Syntax: Size value
+Default value: 8 k or 16 k (2 memory pages) depending on your architecture
+client_body_buffer_size 8k;
+
+client_body_temp_path  ----
+Context: http, server, location
+Allows you to define the path of the directory that will store the client request body files.
+An additional option lets you separate those files into a folder hierarchy over up to three levels.
+Syntax: client_body_temp_path path [level1] [level2] [level3]
+
+Default value: client_body_temp client_body_temp_path /tmp/nginx_rbf;
+
+client_body_temp_path temp 2; # Nginx will create 2-digit folders to hold request body files
+client_body_temp_path temp 1 2 4; # Nginx will create 3 levels of folders (first level: 1 digit, second level: 2 digits, third level: 4 digits)
+
+client_body_timeout ----
+Context: http, server, location
+Defines the inactivity timeout while reading a client request body. A connection becomes inactive the moment the client stops transmitting data. If the delay is reached, Nginx returns a 408 Request timeout HTTP error.
+Syntax: Time value (seconds)
+Default value: 60
+send_timeout 60;
+
+client_header_buffer_size ----
+Context: http, server, location
+This directive allows you to define the size of the buffer that Nginx allocates to request headers. Usually 1 k is enough. However, in some cases, the headers contain large chunks of cookie data or the request URI is lengthy. If that is the case, then Nginx allocates one or more larger buffers (the size of larger buffers is defined by the "large_client_header_buffers" directive).
+Syntax: Size value
+Default value: 1 k
+client_header_buffer_size 1k;
+
+client_header_timeout ----
+Context: http, server, location
+Defines the inactivity timeout while reading a client request header. A connection becomes inactive the moment the client stops transmitting data. If the delay is reached, Nginx returns a 408 Request timeout HTTP error.
+Syntax: Time value (seconds)
+Default value: 60
+send_timeout 60;
+
+client_max_body_size ----
+Context: http, server, location
+It is the maximum size of a client request body. If this size is exceeded, Nginx returns a 413 Request entity too largeHTTP error. This setting is particularly important if you are going to allow users to upload files to your server over HTTP.
+Syntax: Size value
+Default value: 1 m;
+client_max_body_size 1m;
+
+large_client_header_buffers ----
+Context: http, server, location
+Defines the amount and size of larger buffers to be used for storing client requests, in case the default buffer (client_header_buffer_size) was insufficient.
+Each line of the header must fit in the size of a single buffer. If the request URI line is greater than the size of a single buffer, Nginx returns the 414 Request URI too largeerror. If another header line exceeds the size of a single buffer, Nginx returns a 400 Bad requesterror.
+Syntax: large_client_header_buffers amount size
+Default value: 4 buffers of 4 or 8 kilobytes (1 memory page, the size of a page depends on your architecture)
+large_client_header_buffers 4 4k;
+
+lingering_time ----
+Context: http, server, location
+This directive applies to client requests with a request body. As soon as the amount of uploaded data exceeds max_client_body_size, Nginx immediately sends a 413 Request entity too largeHTTP error response. However, most browsers continue uploading data regardless of that notification. This directive defines the amount of time Nginx should wait after sending this error response before closing the connection.
+Syntax: Numeric value (time)
+Default value: 30 seconds
+
+lingering_timeout ----
+Context:http, server, location
+This directive defines the amount of time that Nginx should wait between two read operations before closing the client connection.
+Syntax: Numeric value (time)
+Default value: 5 seconds
+
+ignore_invalid_headers ----
+Context:http, server
+If this directive is disabled, Nginx returns a 400 Bad RequestHTTP error in case request headers are 
+misformed.
+Syntax:on or off
+Default value: on
+
+types ----
+Context: http, server, location
+types {
+    mimetype1 extension1;
+    mimetype2 extension2 [extension3.];
+    [.]
+}
+include mime.types;
+
+This directive allows you to establish correlations between MIME types and file extensions. 
+This will affect the Content-TypeHTTP header sent within responses.
+The value of the Content-Type HTTP header in the response usually affects the way browsers handle files. For example, if the MIME type is "application/octet-stream", the browser downloads the file to the disk instead of displaying it.
+
+http {
+    include mime.types;
+    [.]
+    location /downloads/ {
+	# removes all MIME types, to download everything 
+	types { }
+	default_type application/octet-stream;
+	}
+    [.]
+}
+default_type ----
+Context: http, server, location
+Defines the default MIME type. When Nginx serves a file, the file extension is matched against the known types declared within the types block in order to return the proper MIME type as value of the Content-Type HTTP response header. If the extension doesn.t match any of the known MIME types, the value of the default_type directive is used.
+Syntax: MIME type.
+Default value: text/plain.
+default_type text/plain;
+
+types_hash_max_size ----
+Context: http, server, location
+Defines the maximum size of an entry in the MIME types hash table.
+Syntax: Numeric value.
+Default value: 4 k or 8 k (1 line of CPU cache)
+
+limit_except ----
+Context: location
+This directive allows you to prevent the use of all HTTP methods, except the ones that you explicitly allow.
+
+The syntax is particular:
+limit_except METHOD1 [METHOD2.] {
+    allow | deny | auth_basic | auth_basic_user_file | proxy_pass | perl;
+}
+location /admin/ {
+    limit_except GET {
+	allow 192.168.1.0/24;
+	deny all;
+    }
+}
+limit_rate ----
+Context: http, server, location, if
+Allows you to limit the transfer rate of individual client connections.  The rate is expressed in bytes per second: 
+
+limit_rate 500k;
+
+This will limit connection transfer rates to 500 kilobytes per second. If a client opens two connections, the client will be allowed 2 * 500 kilobytes.
+Syntax: Size value
+Default value: No limit
+limit_rate_ after ----
+Context: http, server, location, if
+Defines the amount of data transferred before the limit_rate directive takes effect.
+
+limit_rate 10m;
+
+Nginx will send the first 10 megabytes at maximum speed. Past this size, the transfer rate is limited by the value specified with the "limit_rate" directive (see above). Similar to the limit_rate directive, this setting only applies to a single connection.
+Syntax: Size value
+Default: None
+
+satisfy ----
+Context: location
+The satisfydirective defines whether clients require all access conditions to be valid (satisfy all) or at least one (satisfy any).
+Syntax: satisfy any | all
+Default value: all
+satisfy all;
+location /admin/ {
+    allow 192.168.1.0/24;
+    deny all;
+    auth_basic "Authentication required";
+    auth_basic_user_file conf/htpasswd;
+}
+The default (satisfy all) is to satisfy both conditions above.
+
+internal ----
+Context: 
+location
+This directive specifies that the locationblock is internal; in other words, the specified resource cannot be accessed by external requests.
+server {
+    [.]
+    server_name .website.com;
+    location /admin/ {
+	internal;
+    }
+}
+With the previous configuration, clients will not be able to browse http://website.com/admin/. Such requests will be met with 404 Not founderrors. The only way to access the resource is via internal redirects (check the Rewrite modulesection for more information on internal redirects).
+
+directio ----
+Context: http, server, location
+If this directive is enabled, files with a size greater than the specified value will be read with the Direct I/Osystem mechanism. This allows Nginx to read data from the storage device and place it directly in memory with no intermediary caching process involved. Enabling this directive will automatically disable the sendfiledirective as they cannot be used together.
+Syntax: Size value, or off
+Default value: off
+directio 5m;
+
+open_file_cache ----
+Context: http, server, location
+This directive allows you to enable the cache which stores information about open files.
+
+Open file descriptors, information with their size and modification time;
+
+Information about the existence of directories;
+
+Error information when searches for a file - no file, do not have rights to read, etc. See also open_file_cache_errors
+
+"max" - specifies the maximum number of entries in the cache. When the cache overflows, the least recently used(LRU) items will be removed;
+"inactive" - specifies the time when the cached item is removed, if it has not been downloaded during that time, the default is 60 seconds;
+"off" - prohibits the cache activity.
+
+open_file_cache max=5000 inactive=180;
+
+open_file_cache max=1000 inactive=20s; 
+open_file_cache_valid    30s; 
+open_file_cache_min_uses 2;
+open_file_cache_errors   on;
+
+open_file_cache_errors ----
+Context: http, server, location
+Enables or disables the caching of file errors with the open_file_cachedirective (read above).
+Syntax: on or off
+Default value: off
+open_file_cache_errors on;
+
+open_file_cache_min_uses ----
+Context: http, server, location
+Default value: 1
+open_file_cache_min_uses 3;
+
+If the cache entry is accessed more than three times, it becomes permanently active and is not removed until Nginx decides to clear out older entries to free up some space.
+Otherwise, the entry will be removed after 60s, by default.
+
+open_file_cache_ valid ----
+Context: http, server, location
+catche expire timer
+Syntax: Time value (in seconds)
+Default value: 60
+open_file_cache_valid 60;
+aio ----
+Syntax:	aio on | off | sendfile
+Default:	off
+Context:	 http, server, location
+Appeared in:	 0.8.11
+Reference:	aio
+
+This directive is usable as of Linux kernel 2.6.22. For Linux it is required
+to use directio, this automatically disables sendfile support.
+
+location /video {
+    aio on; 
+    directio 512; 
+    output_buffers 1 128k;
+}
+
+log_subrequest ----
+Context: http, server, location
+
+Enables or disables "access log" logging of sub-requests triggered by internal
+redirects (see the Rewrite module section) or SSI requests (see the Server
+Side Includes modulesection).
+Syntax: onor off
+Default value: off
+log_subrequest off;
+
+resolver ----
+Context: http, server, location
+Specifies the name server that should be employed by Nginx to resolve
+hostnames to IP addresses and vice-versa.
+
+Syntax: IP address
+Default value: None (system default)
+resolver 127.0.0.1; # use local DNS
+
+resolver_timeout ----
+Context: http, server, location
+Timeout for a hostname resolution query.
+Syntax: Time value (in seconds)
+Default value: 30
+resolver_timeout 30s;
+
+server_tokens ----
+Context: http, server, location
+This directive allows you to define whether or not Nginx should inform the
+clients of the running version number.  
+There are two situations where Nginx indicates its version number:
+
+In the serverheader of HTTP responses (such as nginx/0.7.66). If you set
+server_tokensto off, the serverheader will only indicate Nginx.
+
+On error pages, Nginx indicates the version number in the footer. If you set
+server_tokensto off, the footer of error pages will only indicate nginx.  
+
+If you are running an older version of Nginx and do not plan to update it, it
+might be a good idea to hide your version number.
+
+Syntax: onor off
+Default value: on
+server_tokens on;
+
+underscores_in_headers ----
+Context: http, server
+Allows or disallows underscores in custom HTTP header names. If this directive
+is set to on, the following example header is considered valid by Nginx:
+test_header: value.
+Syntax: onor off
+Default value: off
+underscores_in_headers off;
+
+variables_hash_max_size ----
+Context:http
+This directive defines the maximum size of the variables' hash table. If your
+server configuration uses a total of more than 512 variables, you will have to
+increase this value.
+Syntax: Numeric value
+Default value: 512
+.................................
+sample proxy config:
+# the upstream only works on newer OS, for example centOS 6.4, not the older
+# one. For older one use proxy_pass http://192.168.115.51:80;
+
+upstream myCloud{
+  server s1.domain.com;
+  server 10.0.1.2;
+  server unix:/tmp/backend;
+  server 127.0.0.1:8080;
+}
+
+server {
+  listen domain.com:80;
+  access_log /var/log/nginx/proxy.log;
+  
+  location / {
+    proxy_pass http://myCloud;
+  }
+}
+
+Bind clients to servers ---
+Often, it will be necessary for a single client to be served by a single server, not having different servers answering each request. For this, Nginx has the option "ip_hash".
+When ip_hash is turned on, the proxy server will remember the client's IP address hash and will use the same server every time.
+
+upstream myCloud{
+  ip_hash;
+  server 10.0.1.1;
+  server 10.0.1.2;
+  server 10.0.1.3;
+} 
+
+Exclude Servers ---
+If for some reason you need to temporary exclude one or more servers from being proxied by Nginx, you can use the "down" parameter:
+
+upstream myCloud{
+  server 10.0.1.1;
+  server 10.0.1.2 down;
+  server 10.0.1.3;
+} 
+
+Define priorities ---
+You can define priorities by using a "weight" option for each server. The weight of a server roughly describes how often he will be used.
+
+upstream myCloud{
+  server 10.0.1.1 weight=3;
+  server 10.0.1.2;
+  server 10.0.1.3 weight=2;
+} 
+Automatic Failover ---
+If any of the upstream servers stops responding, then Nginx won't be able to connect to it and will serve the next available server from the "cloud". 
+
+With the parameter "max_fails" you can set a maximum amount of connection failures before Nginx marks the server as down and stops trying to connect there.
+
+By default this option equals to 1, which means that after a connection failure Nginx will stop trying to connect for a certain amount of time. This is defined by the option "fail_timeout" and by default is 10 seconds. 
+
+upstream myCloud{
+  server 10.0.1.1 max_fails=3 fail_timeout=120;
+  server 10.0.1.2;
+  server 10.0.1.3;
+} 
+If 10.0.1.1 failed connection 3 times, stop trying it for 5 minutes.
+
+Backup Servers ---
+Backup Servers are used only when all of the normal upstream servers stop responding to requests. They are marked with the backup parameter. 
+
+upstream myCloud{
+  server 10.0.1.1;
+  server 10.0.1.2;
+  server 10.0.1.3;
+  server 10.0.1.8 backup;
+  server 10.0.1.9 backup;
+} 
+
+.................................
+Controlling Buffer Overflow Attacks   -
+ ## Start: Size Limits & Buffer Overflows ##
+  client_body_buffer_size  1K;
+  client_header_buffer_size 1k;
+  client_max_body_size 1k;
+  large_client_header_buffers 2 1k;
+ ## END: Size Limits & Buffer Overflows ##
+
+"client_body_buffer_size 1k" - (default is 8k or 16k) The directive specifies
+the client request body buffer size.
+"client_header_buffer_size 1k" - Directive sets the headerbuffer size for the
+request header from client. For the overwhelming majority of requests a buffer
+size of 1K is sufficient. Increase this if you have a custom header or a large
+cookie sent from the client (e.g., wap client).
+
+"client_max_body_size 1k" - Directive assigns the maximum accepted body size
+of client request, indicated by the line Content-Length in the header of
+request. If size is greater the given one, then the client gets the error
+'Request Entity Too Large' (413). Increase this when you are getting file
+uploads via the POST method.
+"large_client_header_buffers 2 1k" - Directive assigns the maximum number and
+size of buffers for large headers to read from client request. By default the
+size of one buffer is equal to the size of page, depending on platform this
+either 4K or 8K, if at the end of working request connection converts to state
+keep-alive, then these buffers are freed. 2x1k will accept 2kB data URI. This
+will also help combat bad bots and DoS attacks.
+
+
+ ## Start: Timeouts ##
+  client_body_timeout   10;
+  client_header_timeout 10;
+  keepalive_timeout     5 5;
+  send_timeout          10;
+## End: Timeouts ##
+ 
+
+
+"client_body_timeout 10"; - Directive sets the read timeout for the request
+body from client. The timeout is set only if a body is not get in one
+readstep. If after this time the client send nothing, nginx returns error
+'Request time out' (408). The default is 60.
+"client_header_timeout 10"; - Directive assigns timeout with reading of the
+title of the request of client. The timeout is set only if a header is not get
+in one readstep. If after this time the client send nothing, nginx returns
+error 'Request time out' (408).
+"keepalive_timeout 5 5"; - The first parameter assigns the timeout for
+keep-alive connections with the client. The server will close connections
+after this time. The optional second parameter assigns the time value in the
+header Keep-Alive: timeout=time of the response. This header can convince some
+browsers to close the connection, so that the server does not have to. Without
+this parameter, nginx does not send a Keep-Alive header (though this is not
+what makes a connection 'keep-alive').
+"send_timeout 10"; - Directive assigns response timeout to client. Timeout is
+established not on entire transfer of answer, but only between two operations
+of reading, if after this time client will take nothing, then nginx is
+shutting down the connection.
+
+.................................
+Control Simultaneous Connections -
+
+### Directive describes the zone, in which the session states are stored i.e.
+store in slimits. ###
+### 1m can handle 32000 sessions with 32 bytes/session, set to 5m x 32000
+session ###
+       limit_zone slimits $binary_remote_addr 5m;
+ 
+### Control maximum number of simultaneous connections for one session i.e.
+###
+### restricts the amount of connections from a single ip address ###
+        limit_conn slimits 5;
+
+Allow Access To Our Domain Only -
+## Only requests to our Host are allowed i.e. nixcraft.in, images.nixcraft.in
+and www.nixcraft.in
+      if ($host !~ ^(nixcraft.in|www.nixcraft.in|images.nixcraft.in)$ ) {
+         return 444;
+      }
+##
+
+
+Limit Available Methods -
+## Only allow these request methods ##
+     if ($request_method !~ ^(GET|HEAD|POST)$ ) {
+         return 444;
+     }
+## Do not accept DELETE, SEARCH and other methods ##
+
+How Do I Deny Certain User-Agents? -
+## Block download agents ##
+     if ($http_user_agent ~* LWP::Simple|BBBike|wget) {
+            return 403;
+     }
+##
+Block robots called msnbot and scrapbot:-
+## Block some robots ##
+     if ($http_user_agent ~* msnbot|scrapbot) {
+            return 403;
+     }
+
+How Do I Block Referral Spam? -
+## Deny certain Referers ###
+     if ( $http_referer ~*
+(babes|forsale|girl|jewelry|love|nudit|organic|poker|porn|sex|teen) )
+     {
+         # return 404;
+         return 403;
+     }
+##
+
+How Do I Stop Image Hotlinking?-
+# Stop deep linking or hot linking
+location /images/ {
+  valid_referers none blocked www.example.com example.com;
+   if ($invalid_referer) {
+     return   403;
+   }
+}
+Example: Rewrite And Display Image --
+valid_referers blocked www.example.com example.com;
+ if ($invalid_referer) {
+  rewrite ^/images/uploads.*\.(gif|jpg|jpeg|png)$
+http://www.examples.com/banned.jpg last
+ }
+
+Directory Restrictions -
+
+Limiting Access By Ip Address --
+location /docs/ {
+  ## block one workstation
+  deny    192.168.1.1;
+  ## allow anyone in 192.168.1.0/24
+  allow   192.168.1.0/24;
+  ## drop rest of the world
+  deny    all;
+}
+.................................
+Nginx SSL Configuration -
+
+Create an SSL Certificate
+
+Type the following commands:
+# cd /usr/local/nginx/conf
+# openssl genrsa -des3 -out server.key 1024
+or -- openssl genrsa -aes256 4096 > server.key
+# openssl req -new -key server.key -out server.csr
+# cp server.key server.key.org
+# openssl rsa -in server.key.org -out server.key
+# openssl x509 -req -days 365 -in server.csr -signkey server.key -out server.crt
+
+Edit nginx.conf and update it as follows:
+
+server {
+    server_name example.com;
+    listen 443;
+    ssl on;
+    ssl_certificate /usr/local/nginx/conf/server.crt;
+    ssl_certificate_key /usr/local/nginx/conf/server.key;
+    access_log /usr/local/nginx/logs/ssl.access.log;
+    error_log /usr/local/nginx/logs/ssl.error.log;
+}
+.................................
+"httperf": A relatively well-known open source utility developed by HP, for Linux operating systems only
+
+./configure;make;make install
+
+[alex@example ~]$ httperf --server 192.168.1.10 --port 80 --uri /index.html --rate 300 --num-conn 30000 --num-call 1 --timeout 5
+
+--uri: The path of the file that will be downloaded
+--rate: How many requests should be sent every second
+--num-conn: The total amount of connections
+--num-call: How many requests should be sent per connection
+--timeout: Quantity of seconds elapsed before a request is considered lost
+
+"Autobench": Perl wrapper for httperfimproving the testing mechanisms and generating detailed reports
+
+Au tobench is a Perl script that makes use ofhttperfmore efficiently.it runs continuous tests and automatically increases request rates until your server gets saturated. One of the interesting features of Autobench is that it generates a .tsv report that you can open with various applications to generate graphs.
+
+[alex@example ~]$ autobench --single_host --host1 192.168.1.10 --uri1 /index.html --quiet --low_rate 20 --high_rate 200 --rate_step 20 --num_call 10 --num_conn 5000 --timeout 5 --file results.tsv
+
+--quiet: Does not display httperf information on the screen.
+--low_rate: Connections per second at the beginning of the test.
+--high_rate: Connections per second at the end of the test.
+--rate_step: The number of connections to increase the rate by after each test.
+--num_call: How many requests should be sent per connection.
+--num_conn: Total amount of connections.
+--timeout: The number of seconds elapsed before a request is considered lost.
+--file: Export results as specified (.tsv file).
+
+"OpenWebLoad": it will simply send as many requests as possible using a variable amount of connections and report to you every second.  
+
+[alex@example ~]$ openload example.com/index.html 10
+
+Tps(transactions per second): A transaction corresponds to a completed request
+(back and forth)
+MaTps: Average Tps over the last 20 seconds
+Resp Time: Average response time for the elapsed second
+Err(error rate): Errors occur when the server returns a response that is not
+the expected HTTP 200 OK
+Count: Total transaction count
+
+.................................
+Upgrading Nginx gracefully -
+
+1. Replace the old Nginx binary (by default, /usr/local/nginx/sbin/nginx) with
+the new one.
+2.  Find the pid of the Nginx master process, for example, with ps x| grep
+nginx| grep masteror by looking at the value found in the pid file.
+3. Send a USR2(12) signal to the master process.kill .USR2 ***, replacing
+***with the pid found in step 2. This will initiate the upgrade by renaming
+the old .pid file and running the new binary.
+4. Send a WINCH(28) signal to the old master process.kill .WINCH ***,
+replacing ***with the pid found in step 2. This will engage a graceful
+shutdown of the old worker processes.
+5.  Make sure that all the old worker processes are terminated, and then send
+a QUITsignal to the old master process.kill .QUIT ***, replacing ***with the
+pid found in step 2.  
+Congratulations! You have successfully upgraded Nginx and have not lost a
+single connection.
+
+
+.................................
+vmstlsup05: 192.168.115.51
+GW config:
+
+http {
+    include       /etc/nginx/mime.types;
+    default_type  application/octet-stream;
+    upstream backend {
+        server 192.168.115.40:443;
+    }
+    log_format  main  '$remote_addr - $remote_user [$time_local] "$request" '
+                      '$status $body_bytes_sent "$http_referer" '
+                      '"$http_user_agent" "$http_x_forwarded_for"';
+    access_log  /var/log/nginx/access.log  main;
+    sendfile        on;
+    #tcp_nopush     on;
+    keepalive_timeout  65;
+    #gzip  on;
+    include /etc/nginx/conf.d/*.conf;
+    server {
+         listen       80;
+         server_name  192.168.115.51;
+         client_max_body_size 100M;
+         location /SDC/ {
+                proxy_pass https://backend;
+                proxy_set_header User-Agent SD_TRAFFIC;
+                #proxy_pass http://192.168.115.40:80;
+        }
+         location /SD/ { try_files $uri @app; }
+         location @app {
+             include uwsgi_params;
+             uwsgi_pass unix:/tmp/uwsgi.sock;
+         }
+     }
+}
+
+SD proxy config
+casplda02
+
+http {
+    include       mime.types;
+    default_type  application/octet-stream;
+    upstream sd_clusters {
+      server 192.168.114.147:80;
+    }
+    sendfile        on;
+    #tcp_nopush     on;
+    #keepalive_timeout  0;
+    keepalive_timeout  65;
+    #gzip  on;
+    server {
+        server_name casplda02;
+        client_max_body_size 100M;
+        listen 443;
+        ssl on;
+        ssl_certificate /usr/local/nginx/conf/server.crt;
+        ssl_certificate_key /usr/local/nginx/conf/server.key;
+        access_log /usr/local/nginx/logs/ssl.access.log;
+        error_log /usr/local/nginx/logs/ssl.error.log;
+         location /SDC/ { #still need to add the header check
+                proxy_pass http://sd_clusters;
+                proxy_set_header User-Agent SD_TRAFFIC;
+         }
+
+            }
+         }
+    }
+}

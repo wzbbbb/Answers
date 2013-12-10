@@ -1,0 +1,20 @@
+yum install -y httpd-devel pcre perl pcre-devel zlib zlib-devel GeoIP GeoIP-devel
+
+
+./configure --with-http_ssl_module --without-http_fastcgi_module --without-http_scgi_module 
+make
+make install
+
+To add in the http part of the configuraiotn file.
+ server {
+         listen       80;
+         server_name  192.168.115.51;
+         location / { try_files $uri @app; }
+         location @app {
+             include uwsgi_params;
+             uwsgi_pass unix:/tmp/uwsgi.sock;
+         }
+     }
+
+For some configuration, to start nginx:
+/usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf

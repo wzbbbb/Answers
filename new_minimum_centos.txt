@@ -1,0 +1,4 @@
+yum install vim
+yum install openssh-clients
+yum install mlocate
+yum install java

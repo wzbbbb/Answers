@@ -1,0 +1,65 @@
+token server listens on 2 ports, 9507 is a web server.
+
+Agent:
+collector: 9501
+file server: 9502
+
+copy sldtkd.lic to the token server directory. It will replace the current license.
+sldtkd.dat contains the pool of license and the memory of which server has taken a license. 
+license file is based on the IP of the token server. Token gateway is the same as the token server, it just needs to specify the token server IP.
+
+Agent will check back with token server periodically to see if he can run.
+
+Agent collector can be restart from the console, if the file server is running.
+
+script monitoring is implemented locally on the node with Agent.
+#################################
+
+To generate a ticket, Select the menu Environment > Generate a batch ticket.
+Then, run the command to create a new html report.
+console.exe -h //calpmzwa/wks/user3.wks -batchticket d:\sysload.tic
+#################################
+
+SP analyst			SP portal		SP Monitor
+Performance Monitor		Capacity reporting	Alert Monitoring
+1993				2006			2006
+
+
+-------------------------------------------|
+SP 	|	SP	|	SP	   |
+analyst	|	portal 	|	Monitor	   |
+   ^    |         ^	|      ^     ^	   |
+---|--------------|------------|-|   |	   |
+	sysload agents           |  SNMP   |
+            		         |  	   |
+--------------------------------------------
+
+SP analyst and SP portal need license in token server.
+
+############################################
+SP analyst
+
+	Agent	Agent	Agent
+       /   \	|      /
+      /	    \   |     /
+     /	     \  |    /	
+Tks	Management server	
+
+
+############################################
+Thu Jan 13 14:08:51 2011: coll - fnBuildTabCom - Too many domains psCom->Igen.sNb_dom(4105) >= g_nMaxDom(4000)
+Thu Jan 13 14:08:51 2011: coll - ERROR: fnBuildTabCom
+
+Could means that the number of domains predefined is not enough; memory allocation stuff.
+
+You have reached a limit conecerning the number of domains Sysload is monitoring.
+-Stop sysload collector servivce.
+-Edit file sldrmd.ini
+-Insert parameter Max_Dom=6000
+-Start sysload collector service
+
+
+
+############################################
+By default, the IPCs. analysis is deactivated.
+https://na2.salesforce.com/50140000000EUFF?srPos=0&srKp=501

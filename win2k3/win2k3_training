@@ -1,0 +1,660 @@
+DFS: Distributed File System. DFS allows you to create a single logical tree view for multiple servers.
+
+FRS: File Replication Service. FRS is used to replicate DFS file share data.
+
+shadow copies:
+After you enable shadow copies on the server and install the shadow copy client software on the desktop computer, end users can right-click on a file and view previous versions that were backed up via shadow copies. 
+
+From 2003, 
+From the command line, you can do tasks that were only supported from the GUI in Windows 2000, such as managing partitions and volumes, configuring RAID, and defragmenting your disks. There are also command-line tools for extending basic disk, file system tuning, and shadow copy management. 
+
+chkdsk: to check disk error.
+
+############################################
+Cluster:
+A cluster is a group of servers that work together like one computer. Clusters can be used for performance reasons (to balance the load across two or more computers) or for fault tolerant reasons (to provide failover if one computer fails).
+
+Like Windows 2000, Windows 2003 supports two types of clustering: Microsoft Cluster Service (MSCS) and Network Load Balancing (NLB). 
+
+############################################
+Microsoft Cluster Service
+MSCS uses two or more physically connected servers, called nodes, that communicate with each other constantly. If a node detects that another node is offline, it will take over the services provided by the offline node. However, this happens behind the scenes, and end users are unaware of the process (other than experiencing a small initial delay). 
+
+MSCS is supported in Windows Server 2003 Enterprise Edition and Windows Server 2003 Datacenter Edition. MSCS is traditionally used with mail servers, database servers, and file and print servers. 
+
+Both Enterprise Edition and Datacenter Edition now support eight nodes. Windows 2000 Advanced Server supports two node clusters, and Windows 2000 Datacenter Edition supports four node clusters. 
+
+############################################
+Network Load Balancing
+NLB is available in all versions of Windows Server 2003. Unlike MSCS, where only one server offers the services at a time, NLB nodes all offer services at the same time. The NLB cluster is accessed via a virtual name (a name that represents the group of servers as an entity), and whichever server is least busy answers the request (there is a little more to it, but this is good enough for now). 
+
+If one server goes offline, there is no transferring of services because all servers offer the services already. When a server goes offline, it is removed from the rotation of servicing requests until it comes back online. NLB is generally used with Web servers, application servers, terminal servers, and streaming media servers. 
+There are many new features for NLB in Server 2003. NLB now supports multiple network interface cards (NICs), allowing a single server to host multiple NLB clusters. You can use virtual clusters to set up different port rules for each cluster IP address, so that each IP address represents a different resource (Web page, application, and so forth). 
+ 
+The Internet Group Management Protocol (IGMP) is now supported when NLB is configured in multicast mode. Using IGMP limits cluster traffic on the switch to the ports that have NLB server connected to them. This helps prevent switch flooding. (Switch flooding occurs when every server in an NLB cluster sees every packet addressed to the cluster.) NLB now supports IPSec traffic.  
+
+############################################
+Do not confuse the Microsoft Clustering Service (MSCS) with Network Load Balancing (NLB). MSCS machines actually share hardware (storage), whereas machines using NLB do not.
+
+When using MSCS, only one machine at a time is actually functioning as the server and responding to requests. It owns the resources being offered. If that machine fails, then those resources failover to another machine in the MSCS cluster.
+
+With NLB, all machines offer the resources at the same time. The NLB service routes the request to the next available machine in the NLB cluster. MSCS is implemented for fault tolerance, whereas NLB is implemented to increase performance. 
+
+############################################
+CLR : Common Language Runtime (CLR) software engine
+Encrypting File System (EFS): EFS encrypts files that are stored on NTFS-formatted partitions so that these files can only be decrypted by the person who encrypted the files, those with whom he or she shares the files, or a designated recovery agent.
+The sharing of encrypted files is new to Windows XP/Windows Server 2003.
+Another way to encrypt a file or folder is to use the cipher tool at the command line.
+############################################
+A storage area network (SAN) is a high-speed dedicated network of storage devices. SANs contain a bank of hard drives, optical drives, or other storage devices that can be divided and shared. SANs waste less storage space because you can share the disks between all of your servers. SANs provide high bandwidth with zero latency, and they eliminate I/O bottlenecks from networks.
+
+In an effort to keep up with the changing times, Microsoft has greatly increased the level of built-in SAN support in Windows Server 2003. The Virtual Disk Service (VDS) provides a unified interface for multivendor storage devices. VDS discovers the storage devices in your network and gives you a single place to manage them.
+Also included in Windows Server 2003, via the driver development kit, is multipathing input/output (MPIO). MPIO allows up to 32 different paths to external storage (for example, SAN). 
+
+ The Volume Shadow Copy Services allows you to create a snapshot (or an exact copy) of volumes on your SAN. Clients can then perform shadow copy restores on their own. In other words, clients can look at a list of shadow copies performed on their data and choose to restore their own data from a given snapshot. NTBackup also uses shadow copies to make sure that all open files are backed up. 
+
+############################################
+Terminal Server allows client workstations to function as terminal emulators. 
+Multiple clients can run sessions simultaneously. All processing takes place on the server. The client machine is only responsible for managing the keystrokes and mouse clicks, which are passed over the network to the terminal server via the Remote Desktop Protocol (RDP)
+Although RDP is the native protocol for Microsoft Terminal Server and is used with clients running the Windows 2000 Terminal Services client or the XP/2003 Remote Desktop Connection (RDC) client, the Server 2003 terminal server can also be configured to accept connections from Citrix clients using the ICA protocol
+
+############################################
+Web Edition supports two processors and 2GB of RAM.  
+Standard Edition supports four processors and 4GB of RAM.  
+Enterprise Edition supports eight processors and 32GB of RAM.  
+Datacenter 32-Bit Edition supports 32 processors and 64GB of RAM 
+Datacenter 64-Bit edition supports 64 processors and 512GB of RAM. 
+
+############################################
+Windows Server 2003 supports two disk types: basic and dynamic. Upgrading your disks to dynamic status enables you to take advantage of the operating system's software RAID support, so that you can create fault-tolerant volumes.
+
+
+If you will be moving a hard disk drive between machines, Windows will automatically detect the disk after installation if it is a basic disk. If the disk is dynamic, you have to import the disk using the Disk Management MMC every time you move the disk drive from one machine to another. 
+
+Dynamic disks use a new disk structure that was introduced in Windows 2000. The dynamic disk configuration divides disk information into sections called volumes. You can extend simple volumes (make them bigger without reformatting and losing data) to any empty space on any dynamic disk, create spanned volumes across multiple physical disks, and create fault tolerant (RAID 1 and 5) volumes. Dynamic disks support features that you don't get with basic disks. 
+Basic disks do not support creating volume sets or fault-tolerant volumes. 
+
+...........dynamic disk limitation
+Although dynamic disks support the creation of volumes that span multiple disks and fault-tolerant volumes, dynamic disks are not always the best solution. The following are some limitations of using dynamic disks:
+
+ Dynamic disks currently are not supported on laptop computers. 
+ Removable media and disks attached via FireWire (IEEE 1394), Universal Serial Bus (USB), or shared SCSI buses, cannot be converted to dynamic disks. 
+ You can only install Windows Server 2003 onto a dynamic disk that was converted from a basic boot or system partition, because there must be an entry in the partition table for the setup program to recognize the volume. You cannot install Windows Server 2003 onto a dynamic volume that was created from free space because the entry does not exist on a newly created dynamic volume. 
+ Even though Windows 2000, XP Pro, and Server 2003 all use dynamic disks, you cannot convert a basic disk that holds multiple instances of these operating systems to dynamic. The operating systems installed on the disk will not start if you do this. 
+ Dynamic disks are not supported by Windows Cluster Service. If you need the features of dynamic disks on a clustered shared disk, you can use a third-party program called Veritas Volume Manager 4.0 to accomplish this. 
+
+...........simple volumes
+Some volume types are designed to increase performance, and some types are designed to provide fault tolerance. Simple volumes are made up of free space on a single dynamic disk. They function much like primary partitions on a basic disk.
+
+If you have only one physical disk, all of the volumes you create on the disk will be simple volumes. Extending a simple volume involves taking free space on a disk and adding it to the existing volume. Simple volumes can be extended on a single disk as long as the disk is not the boot or system disk. Simple volumes are not fault tolerant. 
+
+Since an extended partition is a collection of free drive space, it does not require formatting.
+...........Spanned Volumes
+If you extend a simple volume across multiple disks, it becomes a spanned volume. You can't mirror a spanned volume.  
+
+........... Striped Volumes
+Striped volumes are made up of two to 32 disks that store data evenly across the disks in the volume in 64 KB chunks. Striped volumes increase read and write access because all of the disks in the volume are working at the same time. In fact, striped volumes offer the best performance of all Windows Server 2003 volume types. 
+Striped volumes (without parity) do not provide fault tolerance and cannot be mirrored or extended. Their purpose is to increase the speed of read and write access to a volume. 
+
+........... Mirrored Volumes
+A mirrored volume is a duplicate copy of a volume that is saved on a second identical physical disk. If one disk in the mirrored volume fails, the other disk will take its place. Only if you lost both disks at the same time would you lose data.
+
+Because all the data is there on the duplicate disk, you can get back up and running after a failure much faster than with a RAID-5 volume, where the data must be regenerated from the parity information following a failure before it can be accessed. Mirroring can have a negative impact on system performance, because of the overhead of writing to two disks at the same time. 
+
+........... Disk duplexing
+An even more fault-tolerant form of disk mirroring is called disk duplexing. Disk duplexing is the same as disk mirroring, except that each disk in the mirror is connected to a different disk controller. This eliminates the disk controller as a single point of failure. Duplexed disks appear to the operating system the same as mirrored disks; if you have duplexed disks, they will be shown as mirrored disks in the Disk Management console. 
+
+...........  RAID-5 Volumes
+RAID-5 volumes consist of three to 32 disks. Data is written evenly in 64 KB chunks across all of the disks in a RAID-5 volume, like striped volumes. Unlike with disk striping, the available space (the stripe) on one disk is used for parity information. To increase performance, the parity information is split across all the disks in the volume, written in stripes like the data. Write performance is lower, because the parity must be calculated during the write operation.  
+
+If most operations are write-oriented (for instance, users accessing files on a file server), RAID-5 provides significant performance advantages. Windows Server 2003's RAID-5 volumes cannot be extended or mirrored, and the boot and system partitions cannot be part of a RAID-5 volume. 
+
+It is ok to have 1 failed disk in the RAID-5 volume. However, if 2 of them fails, everything lost.
+
+You can still access a RAID-5 volume if one of the disks fails. However, read access will be slowed since the missing information from the failed disk will have to be created from parity every time that it is requested. Also, if one drive has failed, you no longer have fault tolerance. If another drive fails, you will lose all the data on the RAID-5 volume.
+
+#######################################################
+...........  64-Bit Windows
+The 64-bit versions of Windows Server 2003, Enterprise Edition, and Windows Server 2003, Datacenter Edition, are only compatible with computers that support 64-bit memory addressing.
+
+Computers that use the x86 instruction set can only run the 32-bit editions of Windows Server 2003. When you install Windows Server 2003 on a 64-bit processor, the operating system must be installed on a GPT disk. You can select either GPT- or MBR-style partitioning for other disks that are installed in the system. 
+
+The GPT disk on which the operating system is installed must have an Extensible Firmware Interface (EFI) system partition. EFI was developed as a replacement for the BIOS that is familiar to x86 computer users. It contains the platform-related information, hardware-configuration data, etc., and serves as the interface between the operating system and the platform firmware. EFI creates a standard pre-boot environment for booting an operating system, designed to solve the problems caused by lack of standardization among BIOSs created by different vendors.
+
+While the BIOS is a program, the EFI is more like a limited operating system in its own right. It uses an area of the hard disk (a special partition) instead of being limited to flash memory or EEROM. For more information about EFI, see http://www.pcquest.com/content/handson/103040306.asp.
+
+The primary partition that is marked as active functions as the system partition for Windows operating systems.  
+
+#######################################################
+
+...........  Booting Your Computer
+
+The partition table identifies the type and location of partitions on the physical disk. The disk signature identifies the physical disk to the operating system.
+
+...........system partition
+The system partition is the disk partition that stores the hardware-specific boot files (NTLDR, boot.ini, NTDETECT.COM) that are needed to load Windows NT-based operating systems (NT, 2000, and 2003). 
+
+The system partition must be a primary active partition in computers that use the x86 instruction set. Only primary partitions can be made active. The active partition is the one to which the computer looks first to start the boot process. This is usually, but not always, designated as C. The system partition cannot be stored on a logical drive.  
+
+...........boot partition  
+The boot partition is the disk partition on which the root operating system files are located. This is the partition on which you install the operating system during setup (in the WINDOWS folder by default.) 
+The boot partition can be the same partition as the system partition. This generally occurs if you install the operating system to C. The boot partition can also be any other (inactive) primary partition, or it can be a logical drive within an extended partition. It is generally considered best to put the operating system files on a separate partition from the boot files.
+
+Two disk sectors are vital to starting your computer, the master boot record (MBR) and the boot sector. The MBR contains the master boot code, the partition table, and the disk signature for the physical disk. The MBR is automatically created in the first sector of the hard disk when the physical disk is initially partitioned. 
+
+The master boot code is responsible for booting the machine. The MBR performs the following operations when a disk boots:
+
+1. It scans the partition table (or disk configuration database) for an active partition.
+2. It finds the starting sector for the active partition.
+3. It loads a copy of the boot sector of the active partition into memory.
+4. It passes control to the boot sector.
+ 
+The boot sector, like the MBR, contains the code that is required to boot your machine; it also contains information required by the file system to access the partition. There is a boot sector for each partition on a disk. The boot sector is created when a partition is formatted. The boot sector loads NTLDR (the Windows startup file) into memory and gives it control of the boot process.
+
+#######################################################
+start mmc from command line.
+> mmc
+
+#######################################################
+...........Command line tools
+
+diskpart.exe: for managing disks 
+fsutil.exe: for managing the file system 
+rss.exe: for managing remote storage 
+
+
+to sleep 5 seconds
+timeout /t 5
+
+DISKPART> convert dynamic 
+
+You can use Remote Storage to extend your server's disk space by moving data off your hard disks and onto magnetic tapes or magneto-optical (MO) disks, with file data cached locally for quick access. 
+
+#######################################################
+...........Dynamic disk
+Although you can convert from basic to dynamic disk status without losing data, you cannot go back the other way. There is no mechanism to convert volumes from dynamic to basic.
+
+If you want to convert a volume from dynamic to basic, you must back up your data, and then delete the dynamic volumes. You can then convert the disk back to basic using the Disk Management MMC or the diskpart utility. 
+
+All partitions on basic disks become simple volumes when you upgrade a basic disk to dynamic.
+ 
+...........Using Simple Volumes
+Simple volumes are the default volume type on a dynamic disk and provide almost 100 percent utilization of disk space. You are able to use more of the purchased disks' space than is true with other types of volumes. Use simple volumes in the following situations:
+
+ You only have one disk in a machine.
+ You are not concerned with fault tolerance.
+ You want the ability to dynamically extend the space used on a volume.
+ 
+ 
+...........Using Spanned Volumes
+Spanned volumes are used to create a single volume out of multiple physical disks of the same or different sizes, without wasting disk space.
+Like simple volumes, spanned volumes provide 100 percent drive utilization (minus the 1MB used for the LDM database). 
+
+Creating a spanned volume consists of adding unallocated space to a volume (if it is formatted with NTFS), like extending a simple volume, except that the unallocated space does not have to be contiguous and can be on any dynamic disk attached to the computer. No data is lost; the new space is formatted without any impact on the existing data. Let's walk through the process. 
+
+You cannot delete any part of a spanned volume without deleting all of it. If one of the disks on which a spanned volume resides should fail, you will lose the data on the entire volume.
+
+...........Using Mirrored Volumes
+
+...........Using Striped Volumes
+Striped volumes require that you use an equal amount of unallocated space on each of the disks that is part of the volume.
+
+...........Using RAID-5 Volumes
+RAID-5 volumes can be created using 3 to 32 disks.They provide fault tolerance by calculating parity information, which can be used to recreate the data on the other disks, and writing it to a block on one disk as part of the striping operation. Data is striped across all the disks in the volume, while parity information is written to one disk in each stripe. The parity information can be used to regenerate the missing data should one disk fail. If you lose more than one disk, however, all your data will be lost.  
+You lose the storage space equivalent to one disk in the RAID-5 volume because it is used for parity information.
+
+
+##################################################################
+defrag.exe
+##################################################################
+Quotas can be set on both local and shared network volumes. You can also set quotas on volumes that are on shared removable media. However, you cannot set quotas on a volume unless it is formatted with NTFS. 
+
+To set quotas from command line
+fsutil.ext
+
+##################################################################
+The benefit of software-based RAID is that it is built into the operating system.
+
+The drawback with software-based RAID is that the operating system incurs the entire overhead for maintaining the RAID volume.
+
+Windows Server 2003 supports only three levels of software-based RAID: RAID 0, RAID 1, and RAID 5. 
+
+The following provides some general guidelines when you should use software RAID volumes:
+ Use mirrored volumes for the boot and system partitions.
+ Use RAID-5 volumes for database disks (e.g., Exchange and SQL servers).
+ Use striped volumes on database servers' disks that contain transaction logs (e.g., Exchange and SQL servers).
+ Use striped volumes for disks that are used for printer spooling.
+ 
+ 
+...........RAID Level 0
+Level 0 can be implemented as either a software or hardware solution and is supported by all controllers. RAID Level 0 works with a minimum of 2 disks up to a maximum of 32 disks, and is best for data that is not mission-critical or that is backed up regularly. It is good for audio/video streaming, gaming, and other applications where performance is important because it provides the best performance of any single RAID level. 
+
+RAID Level 0 utilizes disk striping. It does not provide fault tolerance because there is no redundancy of the data provided. Because the operating system must be loaded before the striped volume is initialized and made available, a level 0 array cannot be used for either the boot or system partition. 
+ 
+
+...........RAID Level 1
+Level 1 is the simplest RAID implementation and can be implemented as either a software or hardware RAID solution. RAID Level 1 utilizes disk mirroring which enables it to provide fault tolerance. RAID Level 1 is the only software-based RAID level that can be used for the boot and system partitions in Windows Server 2003.
+
+RAID Level 1 should be used when you want to provide fault tolerance for the boot and/or system partitions or if you need fault tolerance and have only two disks available. Level 1 is the most expensive form of Windows Server 2003 RAID because only 50% of the disk space that must be purchased is used for data. 
+
+
+...........RAID Level 5
+RAID Level 5 is one of the most popular RAID implementations. RAID Level 5 utilizes disk striping with parity and as with disk striping, a RAID-5 volume cannot be used for the boot or system partition. You should use RAID Level 5 when you need fault tolerance with better performance and drive utilization than RAID Level 1 can provide. However, because of the overhead involved in calculating the parity information, software RAID 5 is considerably slower than its hardware counterpart. RAID Level 5 is better for read-intensive applications as opposed to write-intensive ones. 
+
+...........Hardware RAID
+As the name implies, hardware-based RAID uses RAID controller hardware to handle the overhead of managing the RAID volumes. This improves performance by removing the processing burden from the operating system and also removes many of the restrictions imposed by software-based RAID. 
+
+Because the RAID controller presents RAID volumes to the operating system as one disk, you can use hardware-based RAID 0 and RAID 5 volumes for the boot and system partitions. 
+
+The following provides some general guidelines when you should use hardware-based RAID volumes:
+ Use hardware RAID whenever possible because it offers the best performance. 
+ Try to use identical hardware for all your servers. This makes it easier to recover if you have a disaster.  
+ Always keep spare hard disks on hand. When you lose one drive (with most RAID levels), you no longer have any fault tolerance. You need to be able to replace failed hardware as quickly as possible. (This also applies to software RAID.) 
+ Keep RAID controllers updated with the current firmware revision. 
+ Always back up your data before updating the firmware on RAID controllers. 
+
+ 
+ 
+Hardware-based RAID provides you with many more RAID levels to choose from, including the following:
+
+ RAID Level 2 splits data at the bit level and spreads it across two types of disks: data disks and redundancy disks, with redundant bits calculated with Hamming codes (a type of Error Correcting Code, or ECC). RAID 2 volumes require a special RAID controller card and are not used often due to their cost and complexity.
+ 
+ 
+ RAID Level 3 splits data at the byte level and stripes it across several disks, with one disk as a dedicated parity disk. RAID 3 volumes require a RAID hardware controller and are good for editing very large files.
+ 
+ 
+ RAID Level 4 stripes data across multiple disks in blocks, instead of in bits or bytes, and uses a dedicated parity disk. RAID 4 volumes require a RAID hardware controller and are used for the same applications as RAID 3 volumes and RAID 5 volumes.
+ 
+ RAID Level 6 stripes data across multiple disks in blocks like RAID 4 volumes and RAID 5 volumes, but RAID 6 volumes create duplicate sets of parity for each data stripe. RAID 6 volumes are more fault tolerant than RAID 5 volumes because it can recover the data if two disks in the array fail, but its performance is not as good in write operations. RAID 6 volumes require a special hardware controller and are used for data that is especially critical and requires the extra fault tolerance.
+ 
+ 
+ RAID Level 7 is a proprietary RAID implementation of the Storage Computer Corporation and uses multi-level cache and a special processor to manage the array. RAID 7 volumes require special proprietary hardware but provide very high performance.
+ 
+ 
+ Nested RAID Levels are arrays that use a combination of the single levels. For example, RAID Level 0+1 and 1+0 (also called 01 and 10) use "mirrored stripes" and "striped mirrors" respectively. Level 0+1 creates a stripe set and then creates a mirror of it, so you have two identical stripe sets. Level 1+0 stripes data across mirror sets. This enables you to have the performance advantages of level 0 along with the fault tolerance of level 1. Other nested RAID Levels include 5+3 (also called 53), 3+0 (30), 0+5 (05), 5+0 (50), 1+5 (15), and 5+1 (51).
+ 
+################################################################## 
+...........Remote Storage
+Remote Storage provides a means of extending the disk space on your servers without installing more hard disks. You tell Remote Storage which volume(s) to manage and how much free space you want to remain available on the volume. When the amount of free space drops below that level, Remote Storage kicks in and archives enough less-frequently used files to a tape or a magneto-optical (MO) disk library to bring the disk back within your predefined parameters. A managed volume refers to a disk volume in Windows whose files are monitored and managed by Remote Storage. 
+
+One significant advantage of Remote Storage is that all the files on the server look the same to the end user. When a user needs to open a file, he simply double-clicks it. If the file has not yet been moved to tape, it automatically opens for the user. If the file has been moved to tape, Remote Storage retrieves it from storage and puts a copy on the local disk (this is called a cached copy). Users might notice a delay while this takes place, but they do not have to take any extra steps to retrieve the file. After the file is cached, it will be automatically opened for the user.  
+
+Storage Levels
+Remote storage has two defined storage levels that are in a hierarchical structure. Local storage is the top level. It contains the NTFS disks of the computer that is running Remote Storage. The bottom level is remote storage and is the library that is connected to the server running Remote Storage. Remote Storage keeps as much information as possible in the top level for faster access. Only when this level is reaching its storage limit is the data moved to the bottom level. 
+ 
+Understanding Libraries
+Libraries hold the data used by Remote Storage. There are two main types of libraries, jukebox libraries and stand-alone libraries. Jukebox libraries hold multiple disks or tapes and automatically switch to the correct disk or tape as needed.
+
+The benefit of jukeboxes is that you do not have to manually load the correct media; the jukebox does it for you. There are all sizes of jukeboxes, ranging from a few disks or tapes to thousands.  
+ 
+Stand-alone libraries hold one disk or tape at a time. You must manually add the media required by Remote Storage. If your data is spread across three tapes, then you must manually load all three tapes one at a time into the library. The benefit of stand-alone libraries is the price. Stand-alones are significantly less expensive than jukeboxes. The drawback is that stand-alones require manual interaction when storing data on multiple disks or tapes.
+
+If most of your data will fit on a single disk or tape, then stand-alone libraries are a good choice. If you are using multiple disks or tapes, a jukebox is a better option.  
+
+#############################################################################
+mountvol
+#############################################################################
+Dynamic disk issues:
+
+...........Disk Status Is Foreign
+To make the new computer recognize the dynamic disk, you must import it. To do so, right-click the Foreign disk and select Import Foreign Disks from the menu. This will make the volume visible and incorporate it into the new machine's dynamic disk database. 
+
+...........Disk Status Is Online (Errors)
+If this problem persists, you should replace the hardware. If the problem is temporary, you might be able to reactivate your volume to bring it back online. 
+
+To do so, right-click the volume and choose Reactivate Disk from the pop-up menu. If the reactivation works, the disk will be marked as Online. You can also use the diskpart command with the online parameter to reactivate a disk (remember to first select the disk so that it is the focus).
+
+...........  Disk Status Is Offline
+A disk status of Offline, where the disk name field indicates Missing usually means that the disk is no longer physically connected to the server.
+
+Check to make sure that the disk is powered on and correctly connected to the server. 
+
+...........
+If the disk you need to remove is part of a mirrored volume, remove the mirror instead of the entire volume. This will preserve the data on the other member of the mirror. 
+
+...........Disk Status Is Data Incomplete
+As we discussed earlier in this lesson, when you move dynamic volumes between servers they are marked as Foreign. You must import them in order for Windows to use them. If you have a volume that spans multiple disks (e.g., a spanned volume, striped volume, or RAID 5 volume) and you only import some of the disks, you will see the error message Data Incomplete.
+
+If this happens, cancel the import process until you can move all the disks in the volume at the same time. When all the disks have been physically installed in the new machine, import them together and Windows will recognize them as being part of the same volume. 
+
+##################################################################
+...........Data Not Redundant Status
+ta Not Redundant Status
+A Data Not Redundant status indicates that your volume is not intact. This is due to moving disks from one machine to another without moving all the disks in the volume. Wait to import your disk until you have all the disks in the volume physically connected to the server. Then when you import them, Windows will see them as a complete volume and retain their configuration. 
+ 
+...........Failed Redundancy Status
+Failed Redundancy, occurs when one of the disks in a fault-tolerant volume fails. Your volume will continue to work, but it is no longer fault tolerant. If another disk fails, you will lose all your data on that volume.
+
+You should repair the failed disk as quickly as possible. Your mirrored volume will need to be recreated after replacing the disk. Right-click the defective disk and select Remove Mirror. Then right-click the working disk and select Add Mirror, selecting the new disk as the mirror. To repair the RAID-5 volume, put in the disk and right-click the volume and choose Repair RAID-5 Volume.  
+
+...........Stale Data Status
+Stale data occurs when a volume's fault-tolerant information is not completely up to date. This happens in a mirrored volume if something has been written to the primary disk, but for whatever reason it hasn't made it to the mirror disk yet.
+
+This occurs in a RAID-5 volume when the parity information isn't up to date. If you try to move a volume while it contains stale information, you will get a status of Stale Data when you try to import the disk. Move the disk back to the machine it was originally in and rescan the machine for new disk. After all the disks are discovered, wait until they say online and healthy before you try to move them again. 
+
+##################################################################
+
+Windows File Protection (WFP) protects critical system files from being replaced or corrupted by other processes. Protecting these files helps the system ensure that it remains reliable and available.
+
+WFP works by monitoring for change notifications from protected directories (for example %SystemRoot%\SYSTEM32). Because this process runs within the core operating system, it cannot be circumvented. 
+
+If a critical system file is changed, the following will happen:
+
+Step 1
+WFP checks the digital signature of the changed file against the version stored in the cache (by default, %SystemRoot%\SYSTEM32\DLLCACHE) or in the digitally signed component's information file (also known as the catalog file). 
+
+Step 2
+If the file is different, Windows attempts to locate the correct version of the file in the following places:
+
+ Cache Folder (by default, %SystemRoot%\SYSTEM32\DLLCACHE)
+ Installation path (if different from the Windows Server 2003 installation media)
+ Server 2003 installation media
+ 
+If it cannot locate it using the above locations and the person who is logged on has the appropriate rights, it prompts for the Windows CD or original installation media. Otherwise, it prompts the next time someone with the appropriate rights logs on. 
+
+Step 3
+After Windows locates the file, it silently replaces the file.  
+
+
+Step 4
+WFP creates an entry in the System event log noting the file that was replaced and the version it was replaced with.  
+
+...........
+When you do need to update a protected system file, the following processes are the only supported mechanisms:
+
+ Windows Service Pack installations using UPDATE.EXE
+ Hotfixes installed using HOTFIX.EXE or UPDATE.EXE
+ Operating system upgrades
+ Windows Update
+ WHQL digitally signed driver installations.
+ 
+
+WFP caches verified versions of critical system files in the cache folder.
+
+By default, this folder is located in %SystemRoot%\SYSTEM32\DLLCACHE; however, it can be modified by adding the SFCDllCacheDir registry value as a REG_EXPAND_SZ type in the HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon registry key.  
+
+The DLL cache continues to grow until it reaches the prescribed quota. By default, this quota is not set to a specific value (0xFFFFFFFF).
+
+You can change this value by modifying the SFCQuota registry value in the HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon registry key. 
+Windows File Protection (WFP) will stop populating the cache folder when disk space is less than 600MB plus the maximum size of the page file on the system volume. 
+
+...........System File Checker
+sfc.exe
+ 
+/Scannow: Initiates an immediate scan of the protected files. 
+/Scanonce: Schedules a one-time scan of the protected files the next time the computer is restarted.
+This option is equivalent to setting the SfcScan registry value to 2 in the HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon registry key. 
+
+/Scanboot: Configures the system to scan the protected files every time the computer is restarted.
+This option is equivalent to setting the SfcScan registry value to 1 in the HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon registry key. 
+
+/Revert: Resets the system to not scan for protected files during boot time. This is equivalent to the /Enable command-line option under Windows 2000.
+This option is equivalent to setting the SfcScan registry value to 0 in the HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon registry key. 
+ 
+/Purgecache: Purges the contents of the cache folder and initiates a scan immediately. 
+ 
+/Cachesize=x: Sets the maximum size of the cache folder in megabytes (MB). For this command to take effect, you need to restart the computer and run the /PurgeCache command to adjust the size of the cache folder.
+This option is equivalent to setting the SfcQuota registry value in the HKLM\Software\Microsoft\Windows NT\CurrentVersion\Winlogon registry key. 
+
+##################################################################
+...........File Signature Verification
+In File Signature Verification, a wizard-driven tool (sigverif.exe) scans the system for the presence of unsigned drivers and critical system files. It also creates a report that lists all the files scanned along with relevant version and digital signature information. The report is stored in your Windows directory and is called SIGVERIF.TXT. 
+ 
+If you want to run the process without user interaction, use the /DEFSCAN command-line option:
+
+sigverif.exe /defscan.
+ 
+##################################################################
+...........To launch device manager
+devmgmt.msc
+
+##################################################################
+For hardware, device dirver stuff.
+devcon.exe : Device Console utility , from Windows support tool
+sc.exe : Service Control
+
+##################################################################
+As part of the Security by Design initiative, the Windows Server product group made some fundamental changes to security around the performance monitoring tools in Windows Server 2003. If you are not a member (explicitly or through inheritance) of the local Administrators, you cannot access the performance monitoring tools or data unless you are a member of one of the following groups:
+
+*  Performance Monitor Users Monitor performance counters locally or from a remote computer.
+ 
+ 
+*  Performance Log Users Manage performance counters, logs, and alerts locally or from a remote computer.
+ 
+ 
+If you are coming from Windows 2000, you will notice that the capability to configure logging using Performance Logs and Alerts under alternative credentials is a new feature. 
+##################################################################
+If the system is unable to start up correctly after you have installed a new device or made a configuration change, the Last Known Good Configuration option should be the first tool you use.
+
+It will restore the HKEY_LOCAL_MACHINE\System\CurrentControlSet registry key to a copy of the one that was used during the last successful system startup. Note that this tool does not solve any issues with corrupt or missing driver files. 
+
+To access the Last Known Good Configuration tool, perform the following steps:
+
+Step 1
+Press F8 during startup when you see the Please select the operating system to start message. (Note: to see this you need to have a timeout value of greater than 0 set in the System control panel applet, under the Advanced tab, in the Startup/Recovery options.)  
+##################################################################
+If the problem occurred late enough in the startup process, it might have also been captured as part of the Safe Mode log file, Ntbtlog.txt, which is located in the System Root directory (by default, the WINDOWS folder).
+
+The log file contains a list of devices and services that were loaded along with whether or not each was successful.
+
+##################################################################
+msinfo32.exe
+msconfig.exe
+##################################################################
+Terminal Services
+However, it still fulfills its traditional function as an application server to which multiple remote clients can connect and run sessions simultaneously. 
+
+In Windows 2000, this was called Application Server mode; now it is referred to as the terminal server role. 
+...........
+In Windows NT 4.0, Microsoft sold a separate server product called Terminal Server Edition. In Windows 2000, the Terminal Services feature was integrated into all Microsoft server operating systems as a separate component that required separate installation.
+
+All versions of Microsoft Windows 2003 come with Terminal Services, except Windows 2003 Web Server Edition. The Web Server Edition includes the core terminal service and the Remote Desktops console. 
+ 
+When Terminal Services is used for remote administration, Microsoft permits two clients to connect simultaneously with no additional license purchases being required. Under these conditions, you need not install Terminal Services Licensing.
+
+...........How Terminal Services Works
+When a client connects to Terminal Services, the server creates an isolated session for its use. 
+
+This session is, in many ways, a virtual Windows 2003 computer running within the Windows 2003 server operating system. 
+
+In fact, if you look at the processes running on the server, you will see several instances of key operating system processes, such as the client/server subsystem. This is because each session has its own set of these key components initialized in memory. 
+
+The client software sends mouse movements and keyboard strokes to your session on the server. In response, the server updates the image of the desktop or application that is running on the server and sends it to the client. 
+
+Thus, only these input signals and images travel across the network. This typically takes less than 20 Kbps of bandwidth per session. 
+
+This means that many clients can connect, using very little bandwidth on the underlying network, which makes Terminal Services an ideal solution in wide area networks (WANs), where overall bandwidth is limited. 
+...........
+Thin clients can be typical, low-powered desktop PCs (for example, 80486 computers) running any Windows operating system or other devices such as personal digital assistants (PDAs) running the Windows CE or Pocket PC operating systems.
+
+You don't have to be running any form of Windows to connect to the Windows terminal server. 
+
+The Remote Desktop Connection (RDC) client software is also available from Microsoft for Macintosh OS X, and Terminal Services clients for MS-DOS and Linux are available from third-party vendors.
+...........
+An outstanding new feature in the Windows server product line is the capability to perform remote administration from any MSIE 5.0 or later browser without a locally installed client. 
+
+This means that you can be away from your desk, at virtually any client system that is capable of running MSIE, and connect to and remotely administer a server using Terminal Services. 
+...........
+Another new feature is the capability to connect to the console session. 
+
+Many server-based applications deliver administrative messages only to the server's primary console session. In the past, administrators relied on third-party products (such as PC Anywhere) to connect to, view, and interact with the console sessions on their servers. 
+
+With Windows 2003, administrators can connect to the server console and see these important messages without a third-party connection utility. 
+
+Note that only a single console session can run at a time, and the console screen on the server itself is locked when the remote session is established. 
+
+In addition, to run a direct console session remotely, you'll need to run a Terminal Services client that uses version 5.1 or later of the Remote Desktop Protocol (RDP). 
+
+This would include the RDP client built into Windows XP. Although you can connect to the terminal server with the older RDP client that came with Windows 2000 server, you cannot use it to run a console session. 
+...........
+In Windows 2000, there was no way to view the console session remotely. However, one of the new Terminal Services client utilities includes this capability. 
+
+...........Remote Assistance
+Remote Assistance (RA) depends on and uses the Terminal Services service. 
+ 
+Under some circumstances, the Expert can also offer remote assistance without receiving an explicit request from the Novice, but the Novice must grant permission; the Expert can never take over the Novice's computer without the Novice's agreement. 
+
+This differs from Remote Desktop, in that administrators and users on the Remote Desktop Users list can start a remote session without getting permission from the person who is using the computer locally.  
+
+When an Expert receives a request from a Novice, he can initiate a connection to the Novice's computer. 
+
+When connected, the Expert is able to view the actual desktop and applications that are being used by the Novice on his computer. 
+
+In addition, a special application is launched on the Novice's computer that enables him to chat with the Expert and control the session, either via text messages or audio (as long as both computers are equipped with full-duplex sound cards, speakers, and microphones).  
+
+Remote Assistance requires that both computers be running Windows XP or Server 2003. 
+...........Win XP Pro, RD connect to console directly, local session get locked.
+Both Remote Desktop and Remote Assistance are also included in the Windows XP Pro operating system (only Remote Assistance is included in Windows XP Home Edition). 
+
+However, whereas a Windows Server 2003 computer can have two Remote Desktop for Administration sessions running simultaneously, only one Remote Desktop session at a time can connect to an XP Pro system. 
+
+In addition, when you connect via Remote Desktop to an XP Pro computer, you will see all the applications that are running on the desktop of that XP computer, just as if you were sitting at that local machine. If Word is open on the local desktop, it will be open in your RDC session. 
+
+Conversely, when you connect to a Windows Server 2003 via the Remote Desktop, you will not see applications that are open on the local (console) session. 
+
+When a remote session is connected to an XP computer, the local session is locked and can't be accessed until the remote session is terminated. With Windows Server 2003, an administrator sitting at the console can continue to do tasks while the remote administrator runs a session. 
+
+...........The Terminal Server Role
+
+......The Multi-Win Component
+The Multi-Win component sits at a very low level in the operating system and enables more than one user to be logged in locally. 
+
+The Multi-Win technology was originally created by Citrix for WinFrame and licensed to Microsoft for Windows NT 4.0 Terminal Server Edition. 
+
+It is a core component of Terminal Services and is used in Remote Desktop for Administration, RA, and the terminal server role. 
+
+......The Remote Desktop Protocol (RDP)
+RDP communicates on port 3389; it uses encryption to protect the information that is sent between the terminal server and the client computer 
+
+RDP was based on a set of International Telecommunications Union (ITU) T.120 protocols. 
+
+The early version of RDP (v4.0) used in NT 4.0 Terminal Server Edition did not perform well over low bandwidth connections (such as WAN connections).
+
+Windows 2000 Terminal Services included RDP v5.0, which increased performance. Windows XP and Server 2003 use RDP 5.1. 
+
+RDP is the native protocol for Microsoft Terminal Services. However, clients using the Citrix Independent Computing Architecture (ICA) protocol can also connect to Windows terminal servers. 
+
+Some advantages of ICA include the fact that it supports 16-bit client software for MS-DOS and Windows 3.x, as well as Java and UNIX clients. 
+
+The ICA client also works over IPX, SPX, NetBEUI, and Asynchronous connections, whereas RDP works only with TCP. 
+
+ 
+...........Comparing Remote Desktop for Administration and the Terminal Server Role
+The primary differences between Remote Desktop for Administration and the terminal server role are the number of simultaneous connections that are allowed and the extent to which settings from multiple users are accommodated and kept separate.  
+
+RDA enables only two simultaneous remote connections; you do not need to purchase a license for these connections. 
+
+The Terminal Server role accepts a number of connections equal to the number of Terminal Services licenses you have purchased. Connections to a Windows 2003 server with the terminal server role installed are not free, although clients are allowed to log on to the terminal server without licenses for 120 days (evaluation period) after the first logon.
+
+...........Remote Desktop for Administration
+Remote Desktop for Administration is not designed to have applications, such as Microsoft Office, installed and used by multiple users. It maintains some separation between the application settings for the two permitted remote users, but it doesn't include extra software to separate and manage settings.  
+ 
+When you use Remote Desktop for Administration to install an application, it's installed for single-user use. If a user alters the settings in the software, the new settings are saved by the application generally, not for the user individually. The next user who launches the application may see the settings of the previous user, rather than his or her previously configured options.
+
+........... terminal server role
+With the terminal server role installed, applications are installed in special way that enables Terminal Services to make sure all settings are always kept and tracked separately.  
+    
+However, keeping track of multiple user sessions and maintaining settings separately requires a substantial commitment of system resources. 
+...........
+Remote Desktop for Administration and Remote Assistance are installed when you install Windows Server 2003. 
+
+An administrator must explicitly install the terminal server role. 
+...........
+ 
+You can add any accounts that require access to the Remote Desktop Users group on the server. 
+ 
+...........runas
+
+...........RDC, the clinet
+It is important to note that you cannot redirect the CTRL + ALT + DEL keyboard combination. This combination works only on the local operating system. An equivalent that can be used in the Remote Desktop window is CTRL + ALT + END. 
+
+...........Remote Desktops MMC Snap-in
+The Remote Desktops MMC enables a remote connection to the console session.
+
+Many server-based applications send notification pop-up windows only to the console session on a server. These messages cannot be redirected to another system or to the event viewer, etc. If one or more of these applications is running on a server, the administrator needs to be able to view the actual console session to see these messages. 
+
+There is no way for the Administrator to connect to an existing console using the Remote Desktop Connection utility or previous versions of Terminal Services and its clients. You can connect to the console session only with the Remote Desktops MMC. 
+
+The Remote Desktops MMC snap-in is not available on Windows XP Professional computers, only on Windows Server 2003. 
+
+However, you can use it on your Windows XP computer to manage your servers, by installing the Admin Pack (adminpak.msi, located in the i386 folder on the Windows Server 2003 installation CD). 
+
+##################################################################
+
+Command line tools for Active Director
+ dsadd.exe:dds objects to Active Directory. You can use dsadd.exe to add computer, contact, group, organization unit, or user objects. 
+ 
+ dsmod.exe:The dsmod.exe utility modifies attributes of objects in Active Directory. You can use dsmod.exe to modify computers, contacts, groups, servers, organization units, users, quotas, and partitions. 
+
+ dsget.exe: Dsget.exe is used to see the properties of objects in Active Directory. It shows selected attributes of computers, contacts, groups, organizational units, servers, or users. You input objects into dsget.exe and it outputs a list of properties for those objects.  
+
+ dsmove.exe: The name dsmove.exe implies that this command moves objects within the directory service. This is, however, only part of what it does. Dsmove.exe moves a single object to a new location in the same domain. However, it will also rename a single object without moving it. 
+
+ dsquery.exe: Dsquery.exe enables you to query Active Directory for objects that match a specified criterion. This is useful if you need to search all of AD for objects that have similar characteristics. For example, you may want to search for all disabled user accounts or for all groups that do not have a description. 
+ gpresult.exe: Gpresult.exe displays the Resultant Set of Policy (RSoP) information for a target user and computer. RSoP is a tool that can show the effective policy applied to a user or computer or what the policy would be, for planning purposes. 
+ 
+ whoami.exe: displays usernames and group membership information about the currently logged-on user. It can display the security identifier (SID) and all privileges assigned to that SID. This tool is great if you need to quickly see which groups a user belongs to. 
+ 
+whomai /all
+whomai /upn
+whomai /groups
+
+
+ cmdkey.exe: Cmdkey.exe enables you to manage stored usernames and passwords from the command prompt. It displays, creates, and deletes stored usernames and passwords. 
+
+You can pipe results from dsquery.exe into dsget.exe. In other words, you can use dsquery.exe to find objects in Active Directory and have dsget.exe show their properties.
+
+To find all users with names starting with "Chad" and display their office numbers, type the following command:  
+
+ 
+dsquery user -name Chad* | dsget user .office  
+ 
+
+
+...........RDN & DN
+Every Active Directory object has a relative distinguished name (RDN) and a distinguished name (DN). The RDN identifies an object within its parent container. The DN identifies the object within the entire directory. The DN consists of the RDN and its entire parent container objects.
+
+For example, the RDN for the Chad user account in the Authors organizational unit in the trainingconcepts.org domain is CN=chad. The DN for the same object is CN=chad, OU=authors, DC=trainingconcepts, DC=org. 
+
+...........for
+for /f %%I in (c:\test\users.txt) do dsadd user &&I -pwd password
+
+When using the For command in a script file you must use a double percent sign (%%) before the variable. If you are typing the command directly into the command prompt, use only one percent sign (%). 
+
+
+...........
+Importing User Accounts
+Realizing that administrators may have the need to import and export data into and out of Active Directory and other LDAP (Lightweight Directory Access Protocol) directory services, Microsoft has provided two utilities to accomplish just that task.
+
+...... csvde (CSV Directory Exchange):  Csvde uses files formatted in the Microsoft comma-separated value (CSV) format. The advantage of the CSV format is that it is supported by many other applications, such as Microsoft Excel and Microsoft Access, thus enabling you to manipulate data in these applications before importing it. The downside to using csvde is that it only enables the addition of new objects — ldifde enables the modification of existing objects.
+ 
+ 
+...... ldifde (LDAP Data Interchange Format Directory Exchange):  Ldifde can be used to extend the Active Directory schema, export data from Active Directory into other LDAP applications and services, and populate the Active Directory database with LDAP data from other directory services. LDIF is an Internet standard file format for performing batch import and export operations that conform to LDAP standards.
+ 
+ 
+ 
+...........Access Control
+Component 			Description 
+Access Control Entry (ACE): Contains the access permissions for a single object, such as a user account or a group. 
+
+Access Control List (ACL): Contains any number of ACEs to govern how an access request should be handled. There are two types of ACLs: DACL and SACL. 
+
+Discretionary Access Control List (DACL): Determines which objects have access to a specific resource, such as a file, folder, or share. 
+
+System Access Control List (SACL): Determines whether an audit activity should be performed when an object attempts to access a resource. 
+
+Security Identifier (SID): A unique identifier associated with a specific resource, such as a user account object or a computer. 
+
+Access Token : A package comprised of the SIDs and other security information about an object that is making an access request of the system. For file/folder access, the token will provide at least the user SID, group SID, and computer SID to determine if the user has access. 
+
+...........
+When the user double-clicks a file listed in the Explorer window, the local PC builds an access token to send off to the server hosting the file. This access token contains the user's SID from his or her network account, the group SID for each of the groups to which the account belongs, and the SID of the computer the user is logged on to, along with other information. 
+
+When the server receives the request and the access token, it compares information in the token to the ACLs for the object.  
+
+The server examines each of the ACEs in the DACL for the requested file and compares those ACEs to each of the SIDs in the access token. If no ACEs on the file match up with any of the information in the access token, the user's request is denied. If one of the ACEs does match with one of the components in the token, access is granted, and the user sees the file open on the screen.
+
+In addition, the server checks the access token against the SACL to determine if any audit events need to be triggered. If no ACEs in the SACL match any items in the access token, then no audit events will occur
+#######################################################
+secpol.msc 
+to get the Local Security Settings

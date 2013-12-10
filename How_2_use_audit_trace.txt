@@ -1,0 +1,66 @@
+Tracing the manual operations
+
+It is possible to trace manual operations on a Dollar Universe Company, including creating/updating/deleting objects, creating/updating/deleting/disabling/enabling launches, etc. It is very userful for maintenance and support purposes. 
+
+
+The monitored actions
+
+Most of operations on a Dollar Universe Company through GUI or Dollar Universe commands are traced. The only actions that are not traced are the object distribution and transfer.
+
+
+Trun on the audit trace mode
+
+On Unix
+
+Define the U_LOG_TRANS variable in the $UXMGR/uxsetenv files :
+
+For uxsetenv and uxsetenv_ksh
+U_LOG_TRANS=Y;export U_LOG_TRANS
+
+For uxsetenv_csh:
+setenv U_LOG_TRANS Y
+
+Then reload the Dollar Universe environment
+. $UXMGR/uxsetenv
+Stop and restart the Dollar Universe Company
+${UXMGR}/uxshutdown
+${UXMGR}/uxstartup
+
+
+
+On Windows 
+
+Define the U_LOG_TRANS variable in 
+
+the %UXMGR%\uxsetenv.bat files :
+set U_LOG_TRANS=Y
+
+the  %UXEXE%\UNIVERSE.def
+U_LOG_TRANS Y
+
+the %UXEXE%\[CompanyName].def
+U_LOG_TRANS Y
+
+
+Then reload the Dollar Universe environment
+%UXMGR%\uxsetenv
+Stop and restart the Dollar Universe Company
+%UXMGR%\uxshutdown
+%UXMGR%\uxstartup
+
+
+After turning on the audit trace option, a uxiotrns.log will be created in the log directory of each area.
+
+
+
+How to read the log file:
+
+Let's consider the following record from the uxiotrns.log:
+
+
+20040914 120532 : user_system [user1] user_universe [univa] profil [PROFADM] node [DA_US_W_04] prog [GraphicJobMonitor] DELETE CTL   key [S1        0000055TRAILER   0000152DA_US_U_05]
+
+A record is consisted with several field. The above line records the following information:
+
+On 2004-09-14 at 12:05:32, system user "user1" with Dollar Universe user "univa" with the profile "PROFADM", using the program "Graphic Job Monitor" deleted a record from the CTL. The session is S1 with session number: 0000055 and the uproc is TRAILER with uproc number: 0000152 in the MU DA_US_U_05.
+

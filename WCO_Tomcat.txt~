@@ -1,0 +1,40 @@
+1. Install jdk
+2. tar zxvf tomcat.taz to a directory
+3. set env variables JAVA_HOME, CATALINA_HOME
+4. start tomcat with .../bin/startup.sh and .../bin/shutdown.sh
+5. copy DollarUniverse.war to the webapps directory, and start the Tomcat to initialize the file.
+6. create users and rols in the tomcat/conf/user.xml.
+DollarUniverseUser
+DollarUniverseAdmin
+7. Modify the tomcat/conf/web.xml or tomcat/webapps/DollarUniverse/conf/web.xml file.
+7. install ICS, assoicate it to a $U company.
+8. login to 8080/DollarUniverse/servlet/Admin 
+and add the license and users.
+
+For Tomcate 5.0
+#####################################################################
+You need apply the following modifications to the web.xml file located in the conf directory of tomcat release 5 :
+
+Uncomment the following part around line 90 :
+    <servlet>
+        <servlet-name>invoker</servlet-name>
+        <servlet-class>
+          org.apache.catalina.servlets.InvokerServlet
+        </servlet-class>
+        <init-param>
+            <param-name>debug</param-name>
+            <param-value>0</param-value>
+        </init-param>
+        <load-on-startup>2</load-on-startup>
+    </servlet>
+
+Uncomment the following part around line 310
+    <servlet-mapping>
+        <servlet-name>invoker</servlet-name>
+        <url-pattern>/servlet/*</url-pattern>
+    </servlet-mapping>
+
+And then stop and restart tomcat.
+
+#######################################################
+when reloading,  the WCO license can only use all capital letter node name.

@@ -1,0 +1,3 @@
+The u_fmhs50.dta and u_fmph50.dta (a pointer to u_fmhs50.dta) files are used by to display history traces.
+$UXEXE/uxlst ctl exp hst
+and if raz_fic-ed, the Execution History window from the Motif interface will be empty.

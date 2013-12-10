@@ -1,0 +1,59 @@
+To be central monitored:
+The following files on both of the monitoring nodes and the monitored nodes are needed to be modified. 
+1. On the monitoring nodes, modify and restart
+2. On the monitored nodes, modify and restart, the 2 stepps should be followed in the right order.
+
+In uxlnmQCL500.dat file define:
+
+/TABLE="LNM_QCL500"/NAME="S_CTRLCENT_X"/VALUE="IT"
+R: Refused
+W: Event wait
+O: overdue 
+A: waiting for execution (in a batch queue)
+E: running
+I: aborted
+T: completed 
+ 
+The above will work with all area.
+If, for example, for the INT only, you can use
+/TABLE="LNM_QCL500"/NAME="S_CTRLCENT_I"/VALUE="IT"
+
+Then, the job in EXP area will not be central monitored.
+
+Note: only one central Monitoring node can be defined in a node table.
+Define the central monitoring node and the 
+uxshw node tnode=*
+
+ TYPE  | node 
+
+ ITEMS | tnode        : itowtc03   
+       | label        : itowtc03             
+       | dev 
+       | prod 
+-->    | moni 
+       | dir          : F:\var\universe\MEM1TSM12\FDXP01                             
+       | adir         :                                                              
+       | idir         :                                                              
+       | sdir         :                                                              
+       | xdir         :                                                              
+       | ddir         :                                                              
+       | pdir         :                                                              
+       |
+And the central monitored node.
+
+ ITEMS | tnode        : itowtc06   
+       | label        : itowtc06 (primary)   
+       | dev 
+       | prod 
+-->    | nomoni 
+       | dir          : F:\var\universe\MEM1TSM12\FDXP01                             
+       | adir         :                                                              
+       | idir         :                                                              
+       | sdir         :                                                              
+       | xdir         :                                                              
+       | ddir         :                                                              
+       | pdir         :                                                              
+       |
+
+On V500+FX24334C+FX24384B, if an ABORTED job is purged on a monitored node, the  
+will not be purged on the central monitoring node.

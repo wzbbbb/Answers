@@ -1,0 +1,203 @@
+ls -ltr $U_TMP_PATH
+ls -ltr $UXLEX
+set -x
+set -v
+$UXEXE/uxrgz uni FILE_NM=dffdob50
+$UXEXE/uxrgz uni FILE_NM=mdfach50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=mdfachgb
+$UXEXE/uxrgz uni FILE_NM=mdfapg50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=mdfapggb
+$UXEXE/uxrgz uni FILE_NM=mdfapr50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=mdfaprgb
+$UXEXE/uxrgz uni FILE_NM=mdfatr50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=mdfatrgb
+$UXEXE/uxrgz uni FILE_NM=u_fmrl50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=u_frra50
+$UXEXE/uxrgz uni FILE_NM=u_frre50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=u_frrv50
+$UXEXE/uxrgz uni FILE_NM=u_ftru50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=u_fttg50
+$UXEXE/uxrgz uni FILE_NM=u_ftts50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=u_fuec50
+$UXEXE/uxrgz uni FILE_NM=u_fuecgb
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=u_fsec50
+$UXEXE/uxrgz uni FILE_NM=u_fmeq50
+sleep 2
+$UXEXE/uxrgz uni FILE_NM=u_fmqr50
+$UXEXE/uxrgz uni FILE_NM=u_fmqp50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fecd50
+$UXEXE/uxrgz uni APP FILE_NM=u_fecd50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fecd50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fecd50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fecl50
+$UXEXE/uxrgz uni APP FILE_NM=u_fecl50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fecl50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fecl50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmca50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmca50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmca50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmca50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmcm50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmcm50
+
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmcm50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmcm50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmcx50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmcx50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmcx50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmcx50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmer50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmer50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmer50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmer50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmev50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmev50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmev50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmev50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmfu50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmfu50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmfu50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmfu50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmhs50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmhs50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmhs50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmhs50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmlc50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmlc50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmlc50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmlc50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmlp50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmlp50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmlp50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmlp50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmph50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmph50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmph50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmph50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmpi50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmpi50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmpi50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmpi50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmpl50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmpl50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmpl50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmpl50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmsb50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmsb50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmsb50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmsb50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmse50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmse50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmse50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmse50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmsp50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmsp50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmsp50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmsp50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmta50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmta50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmta50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmta50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmtp50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmtp50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmtp50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmtp50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmtr50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmtr50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmtr50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmtr50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fppf50
+$UXEXE/uxrgz uni APP FILE_NM=u_fppf50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fppf50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fppf50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fseu50
+$UXEXE/uxrgz uni APP FILE_NM=u_fseu50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fseu50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fseu50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_frup50
+$UXEXE/uxrgz uni APP FILE_NM=u_frup50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_frup50
+$UXEXE/uxrgz uni SIM FILE_NM=u_frup50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fupr50
+$UXEXE/uxrgz uni APP FILE_NM=u_fupr50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fupr50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fupr50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fmpf50
+$UXEXE/uxrgz uni APP FILE_NM=u_fmpf50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fmpf50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fmpf50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fbvi50
+$UXEXE/uxrgz uni APP FILE_NM=u_fbvi50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fbvi50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fbvi50
+sleep 2
+$UXEXE/uxrgz uni EXP FILE_NM=u_fbvm50
+$UXEXE/uxrgz uni APP FILE_NM=u_fbvm50
+sleep 2
+$UXEXE/uxrgz uni INT FILE_NM=u_fbvm50
+$UXEXE/uxrgz uni SIM FILE_NM=u_fbvm50
+sleep 2
+ls -ltr $U_TMP_PATH
+ls -ltr $UXLEX
+exit $?

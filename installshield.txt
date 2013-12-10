@@ -1,0 +1,24 @@
+DUAS could not install, "Object reference not set"
+
+
+This issue could be on Windows XP, Windows 2000 or earlier versions.
+
+
+You will see a pop up window: "Unhanded Execition", with the following error message:
+
+Error Number: 0x80040706
+Description: Object reference nots set
+
+Setup will now terminate.
+
+
+This error is from InstallShield. The reason is that the InstallShield Installation Engines in the OS is too old. 
+After updating the InstallShield Installation Engines, the error will be gone.
+
+For more details, please check the link:
+
+
+http://consumerdocs.installshield.com/selfservice/viewContent.do?externalId=Q110641&sliceId=1
+
+If this FAQ can not fix your issue, please open a case with technical support and mention the FAQ number 76699.
+

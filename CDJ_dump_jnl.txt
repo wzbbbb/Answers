@@ -1,0 +1,21 @@
+It seems that this issue is related to the FX24039C. After FX24039C, the behavior of CDJ server changed a bit. There are two files uxcdjsrv.dump and uxcdjsrv.jnl needed to be check. These two files are not usually used after FX24039C. However, if the IO server dosen't answer the CDJ server within a specific time frame, (which could be caused by starting the CDJ server before the IO server is ready,) the CDJ with use these two files instead. To remove those old records from the GJM, you can simply delete these two files on the Linux node. They will be re-generated automatically by the CDJ server later. 
+
+The following is the instrucitons. 
+-..- unix
+With a Dollar Universe user and the Dollar Universe environment loaded please.
+- Stop Dollar Universe on the unix host.
+${UXMGR}/uxshutdown
+- Remove the files from the related area (for example for EXP) :
+rm ${UXDEX}/uxcdjsrv.dump ${UXDEX}/uxcdjsrv.jnl
+- Restart your Dollar Universe company
+${UXMGR}/uxstartup
+
+
+To avoid of using those two files, please check the $UXMGR/uxstartup_gen file to make sure that CDJ servers doesn't start up right after the IO servers. 
+
+#######################################################
+#######################################################
+
+For before RE24039C:
+
+If the dump and jnl files got deleted, only newly posted LAUNCHE WAIT and COMPLETED jobs will be displayed after restart the $U. 

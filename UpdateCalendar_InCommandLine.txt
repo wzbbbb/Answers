@@ -1,0 +1,3 @@
+If for example you want to change may 31st into a hollyday in the general calendar, just run :
+${UXEXE}/uxupd CAL EXP MU=\" 00\" dsince=05/31/2004 dbefore=05/31/2004 attr=all to=h
+

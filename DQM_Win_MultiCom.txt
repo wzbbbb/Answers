@@ -1,0 +1,92 @@
+Objective: The purpose of this document is to fine-tune the Windows DQM configuration to avoid some potential issues. The adjustment is necessary, if multiple Dollar Universe Companies coexist in one Windows host.
+Please note that we do not recommend you to implement DQM on Windows if you don't have a specific need for it.
+To use DQM on Windows, the DQM server has to be installed along with the installation of the Dollar Universe Company. It cannot be installed separately. 
+
+Note: throughout this document, we will use the 'CompanyName' as the discussed Dollar Universe Company name. You will have to replace it with your actual Dollar Universe Company name.
+
+1. Multi-company installations on Windows
+
+It is possible to run multiple Dollar Universe Companies with DQM servers the same time on one Windows node. However, it is necessary to make some modifications, in order to be sure that the DQM server(s) will work properly. The default Windows based Dollar Universe Company installation doesn't consider multiple Companies coexisting case; some manual interventions are needed to overcome this limitation.
+ 
+In this document, we promote a solution to this issue : Company dedicated DQM server. 
+Note: If you have Dollar Universe Companies that have different patch levels on one Windows node, we strongly recommend you to adopt this configuration.
+We will use 3 Dollar Universe Companies to discuss this issue and the 3 companies have names:
+'CompanyName1', 'CompanyName2' and 'CompanyName3'.
+
+
+2.  Company dedicated DQM server
+
+A) Uninstall the _DQM_ service
+By default, after a Dollar Universe Company installation, the DQM service has a alias name _DQM_, which could cause some problems if more than one Dollar Universe Companies installed. So the first step is to uninstall the _DQM_ service. First, shutdown the Dollar Universe Company and run the following command.
+
+	%UXEXE%\uniservdqm.exe -remove 'CompanyName' X
+
+Note: even you have more than one DQM services to modify; this command needs only to be run once.
+
+B) Modifying the C:\WINNT\system32\drivers\etc\services file
+In this file, you will find the TCP/UDP ports definitions for all of your network services. Find the part for your Dollar Universe Company. For instance, for 'CompanyName1' , you should find 16 lines like the following:
+
+	'CompanyName1'_IO      10600/tcp 
+	'CompanyName1'_IO_X    10600/tcp 
+	'CompanyName1'_IO_S    10601/tcp  
+	'CompanyName1'_IO_I    10602/tcp  
+	'CompanyName1'_IO_A    10603/tcp  
+	'CompanyName1'_CMD     10604/tcp  
+	'CompanyName1'_CMD_X   10604/tcp  
+	'CompanyName1'_PMP_X   10605/tcp  
+	'CompanyName1'_PMP_S   10606/tcp  
+	'CompanyName1'_PMP_I   10607/tcp  
+	'CompanyName1'_PMP_A   10608/tcp  
+	'CompanyName1'_LNM     10610/tcp  
+	'CompanyName1'_CDJ_X   10611/tcp  
+	'CompanyName1'_CDJ_S   10612/tcp  
+	'CompanyName1'_CDJ_I   10613/tcp  
+	'CompanyName1'_CDJ_A   10614/tcp  
+	_DQM_       10615/tcp 
+
+
+Note: the TCP port numbers may vary; they depend on your specific TCP port definitions. 
+As you can see, the last line is for the DQM server, and it is not associated with a Dollar Universe Company name. It is fine if there is only one Dollar Universe Company using the DQM server. For our case, we need to modify it to the following:
+	'CompanyName1'_DQM_ 	10615/tcp
+The first column of the 16 lines act as aliases of the followed TCP ports.  
+
+
+C) Modifying the %UXMGR%\uxsrsrv.alias file
+There should be 8 lines look like the following:
+
+	'CompanyName1'_DQM_X	_DQM_
+	'CompanyName1'_DQM_S 	_DQM_
+	'CompanyName1'_DQM_I 	_DQM_
+	'CompanyName1'_DQM_A 	_DQM_
+	_DQM_X       	 _DQM_
+	_DQM_S      	 _DQM_
+	_DQM_I       	 _DQM_
+	_DQM_A     	 _DQM_
+
+The first column defines the services and the second column specifies the TCP ports with the TCP port aliases defined in the C:\WINNT\system32\drivers\etc\services file (see step B). Since we have modified the alias from "_DQM_" to "'CompanyName1'_DQM_", the  %UXMGR%\uxsrsrv.alias file also needs to be modified accordingly. The result should be like the following:
+
+	'CompanyName1'_DQM_X 'CompanyName1'_DQM_
+	'CompanyName1'_DQM_S 'CompanyName1'_DQM_
+	'CompanyName1'_DQM_I 'CompanyName1'_DQM_
+	'CompanyName1'_DQM_A 'CompanyName1'_DQM_
+	_DQM_X        'CompanyName1'_DQM_
+	_DQM_S        'CompanyName1'_DQM_
+	_DQM_I        'CompanyName1'_DQM_
+	_DQM_A        'CompanyName1'_DQM_
+
+
+D) Reinstalling the DQM service
+We have removed the DQM service in step A; now we have to reinstall the service. 
+	%UXEXE%\uniservdqm.exe -install 'CompanyName1' X
+If you check again, you will see that the DQM service has been reinstalled but with a different name: 
+	Univer$e 'CompanyName1'_DQM_
+
+E) Restart the Dollar Universe Company
+
+Repeat the steps from (B) to (E) for each Dollar Universe Company with the corresponding Dollar Universe Company Name. 
+The configuration is done.
+
+Conclusion:
+Now, the Dollar Universe Companies will submit their jobs to their DQM servers. The startup and shutdown of each DQM server is controlled by its related Dollar Universe Company's startup and shutdown scripts.
+
+

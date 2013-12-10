@@ -1,0 +1,1477 @@
+...........get the WMI object
+set objwmi=getobject("winmgmts://" & computer)
+
+...........get the disk list
+set colobjlogdisk= objwmi.instancesof("win32_logicaldisk")
+
+colobjlogdisk is an array; no need to worry about type or mem location stuff.
+
+...........get the logical disk ID
+objdisk.deviceid
+
+...........get the free space of a logical disk
+objdisk.freespace
+
+...........for each loop: no need to know the number of the items to loop
+for each  objdisk in colobjlogdisk
+	freemb=objdisk.freespace / mb_factor
+	wscript.echo objdisk.deviceid, int(freemb), "Mb free"
+next
+
+...........The number of of items in a collection :count
+colTapDrives.Count
+
+Can not access directly to a specific item, has to iterate all of them to find it.
+
+...........Array
+computers = Array("support4", "support1")
+
+Wscript.Echo computer(0)
+
+'Can loop through with "for each... next"
+
+... dynamic array
+dim StaticArray(3)
+dim dynamicArray()
+
+Dim arrTestArray()
+intSize = 0
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+Set colRunningServices = objWMIService.ExecQuery _
+    ("SELECT * FROM Win32_Service")
+For Each objService in colRunningServices
+    ReDim Preserve arrTestArray(intSize)
+    arrTestArray(intSize) = objService.DisplayName
+    intSize = intSize + 1
+Next
+
+...slipt(), and lbound() and ubound() of an array
+TestString = " atl-dc-01,DNS Server,13"
+TestArray = Split(TestString , ",")
+For i = LBound(TestArray) to UBound(TestArray)
+    Wscript.Echo TestArray(i)
+Next
+
+
+...........if ... then ... elseif... else ... end if
+If FreeMegaBytes < WARNING_THRESHOLD Then
+ Wscript.Echo objLogicalDisk.DeviceID & " is low on disk space."
+ End If
+
+and, or
+> , < , = , <=, >=
+
+...........case
+Select Case PrinterStatus
+    Case 1 strCurrentState = "Other"
+    Case 2 strCurrentState = "Unknown"
+    Case 3 strCurrentState = "Idle"
+    Case 4 strCurrentState = "Printing"
+    Case 5 strCurrentState = "Warming Up"
+    Case Else strCurrentState = "Status cannot be determined."
+End Select
+
+
+...........for ... next
+for i = 1 to 12
+	...
+	...
+Next
+
+...........sleep
+Wscript.Sleep 3600
+
+...........command line arguments, saved as a collection
+Cscript df.vbs support4 support2
+
+for each computer in wscript.Arguments
+...
+...
+
+next
+
+...........argument count
+WScript.Argumetns.Count
+
+...........to exit
+WScript.Quit
+
+...........error handling
+On Error Resume Next
+
+for each computer in wscript.arguments
+set objwmi = getobject("winmgmts:" & computer)
+if err.number <> 0 then
+	wscript.echo computer & " " & err.description
+	err.clear
+else
+	...
+	...
+end if
+
+On Error GoTo 0 'to turn off error handling:w
+
+...error within COM objects
+
+On Error Resume Next
+Set Test = GetObject _
+    ("Winmgmts:root\cimv2:Win32_Printer.Name='TestPrinter'")
+Set WMI_Error = CreateObject("WbemScripting.SwbemLastError")
+Wscript.Echo WMI_Error.Operation & VbTab & _
+    WMI_Error.ParameterInfo & VbTab & WMI_Error.ProviderName
+
+...........line break
+VBS consider "return" as the end of a statement
+to break a line, use "_" and &
+
+Set colServiceList = GetObject("winmgmts:").ExecQuery("SELECT * FROM " _ 
+    & "Win32_Service WHERE State = 'Stopped' AND StartMode = 'Auto' ") 
+
+...........option explicit
+Option Explicit
+Dim intFirstNumber              ' First number in our simple equation
+Dim intSecondNumber             ' Second number in our simple equation
+
+
+...........Intrinsic Constants
+ConfirmDelete = MsgBox ("Are you sure you want to delete these files?", _
+    VbYesNo OR VBDefaultButton2, "Delete all files")
+If ConfirmDelete = VbNo then   
+    Wscript.Quit
+End If
+
+VbCrLf: This is equivalent to pressing the ENTER key and is typically used to format output for display. 
+
+VbTab: This is equivalent to pressing the TAB key.
+
+...........FileSystemObject
+...local (fixed) drives
+
+Const Fixed = 2
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set colDiskDrives = objFSO.Drives
+For Each objDiskDrive in colDiskDrives
+    If objDiskDrive.DriveType = Fixed then
+        Wscript.Echo objDiskDrive.DriveLetter
+    End if
+Next
+
+...File list
+Set FSO = CreateObject("Scripting.FileSystemObject")
+Set Folder = FSO.GetFolder("C:\Winnt")
+Set FileList = Folder.Files
+For Each File in FileList
+    Wscript.Echo File.Name & VbTab & File.Size & File.DateLastModified
+Next
+
+...........date type casting
+cint(): to int
+CBool: Converts any nonzero value to True and 0 (zero) to False.
+CByte: Converts an expression to a Byte value.
+CCur: Converts an expression to a Currency value.
+CDate: Converts an expression to a Date value.
+CDbl: Converts an expression to a Double value.
+CInt: Converts an expression to an Integer value. If the fractional part of the expression is .5, CInt will round the value to the nearest even number. For example, 3.5 will be rounded to 4, and 6.5 will be rounded to 6.
+CLng: Converts an expression to a Long value.
+CSng: Converts an expression to a Single value.
+CStr: Converts an expression to a String value.
+ 
+
+..........."Empty" value and "Null" value, and "IsNull"
+An "Empty" variable is a variable that has not been initialized. after dim, with default value 0
+A "Null" variable is a variable that has not had a valid value assigned to it. No default value
+
+curBonus = Null
+curBaseSalary = 50000
+If IsNull(curBonus) Then
+    CurBonus = 0
+End If
+curTotalCompensation = curBaseSalary + curBonus
+Wscript.Echo curTotalCompensation
+
+...........date & time
+Now - retrieves both the date and the time.
+Date - retrieves the current date.
+Time - returns the current time
+
+IsDate()
+
+#9/3/2002# : date literals
+
+...........Date extraction
+Wscript.Echo Now
+Wscript.Echo "Year: " & DatePart("yyyy" , Now)
+Wscript.Echo "Quarter: " & DatePart("q", Now)
+Wscript.Echo "Month: " & DatePart("m" , Now)
+Wscript.Echo "Day of Year: " & DatePart("y" , Now)
+Wscript.Echo "Day: " & DatePart("d" , Now)
+Wscript.Echo "Weekday: " & DatePart("w" , Now)
+Wscript.Echo "Week of Year: " & DatePart("ww" , Now)
+Wscript.Echo "Hour: " & DatePart("h", Now)
+Wscript.Echo "Minute: " & DatePart("n" , Now)
+Wscript.Echo "Seconds: " & DatePart("s" , Now)
+
+'d: for day; w: for week; m: month; h: hour; n: minute; s: second
+
+or
+
+CurrentDate = Now
+Wscript.Echo "Year: " & VbTab & VbTab & Year(CurrentDate)
+Wscript.Echo "Month: " & VbTab & VbTab & Month(CurrentDate)
+Wscript.Echo "Day: " & VbTab & VbTab & Day(CurrentDate)
+Wscript.Echo "Weekday: " & VbTab & Weekday(CurrentDate)
+Wscript.Echo "Hour: " & VbTab & VbTab & Hour(CurrentDate)
+Wscript.Echo "Minute: " & VbTab & Minute(CurrentDate)
+Wscript.Echo "Second: " & VbTab & Second(CurrentDate)
+
+...........Date calculation
+DateDiff()
+Wscript.Echo "Date: " & Date
+Wscript.Echo "Days Until July 1: " & DateDiff("d", Date, "7/1/2002") 
+'d: for day; w: for week; m: month; h: hour; n: minute; s: second
+
+Abs(): absolute value 
+
+e.g. , To monitor execution elapse:
+
+Start = Now
+...
+...
+Wscript.Echo DateDiff("s", Start, Now)
+
+DateAdd() : can work both forward and backward
+Wscript.Echo "Date: " & Date
+Wscript.Echo "180 Days From Today: " & DateAdd("d", 180, Date)
+
+...........formating date output
+FormatDateTime()
+
+constants:
+vbGeneralDate 0
+vbLongDate 1
+vbShortDate 2
+vbLongTime 3 
+vbShortTime 4
+ 
+CurrentDate = Now
+Wscript.Echo "General date: " & FormatDateTime(CurrentDate, vbGeneralDate)
+Wscript.Echo "Long date: " & FormatDateTime(CurrentDate, vbLongDate)
+Wscript.Echo "Short date: " & FormatDateTime(CurrentDate, vbShortDate)
+Wscript.Echo "Long time: " & FormatDateTime(CurrentDate, vbLongTime)
+Wscript.Echo "Short time: " & FormatDateTime(CurrentDate, vbShortTime)
+
+
+MonthName() and WeekDayName()
+Wscript.Echo MonthName(Month("9/19/2002"))
+Wscript.Echo WeekDayName(Day("9/1/2002"))
+
+...........String formating
+len(): Returns the number of characters in a string.
+TestString = "This is a test string."
+Wscript.Echo Len(TestString)
+
+left(): Returns the specified number of characters from the string, starting with the first character and working forward toward the end of the string (from left to right).
+TestString = "This is a test string."
+Wscript.Echo Left(TestString, 3)
+
+'output "Thi"
+
+right(): Returns the specified number of characters from the string
+
+mid(): Returns the specified number of characters from the string, starting with a designated character position and working toward the end of the string (from left to right). 
+TestString = "This is a test string."
+Wscript.Echo Mid(TestString, 6, 3)
+
+'output "is "
+
+Space(): inserting spaces
+Wscript.Echo "This is a" & Space(10) _
+    & "test string."
+
+ltrim(): Removes any blank spaces that appear at the beginning of a string. 
+TestString = "         This is a test string.      "
+Wscript.Echo LTrim(TestString)
+
+rtrim():
+
+trim(): Removes both the leading and trailing spaces from a string. 
+
+Service1 = "Alerter"
+State1 = "Running"
+Service2 = "DHCP Client"
+State2 = "Stopped"
+
+NameLength = Len(Service1)
+SpacesToAdd = 20 - NameLength
+DisplayName = Service1 & Space(SpacesToAdd)
+Wscript.Echo DisplayName & State1
+
+Display = ""
+
+NameLength = Len(Service2)
+SpacesToAdd = 20 - NameLength
+DisplayName = Service2 & Space(SpacesToAdd)
+Wscript.Echo DisplayName & State2
+
+
+...........InStr()
+TestString = "This is a test string being searched for two different words."
+PresentString = "test"
+AbsentString = "strong"
+Wscript.Echo InStr(TestString, PresentString)
+Wscript.Echo InStr(TestString, AbsentString)
+
+'When the preceding script runs, the values 11 and 0 will be returned.
+
+...........string case
+LCase()
+UCase()
+
+...........format percentage
+Const NoDecimals = 0
+NumberToFormat = 1 / 7
+Wscript.Echo NumberToFormat
+Wscript.Echo FormatPercent(NumberToFormat, NoDecimals)
+
+...........DO loop
+Do Until :  the loop runs until the loop condition becomes True.
+
+Const ForReading = 1
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objTextFile = objFSO.OpenTextFile _
+    ("c:\test.txt", ForReading)
+Do Until objTextFile.AtEndOfStream
+    strNextLine = objTextFile.Readline
+    Wscript.Echo strNextLine
+Loop
+
+...checking condition at the beginning or at the end
+LoopVariable = 1
+Do Until LoopVariable  = 1
+    Wscript.Echo "Script entered loop 1."
+Loop
+Do
+    Wscript.Echo "Script entered loop 2."
+Loop Until LoopVariable  = 1
+
+...Exit Do
+On Error Resume Next
+Do Until Err <> 0
+    X = 5/0
+    If Err <> 0 Then
+        Wscript.Echo "An error has occurred."
+        Exit Do
+    End If
+        Wscript.Echo "The result of the equation is " & X & "."
+Loop
+
+
+Do While : runs as long as the condition has not been met
+Const ForReading = 1
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objTextFile = objFSO.OpenTextFile _
+    ("c:\test.txt", ForReading)
+Do While Not objTextFile.AtEndOfStream
+    strNextLine = objTextFile.Readline
+    Wscript.Echo strNextLine
+Loop
+
+...........subroutine & function
+EchoLineB 'calling the sub
+Sub EchoLine2
+   Wscript.Echo "B"
+End Sub
+
+Option Explicit
+Wscript.Echo ThisDate
+Function ThisDate
+    ThisDate = Date
+End Function
+
+By default, VBScript passes variables by reference.
+Function TestFunction(ByVal x, ByRef y)
+	...
+	...
+End Function
+
+...recursion
+Set FSO = CreateObject("Scripting.FileSystemObject")
+ShowSubFolders FSO.GetFolder("C:\Scripts")
+Sub ShowSubFolders(Folder)
+    For Each Subfolder in Folder.SubFolders
+        Wscript.Echo Subfolder.Path
+        ShowSubFolders Subfolder
+    Next
+End Sub
+
+...........COM
+VBScript works with a subset of objects known as Automation objects. All COM objects must support one or more interfaces, which are simply the avenues by which a COM client can access the COM server. Any object that supports the IDispatch interface is known as an Automation object. Because not all COM objects support the IDispatch interface, VBScript cannot access all of the COM objects on your computer.
+
+
+...To stop server mode
+Set IE = CreateObject("InternetExplorer.Application")
+IE.Visible = True
+
+...IsObject
+Set TestObject = CreateObject("Word.Application")
+TestObject.Quit
+Wscript.Echo IsObject(TestObject)
+
+' The IsObject return true, since vbs consider it will remain true within the script
+scope. Use eventing to get notice of object.quit .
+
+' In-process servers (that is, Automation objects encapsulated in .dll files)
+will automatically unload themselves from memory when the calling script
+completes.
+' With out-of-process servers, you will typically have to use the method built
+into the object to explicitly unload it from memory. 
+
+...nothing keyword
+Set TestObject = CreateObject("Scripting.FileSystemObject")
+Set TestObject = Nothing
+
+' to free the memory for reference TestObject
+
+...........WSH
+
+...create a user in active directory
+Set objOU = Wscript.GetObject("LDAP://OU=management,dc=fabrikam,dc=com")
+Set objUser = objOU.Create("User", "cn=MyerKen")
+objUser.Put "sAMAccountName", "myerken"
+objUser.SetInfo
+
+...Running command line tools
+Set objNetwork = Wscript.CreateObject("Wscript.Network")
+Set objShell = WScript.CreateObject("WScript.Shell")
+strDomain = objNetwork.DomainName
+If strDomain = "fabrikam" Then
+    objShell.Run "net use x: \\atl-fs-01"
+End If
+
+
+...the version
+Wscript.Echo Wscript.Version
+
+...stop a service
+strComputer = "."
+strComputer = "."
+Set objWMIService = GetObject("winmgmts:" _
+    & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+Set colServices = objWMIService.ExecQuery _
+    ("SELECT * FROM Win32_Service WHERE Name = 'Alerter'")
+For Each objService in colServices
+    errReturnCode = objService.StopService()
+Next
+
+...using wscript object
+Set objNetwork = Wscript.CreateObject("Wscript.Network")
+Wscript.Echo objNetwork.ComputerName
+
+...scheduling a task
+For example, this script creates a scheduled task that runs a script named
+Monitor.vbs every Monday, Wednesday, and Friday at 12:30 P.M.
+
+Set Service = GetObject("winmgmts:")
+Set objNewJob = Service.Get("Win32_ScheduledJob")
+errJobCreated = objNewJob.Create _
+    ("cscript c:\scripts\monitor.vbs", "********123000.000000-420", _
+        True , 1 OR 4 OR 16, , , JobID)
+Wscript.Echo errJobCreated
+
+...........running script
+//B
+ Batch mode; suppresses display of user prompts and script errors. For
+example, if your script includes messages displayed using Wscript.Echo, these
+messages will not appear when the script runs in Batch mode. Batch mode also
+suppresses the use of VBScript functions such as Msgbox.
+
+The default is Interactive mode.
+ 
+//D
+ Turns on the Microsoft Script Debugger if this program is installed. The
+Script Debugger ships as part of Windows 2000, although it is not installed by
+default. The Script Debugger does not ship with Windows XP .
+
+If the Script Debugger is not installed, no error will occur. Instead, the
+script will simply run.
+ 
+//E:engine
+ Executes the script with the specified script engine. Among other things,
+this allows you to run scripts that use a custom file name extension. Without
+the //E argument, you can run only scripts that use registered file name
+extensions. For example, if you try to run this command:
+
+cscript test.admin
+
+You will receive this error message:
+
+Input Error: There is no script engine for file extension ".admin".
+
+To run a script that uses a custom file extension, include the //E argument:
+
+cscript //E:vbscript test.admin
+
+One advantage of using nonstandard file name extensions is that it guards
+against accidentally double-clicking a script and thus running something you
+really did not want to run.
+
+This does not create a permanent association between the .admin file name
+extension and VBScript. Each time you run a script that uses a .admin file
+name extension, you will need to use the //E argument.
+ 
+//H:CScript or //H:WScript
+ Registers Cscript.exe or Wscript.exe as the default application for running
+scripts. When WSH is initially installed, WScript is set as the default script
+host.
+ 
+//I
+ Interactive mode; allows display of user prompts and script errors. This is
+the default mode and is the opposite of Batch mode.
+ 
+//logo
+ Displays a logo when the script runs under CScript (this is the default
+setting for WSH). The logo, which appears prior to any of the output from the
+script, looks like this:Microsoft (R) Windows Script Host Version 5.6Copyright
+(C) Microsoft Corporation 1996-2000. All rights reserved.
+ 
+//nologo
+ Prevents display of the logo at run time (by default, the logo is displayed).
+
+The //nologo option is often used for scripts whose output is redirected to a
+text file. Suppressing the logo ensures that this information does not appear
+within the text file. This makes it easier to write scripts that parse the
+information found in the text file or that import the contents of the file to
+a database, because these scripts do not have to account for the logo.
+ 
+//S
+ Saves the Timeout and Logo options for this user. For example, this command
+ensures that the logo will be suppressed anytime a script runs under CScript:
+
+cscript //nologo //S
+
+You can also modify these settings by right-clicking a script file and then
+clicking Properties.
+ 
+//T:nn
+ Determines the maximum number of seconds the script can run. (The default is
+no limit.) The //T parameter prevents excessive execution of scripts by
+setting a timer. When execution time exceeds the specified value, the script
+host interrupts the script engine and terminates the process.
+ 
+//X
+ Starts the program in the Microsoft Script Debugger. If the Script Debugger
+is not installed, the script simply runs.
+ 
+//?
+ Displays a brief description of command parameters (the usage information).
+The usage information is similar to the information presented in this table,
+although with less explanation. For example, here is the usage information for
+the //E argument://E:engine Use engine for executing script
+ 
+...........read registry with wshshell
+Set WshShell = WScript.CreateObject("WScript.Shell")
+strWallpaper = WshShell.RegRead("HKCU\Control Panel\Desktop\Wallpaper")
+Wscript.Echo strWallpaper
+
+...........WMI and ADSI do not work with NT and 98
+WSH scripts are more likely to be supported by Windows NT 4.0-based and
+Windows 98-based computers. WSH is included with both those operating systems;
+however, neither WMI nor ADSI shipped with Windows NT 4.0 or Windows 98.
+
+........... using COM with wscript method
+Set objSysInfo = Wscript.CreateObject("ADSystemInfo")
+Wscript.Echo "Domain DNS name: " & objSysInfo.DomainDNSName
+
+
+If the COM object you want to use is already running, you can use that
+existing object rather than create a new instance.
+When you write scripts that use WMI or ADSI, you will typically use the
+GetObject method; this is because both WMI and ADSI are always available.  
+
+Set objWMIService = Wscript.GetObject("winmgmts:")
+
+...........almost the same for vbscript and wsh, 
+Set objExcel = CreateObject("Excel.Application", "Parameter2")
+Set objExcel = Wscript.CreateObject("Excel.Application", "Parameter2")
+
+vbscript is better for remoting and event-handling
+The VBScript CreateObject function interprets the second parameter as a remote
+computer name and tries to create the COM object on that remote computer; in
+this example, it tries to instantiate an instance of Microsoft Excel on a
+remote computer named Parameter2. The WScript CreateObject method interprets a
+second parameter as a subroutine prefix to be used in handling events from the
+object.
+
+
+...........stdIn, stdOut, steErr (only available with cscript)
+...stdout
+Set objNetwork = Wscript.CreateObject("Wscript.Network")
+Set objStdOut = WScript.StdOut
+objStdOut.Write "User: "
+objStdOut.Write objNetwork.UserDomain
+objStdOut.Write "\"
+objStdOut.Write objNetwork.UserName
+objStdOut.WriteBlankLines(1)
+objStdOut.WriteLine objNetwork.ComputerName
+objStdOut.Write "Information retrieved."
+objStdOut.Close
+
+...stdIn
+Wscript.StdOut.Write "Enter a Decimal Number: "
+strDecimal = Wscript.StdIn.ReadLine
+
+Wscript.StdOut.WriteLine strDecimal & " is equal to " & _
+ Hex(strDecimal) & " in hex."
+
+
+...StdIn
+Read
+ Reads the specified number of characters and then stops. For example, the
+following reads and echoes 3 characters at a time from StdIn until the entire
+line has been read:
+
+Do Until Wscript.StdIn.AtEndOfLine strInput = Wscript.StdIn.Read(3)
+Wscript.Echo strInput Loop
+
+If StdIn consists of the string "abcdefghijklmnopqrstuvwxyz", output from the
+script will look like this:
+ 
+ReadLine
+ Reads one line from StdIn and then stops before reaching the newline
+character. ReadLine is particularly useful for reading input typed by users
+because it reads all the characters typed by the user before he or she pressed
+ENTER:
+
+strInput = Wscript.StdIn.ReadLine Wscript.Echo strInput
+
+If StdIn consists of the string "abcdefghijklmnopqrstuvwxyz", output from the
+script will look like this:
+
+abcdefghijklmnopqrstuvwxyz
+
+ReadLine is also useful for reading the output generated by a spawned
+command-line tool. For more information about this, see "Running Programs"
+later in this chapter.
+ 
+ReadAll
+ Used only for reading the output generated by a spawned command-line tool,
+batch file, or shell command.
+ 
+Skip
+ Skips the specified number of characters and then stops. For example, this
+script skips the first 23 characters in StdIn and then reads any remaining
+characters one at a time:
+
+Wscript.StdIn.Skip(23) Do Until Wscript.StdIn.AtEndOfLine strInput =
+Wscript.StdIn.Read(1) Wscript.Echo strInput Loop
+
+If StdIn consists of the string "abcdefghijklmnopqrstuvwxyz", output from the
+script will look like this:
+ 
+SkipLine
+ Used to skip a line when reading the output generated by a spawned
+command-line tool, batch file, or shell command.
+ 
+AtEndOfLine
+ Boolean value indicating whether the end of a line has been reached. When the
+Read method is used to retrieve input typed by a user, this property when True
+informs the script that the entire line has been read.Do Until
+Wscript.StdIn.AtEndOfLine strInput = Wscript.StdIn.Read(1) Wscript.Echo
+strInput Loop
+ 
+AtEndOfStream
+ Boolean value indicating whether the end of the stream has been reached. Used
+only for reading the output generated by a spawned command-line tool, batch
+file, or shell command.
+ 
+e.g.
+Wscript.StdOut.Write "Enter a Decimal Number: "
+strDecimal = Wscript.StdIn.ReadLine
+
+Wscript.StdOut.WriteLine strDecimal & " is equal to " & _
+ Hex(strDecimal) & " in hex."
+
+
+...........command line argument
+
+Arguments that conform to /name:value format are stored in the WshNamed
+collection, and arguments that do not follow the /name:value format are stored
+in the WshUnnamed collection. 
+
+...unnamed
+If WScript.Arguments.Count = 3 Then
+ ServerName = WScript.Arguments.Item(0)
+ EventLog = WScript.Arguments.Item(1)
+ EventID = WScript.Arguments.Item(2)
+Else
+ Wscript.Echo "Usage: GetEvents.vbs ServerName EventLog EventID"
+ Wscript.Quit
+End If
+
+...named
+ServerTest.vbs /Timeout:3000 /Server:HRServer01
+
+e.g.
+Const DEFAULT_PACKET_SIZE = 100
+
+Set colNamedArguments = WScript.Arguments.Named
+
+strServer = colNamedArguments.Item("Server")
+If colNamedArguments.Exists("PacketSize") Then
+ strPacketSize = colNamedArguments.Item("PacketSize")
+Else
+ strPacketSize = DEFAULT_PACKET_SIZE
+End If
+strTimeout = colNamedArguments.Item("Timeout")
+
+Wscript.Echo "Server Name: " & strServer
+If colNamedArguments.Exists("PacketSize") Then
+ Wscript.Echo "Packet Size :" & strPacketSize
+Else
+ Wscript.Echo "Packet Size [default]: " & strPacketSize
+End If
+Wscript.Echo "Timeout (ms): " & strTimeout
+
+
+...........limiting execution time
+Wscript.Timeout = 5
+Wscript.Sleep 60000
+Wscript.Echo "Script is finished."
+
+........... WSH env
+Wscript.Echo "Script Full Name: " & Wscript.ScriptFullName
+Wscript.Echo "Script Name: " & Wscript.ScriptName
+Wscript.Echo "Version: " & WScript.Version
+Wscript.Echo "Build: " & Wscript.BuildVersion
+Wscript.Echo "Name: " & Wscript.Name
+Wscript.Echo "Full Name: " & Wscript.FullName
+Wscript.Echo "Path: " & Wscript.Path
+
+...........run or exec
+...run
+However, when you use the Run method, your script will not have access to the
+standard input, output, and error streams generated by the program being run.
+A script cannot use the Run method to run a command-line tool and retrieve its
+output.
+
+===run accept: 3 parameters:program name, window style, if the script pauses until the called program is finished running 
+
+e.g.
+Set objShell = WScript.CreateObject("WScript.Shell")
+objShell.Run("calc.exe"),1,True
+Wscript.Echo "Script completed."
+
+===Windows styles
+0
+ Hides the window and activates another window.
+ 
+1
+ Activates and displays a window. If the window is minimized or maximized, the
+system restores it to its original size and position. An application should
+specify this flag when displaying the window for the first time.
+ 
+2
+ Activates the window and displays it as a minimized window.
+ 
+3
+ Activates the window and displays it as a maximized window.
+ 
+4
+ Displays a window in its most recent size and position. The active window
+remains active.
+ 
+5
+ Activates the window and displays it in its current size and position.
+ 
+6
+ Minimizes the specified window and activates the next top-level window in the
+Z order. The Z order is nothing more than the list detailing the order in
+which windows are to be activated. If you press ALT+TAB, you will see a
+graphical representation of the Z list.
+ 
+7
+ Displays the window as a minimized window. The active window remains active.
+ 
+8
+ Displays the window in its current state. The active window remains active.
+ 
+9
+ Activates and displays the window. If the window is minimized or maximized,
+the system restores it to its original size and position. An application
+should specify this flag when restoring a minimized window.
+ 
+10
+ Sets the show-state based on the state of the program that started the
+application.
+ 
+...to run command line tools
+The %comspec% variable is an environment variable that specifies the command-line processor. By using %comspec%, you can create scripts that run on both Windows 98 computers (where the command-line processor is Command.exe) and on Windows 2000 computers (where the command-line processor is named Cmd.exe).
+
+
+Set objShell = WScript.CreateObject("WScript.Shell")whether 
+objShell.Run("%comspec% /K dir"), 1, True
+
+%comspec% /k : keep the command window open after the command
+%comspec% /c : close the command window after the command
+
+...quoting
+Anytime you need to include quotation marks as part of the command string, you must use a pair of quotation marks. For example:
+
+Set objShell = WScript.CreateObject("WScript.Shell")
+objShell.Run("%comspec% /k sc.exe getkeyname ""Upload Manager"""), 1, True
+
+
+
+...exec (supported only with WSH 5.6)
+If you need access to command-line output, you should use the Exec method
+instead. 
+
+e.g.
+Set objShell = WScript.CreateObject("WScript.Shell")
+Set objExecObject = objShell.Exec("cmd /c ping -n 3 -w 1000 157.59.0.1")
+Do While Not objExecObject.StdOut.AtEndOfStream
+    strText = objExecObject.StdOut.ReadLine()
+    If Instr(strText, "Reply") > 0 Then
+        Wscript.Echo "Reply received."
+        Exit Do
+    End If
+Loop
+
+...to run command line tools
+Set objShell = WScript.CreateObject("WScript.Shell")
+Set objExecObject = objShell.Exec("%comspec% /c ipconfig.exe")
+
+Do Until objExecObject.StdOut.AtEndOfStream
+ strLine = objExecObject.StdOut.ReadLine()
+ strIP = Instr(strLine,"Address")
+ If strIP <> 0 Then
+ Wscript.Echo strLine
+ End If
+Loop
+
+
+...........environment variable
+Set objShell = WScript.CreateObject("WScript.Shell")
+Set colSystemEnvVars = objShell.Environment("System")
+Set colUserEnvVars = objShell.Environment("User")
+Wscript.Echo "Computer-specific PATH Environment Variable"
+Wscript.Echo colSystemEnvVars("PATH")
+Wscript.Echo "User-specific PATH Environment Variable"
+Wscript.Echo colUserEnvVars("PATH")
+
+...........reading registry
+Set objShell = WScript.CreateObject("WScript.Shell")
+sngVersion = objShell.RegRead _
+    ("HKLM\Software\Microsoft\Windows NT\CurrentVersion\CurrentVersion")
+Wscript.Echo sngVersion
+
+...data types
+REG_SZ String Converted to String
+ 
+REG_DWORD Number Converted to Integer
+ 
+REG_BINARY Binary Value Converted to VBArray of Integers
+ 
+REG_EXPAND_SZ Expandable String Converted to String
+ 
+REG_MULTI_SZ Array of Strings Converted to VBArray of Strings
+ 
+...........determin the current working directory
+Set objShell = WScript.CreateObject("WScript.Shell")
+
+Wscript.Echo "Initial Working Directory:"
+Wscript.Echo objShell.CurrentDirectory
+
+objShell.CurrentDirectory = "C:\"
+
+Wscript.Echo "Working Directory After Change:"
+Wscript.Echo objShell.CurrentDirectory
+
+...........wshNetwork object
+Working with network drives
+	MapNetworkDrive
+	EnumNetworkDrives
+	RemoveNetworkDrive
+ 
+Working with network printers
+	AddPrinterConnection
+	AddWindowsPrinterConnection
+	EnumPrinterConnections
+	SetDefaultPrinter
+	RemovePrinterConnection
+ 
+Obtaining information about the currently logged-on user
+	ComputerName
+	UserDomain
+	UserName
+ 
+
+...........MapNetworkDrive
+Argument;type;default value
+LocalName;String;None
+ The drive letter, followed by a colon, assigned to the mapped network drive,
+e.g., "H:".
+ 
+RemoteName;String;None
+ The shared folders UNC name, e.g., "\\ServerName\ShareName" or "\\ServerName\ShareName\FolderName".
+ 
+UpdateProfile;Boolean;False
+ Boolean value indicating whether the mapping information is stored in the
+current users profile. The value True updates the current users profile; False
+does not.
+ 
+UserName; String;None
+ Maps the network drive using the credentials of someone other than the
+current user.
+ 
+Password;String;None
+ Password for the user identified by the UserName argument.
+ 
+e.g.
+Set objNetwork = Wscript.CreateObject("WScript.Network")
+objNetwork.MapNetworkDrive "G:", "\\atl-fs-01\Sales"
+objNetwork.MapNetworkDrive "H:", "\\atl-fs-01\Users$\lewjudy"
+
+...remove network drive
+bjNetwork = WScript.CreateObject("Wscript.Network")
+objNetwork.RemoveNetworkDrive "G:"
+
+...listing network drive
+Set objNetwork = WScript.CreateObject("WScript.Network")
+Set colDrives = objNetwork.EnumNetworkDrives
+For i = 0 to colDrives.Count-1 Step 2
+ Wscript.Echo colDrives.Item(i) & vbTab & colDrives.Item (i + 1)
+Next
+
+sample collection:
+Index Number 	Value 
+0		 D:
+1 		\\atl-fs-01\users\kmyer
+2		 E:
+3		 \\atl-fs-02\accounting
+4 		F:
+5		 \\atl-fs-03\public
+ 
+...........user & computer info
+Set objNetwork = WScript.CreateObject("WScript.Network")
+strUserDomain = objNetwork.UserDomain
+
+If strUserDomain = "ACCOUNTING" Then
+ objNetwork.MapNetworkDrive "N:", "\\fileserver01\accounting", True
+ElseIf strUserDomain = "DEVELOPMENT" Then
+ objNetwork.MapNetworkDrive "N:", "\\fileserver01\development", True
+Else
+ Wscript.Echo "User " & objNetwork.UserName & _
+ "not in ACCOUNTING or DEVELOPMENT. N: not mapped."
+End If
+
+...........WshController Object
+To run script remotely:
+• Both the local and target remote computers must be running WSH version 5.6.
+ 
+• You must add a string-valued entry (REG_SZ) named Remote to the registry
+subkey HKEY_LOCAL_ MACHINE\SOFTWARE\Microsoft\Windows Script Host\Settings and
+set its value to 1 on all target remote computers. You do not need to add this
+entry to the registry of the local computer from which you run the controller
+script.
+ 
+...using WMI to add the registry key to enable running script remotely
+Const HKEY_LOCAL_MACHINE = &H80000002
+strComputer = "RemoteComputerName"
+
+Set objRegProv = GetObject("winmgmts:{impersonationLevel=Impersonate}" & _
+ "!\\" & strComputer & "\root\default:StdRegProv")
+ 
+strKeyPath = "SOFTWARE\Microsoft\Windows Script Host\Settings"
+objRegProv.SetStringValue HKEY_LOCAL_MACHINE,strKeyPath,"Remote","1"
+
+...........running local script on a remote computer
+strRemoteComputer = "RASServer01"
+strWorkerScript = "MapNetworkDrive.vbs"
+Set objWshController = WScript.CreateObject("WshController")
+Set objRemoteScript = _
+objWshController.CreateScript(strWorkerScript, strRemoteComputer)
+objRemoteScript.Execute
+
+Do While Not objRemoteScript.Status = 2
+ Wscript.Sleep(100)
+ Wscript.Echo "Remote script not yet complete."
+Loop
+
+...........WMI
+
+...........To get physical memory
+strComputer = "."
+
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer)
+Set colSWbemObjectSet = _
+ objSWbemServices.InstancesOf("Win32_LogicalMemoryConfiguration")
+
+For Each objSWbemObject In colSWbemObjectSet
+ Wscript.Echo "Total Physical Memory (kb): " & _
+ objSWbemObject.TotalPhysicalMemory
+Next
+
+...........total virtual memory
+strComputer = "."
+
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer)
+Set colSWbemObjectSet = _
+ objSWbemServices.InstancesOf("Win32_LogicalMemoryConfiguration")
+
+For Each objSWbemObject In colSWbemObjectSet
+ Wscript.Echo "Total Virtual Memory (kb): " & _
+ objSWbemObject.TotalVirtualMemory
+Next
+
+...........All services, state and start mode
+strComputer = "."
+
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer)
+Set colSWbemObjectSet = objSWbemServices.InstancesOf("Win32_Service")
+
+For Each objSWbemObject In colSWbemObjectSet
+ Wscript.Echo "Display Name: " & objSWbemObject.DisplayName & vbCrLf & _
+ " State: " & objSWbemObject.State & vbCrLf & _
+ " Start Mode: " & objSWbemObject.StartMode
+Next
+... with binary path!
+strComputer = "."
+
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer)
+Set colServices = objSWbemServices.InstancesOf("Win32_Service")
+
+For Each objService In colServices
+ Wscript.Echo "Name: " & objService.Name & vbCrLf & _
+ "Display Name: " & objService.DisplayName & vbCrLf & _
+ "Description: " & objService.Description & vbCrLf & _
+ "Path Name: " & objService.PathName & vbCrLf & _
+ "Start Mode: " & objService.StartMode & vbCrLf & _
+ "State: " & objService.State & vbCrLf
+Next
+
+
+...........getting Windows eventlog records
+strComputer = "."
+
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer)
+Set colSWbemObjectSet = objSWbemServices.InstancesOf("Win32_NTLogEvent")
+For Each objSWbemObject In colSWbemObjectSet 
+ Wscript.Echo "Log File: " & objSWbemObject.LogFile & vbCrLf & _
+ "Record Number: " & objSWbemObject.RecordNumber & vbCrLf & _
+ "Type: " & objSWbemObject.Type & vbCrLf & _
+ "Time Generated: " & objSWbemObject.TimeGenerated & vbCrLf & _
+ "Source: " & objSWbemObject.SourceName & vbCrLf & _
+ "Category: " & objSWbemObject.Category & vbCrLf & _
+ "Category String: " & objSWbemObject.CategoryString & vbCrLf & _
+ "Event: " & objSWbemObject.EventCode & vbCrLf & _
+ "User: " & objSWbemObject.User & vbCrLf & _
+ "Computer: " & objSWbemObject.ComputerName & vbCrLf & _
+ "Message: " & objSWbemObject.Message & vbCrLf
+Next
+
+...........WMI provider
+Provider 		DLL 		Namespace 		Description 
+Active Directory	dsprov.dll	root\directory\ldap
+ Maps Active Directory objects to WMI
+ 
+Event Log 		ntevt.dll 			root\cimv2
+ Manages Windows event logs (for example, reads, backs up, clears, copies, deletes, monitors, renames, compresses, and uncompresses event log files and changes event log settings)
+ 
+Performance Counter 	wbemperf.dll 	root\cimv2
+ Provides access to raw performance data
+ 
+Registry 		stdprov.dll 	root\default
+ Reads, writes, enumerates, monitors, creates, and deletes registry keys and values
+ 
+SNMP 			snmpincl.dll 	root\snmp
+ Provides access to SNMP MIB data and traps from SNMP-managed devices
+ 
+WDM 			wmiprov.dll 	root\wmi
+ Provides access to information about WDM device drivers
+ 
+Win32 			cimwin32.dll 	root\cimv2
+ Provides information about the computer, disks, peripheral devices, files, folders, file systems, networking components, operating system, printers, processes, security, services, shares, SAM users and groups, and more
+ 
+Windows Installer 	msiprov.dll 	root\cimv2
+ Provides access to information about installed software
+ 
+
+...........
+In Windows 2000 and Windows NT 4.0 with SP4, the CIM is stored in
+systemroot\System32\Wbem\Respository\cim.rep.
+In Windows XP, the CIM repository resides in the
+systemroot\System32\Wbem\Repository\FS directory and consists of the following
+four files:
+
+• Index.btr. Binary-tree (btree) index file.
+ 
+• Index.map. Transaction control file.
+ 
+• Objects.data. CIM repository where managed resource definitions are stored.
+ 
+• Objects.map. Transaction control file.
+ 
+...........system info
+strComputer = "."
+
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer)
+Set colOperatingSystems =
+objSWbemServices.InstancesOf("Win32_OperatingSystem")
+
+For Each objOperatingSystem In colOperatingSystems
+ Wscript.Echo "Name: " & objOperatingSystem.Name & vbCrLf & _
+ "Caption: " & objOperatingSystem.Caption & vbCrLf & _
+ "CurrentTimeZone: " & objOperatingSystem.CurrentTimeZone & vbCrLf & _
+ "LastBootUpTime: " & objOperatingSystem.LastBootUpTime & vbCrLf & _
+ "LocalDateTime: " & objOperatingSystem.LocalDateTime & vbCrLf & _
+ "Locale: " & objOperatingSystem.Locale & vbCrLf & _
+ "Manufacturer: " & objOperatingSystem.Manufacturer & vbCrLf & _
+ "OSType: " & objOperatingSystem. OSType & vbCrLf & _
+ "Version: " & objOperatingSystem.Version & vbCrLf & _
+ "Service Pack: " & objOperatingSystem.ServicePackMajorVersion & _
+ "." & objOperatingSystem.ServicePackMinorVersion & vbCrLf & _
+ "Windows Directory: " & objOperatingSystem.WindowsDirectory
+Next
+
+...........SWbemLocator
+If not Administrator and need to specify username and passwd:
+
+strComputer = "atl-dc-01"
+Set objSWbemLocator = CreateObject("WbemScripting.SWbemLocator")
+Set objSWbemServices = objSWbemLocator.ConnectServer _
+    (strComputer, "root\cimv2", "kenmyer", "homerj")
+Set colSWbemObjectSet = objSWbemServices.InstancesOf("Win32_Service")
+For Each objSWbemObject In colSWbemObjectSet
+    Wscript.Echo "Name: " & objSWbemObject.Name
+Next
+
+WMI scripts that connect to the WMI service on the local computer always connect using the security context of the logged on user. You cannot use the SWbemLocator ConnectServer method to specify user and password credentials for a local connection.
+
+...........SWbemServices Methods
+
+Method Name 		Default Mode 		Return Type 		Description 
+
+AssociatorsOf 	Semisynchronous 	SWbemObjectSet
+ Retrieves the instances of managed resources that are associated with a specified resource through one or more association classes. You provide the object path for the originating endpoint, and AssociatorsOf returns the managed resources at the opposite endpoint. The AssociatorsOf method performs the same function that the ASSOCIATORS OF WQL query performs.
+ 
+Delete 			Synchronous 		None
+			(cannot be changed) 
+ Deletes an instance of a managed resource (or a class definition from the CIM repository).
+ 
+ExecMethod 		Synchronous  		SWbemObject
+			(cannot be changed)
+ Provides an alternative way to execute a method defined by a managed resource class definition. Primarily used in situations in which the scripting language does not support out parameters. For example, JScript does not support out parameters.
+ 
+ExecNotificationQuery 	Semisynchronous 	SWbemEventSource
+ Executes an event subscription query to receive events. An event subscription query is a query that defines a change to the managed environment that you want to monitor. When the change occurs, the WMI infrastructure delivers an event describing the change to the calling script.
+ 
+ExecQuery 		Semisynchronous 	SWbemObjectSet
+ Executes a query to retrieve a collection of instances of WMI-managed resources (or class definitions). ExecQuery can be used to retrieve a filtered collection of instances that match criteria you define in the query passed to ExecQuery.
+ 
+Get 			Synchronous  		SWbemObject
+			(cannot be changed)
+ Retrieves a single instance of a managed resource (or class definition) based on an object path.
+ 
+InstancesOf 		Semisynchronous 	SWbemObjectSet
+ Retrieves all the instances of a managed resource based on a class name. By default, InstancesOf performs a deep retrieval. That is, InstancesOf retrieves the instances of the resource identified by the class name passed to the method and also retrieves all the instances of all the resources that are subclasses (defined beneath) of the target class.
+ 
+ReferencesTo 		Semisynchronous 	SWbemObjectSet
+ Returns all of the associations that reference a specified resource. The best way to understand ReferencesTo is to compare it with the AssociatorsOf method.  AssociatorsOf returns the dynamic resources that are at the opposite end of an association. ReferencesTo returns the association itself. The ReferencesTo method performs the same function that the REFERENCES OF WQL query performs.
+ 
+SubclassesOf 		Semisynchronous 	SWbemObjectSet
+ Retrieves all the subclasses of a specified class from the CIM repository.
+ 
+
+........... asynchronous method
+Each asynchronous method name is appended with the suffix Async. For example, the asynchronous version of ExecNotificationQuery is named ExecNotificationQueryAsync. 
+To use an asynchronous method, your script must first create an SWbemSink object and a special subroutine called an event handler. WMI performs the asynchronous operation and notifies the script by calling the event handler subroutine when the operation is complete.
+
+...........Semisynchronous
+Semisynchronous operations offer better performance than synchronous operations, yet they do not require the extra knowledge and scripting steps necessary to handle asynchronous operations. This is the default operation type for most WMI queries.
+
+...........InstancesOf
+list all
+
+...........ExecQuery
+With filter
+
+...........Get (single object)
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+Set objSWbemObject = objSWbemServices.Get("Win32_Service.Name='Messenger'")
+Wscript.Echo "Name:         " & objSWbemObject.Name        & vbCrLf & _
+"Display Name: " & objSWbemObject.DisplayName & vbCrLf & _
+"Start Mode:   " & objSWbemObject.StartMode   & vbCrLf & _
+"State:        " & objSWbemObject.State
+
+...........Impersonation Level
+impersonationLevel and authenticationLevel, are not specific to WMI but rather are derived from DCOM, which WMI uses to access the WMI infrastructure on remote computers.
+...levels
+Anonymous
+ Hides the credentials of the caller. WMI does not actually support this
+impersonation level; if a script specifies impersonationLevel=Anonymous, WMI
+will silently upgrade the impersonation level to Identify. This is in some
+ways a meaningless exercise, however, because scripts using the Identify level
+are likely to fail.
+ 
+Identify
+ Enables objects to query the credentials of the caller. Scripts using this
+impersonation level are likely to fail; the Identify level typically lets you
+do no more than check access control lists. You will not be able to run
+scripts against remote computers using Identify.
+ 
+Impersonate
+ Enables objects to use the credentials of the caller. It is recommended that
+you use this impersonation level with WMI scripts. When you do so, the WMI
+script will use your user credentials; as a result, it will be able to perform
+any tasks that you are able to perform.
+ 
+Delegate
+ Enables objects to permit other objects to use the credentials of the caller.
+Delegation allows a script to use your credentials on a remote computer and
+then enables that remote computer to use your credentials on another remote
+computer. While you can use this impersonation level within WMI scripts, you
+should do so only if necessary because it might pose a security risk.
+
+You cannot use the Delegate impersonation level unless all the user accounts
+and computer accounts involved in the transaction have all been marked as
+Trusted for delegation in Active Directory. This helps minimize the security
+risks. Although a remote computer can use your credentials, it can do so only
+if both it and any other computers involved in the transaction are trusted for
+delegation.
+ 
+...........WMI Object Path
+Specific instance or instances of a WMI class within a namespace.This moniker connects directly to the WMI instance representing drive C. To bind directly to an instance, you must include the key property (defined in the "Key properties" section of this chapter) in the object path:
+ 
+A key property is a property that can be used to uniquely identify an instance. 
+
+Set objSWbemObject = GetObject _
+    ("winmgmts:\\atl-dc-01\root\cimv2:Win32_LogicalDisk.DeviceID='C:'")
+
+
+...........WQL
+strState = Wscript.Arguments.Item(0)
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+Set colServices = objSWbemServices.ExecQuery _
+    ("SELECT * FROM Win32_Service WHERE State = '" & strState & "'")
+For Each objService In colServices
+    Wscript.Echo objService.Name
+Next
+
+...Using Boolean
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+Set colServices = objSWbemServices.ExecQuery _
+    ("SELECT * FROM Win32_Service WHERE AcceptPause = True")
+For Each objService In colServices
+    Wscript.Echo objService.Name
+Next
+
+...
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+
+Set colServices = objSWbemServices.ExecQuery _
+  ("SELECT * FROM Win32_Service WHERE State = 'Stopped' AND StartMode = 'Auto'")
+
+For Each objService In colServices
+    Wscript.Echo objService.Name
+Next
+
+...
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+
+Set colServices = objSWbemServices.ExecQuery _
+    ("SELECT * FROM Win32_Service WHERE State = 'Stopped' OR State = 'Paused'")
+
+For Each objService In colServices
+    Wscript.Echo objService.Name
+Next
+
+...
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+
+Set colServices = objSWbemServices.ExecQuery _
+    ("SELECT Name, State FROM Win32_Service WHERE AcceptPause = True")
+
+For Each objService In colServices
+    Wscript.Echo objService.Name, objService.State
+Next
+
+..........Forward-only enumerator
+Forward-only enumerators typically run faster than other queries and use less memory. However, with a forward-only enumerator, as soon as an object is enumerated it is released from memory. 
+
+Const wbemFlagReturnImmediately = 16
+Const wbemFlagForwardOnly = 32
+strComputer = "."
+Set objSWbemServices = _
+    GetObject("winmgmts:{(Security)}\\" & strComputer & "\root\cimv2")
+Set colNTLogEvents = objSWbemServices.ExecQuery _
+    ("SELECT * FROM Win32_NTLogEvent", , _
+     wbemFlagReturnImmediately + wbemFlagForwardOnly)
+For Each objNTLogEvent In colNTLogEvents
+    Wscript.Echo "Log File:        " & objNTLogEvent.LogFile        & vbCrLf & _
+"Record Number:   " & objNTLogEvent.RecordNumber   & vbCrLf & _
+"Type:            " & objNTLogEvent.Type           & vbCrLf & _
+"Time Generated:  " & objNTLogEvent.TimeGenerated  & vbCrLf & _
+"Source:          " & objNTLogEvent.SourceName     & vbCrLf & _
+"Category:        " & objNTLogEvent.Category       & vbCrLf & _
+"Category String: " & objNTLogEvent.CategoryString & vbCrLf & _
+"Event:           " & objNTLogEvent.EventCode      & vbCrLf & _
+"User:            " & objNTLogEvent.User           & vbCrLf & _
+"Computer:        " & objNTLogEvent.ComputerName   & vbCrLf & _
+"Message:         " & objNTLogEvent.Message        & vbCrLf
+Next
+
+...........WMI with Dates & Times
+WMI using Universal Time Coordinate (UTC) format
+
+...Converting UTC to standard date
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:\\" & strComputer & "\root\cimv2")
+Set objOS = objSWbemServices.ExecQuery("SELECT * FROM Win32_OperatingSystem")
+For Each strOS in objOS
+ dtmInstallDate = strOS.InstallDate
+ strReturn = WMIDateStringToDate(dtmInstallDate)
+ Wscript.Echo strReturn
+Next
+Function WMIDateStringToDate(dtmInstallDate)
+ WMIDateStringToDate = CDate(Mid(dtmInstallDate, 5, 2) & "/" & _
+ Mid(dtmInstallDate, 7, 2) & "/" & Left(dtmInstallDate, 4) _
+ & " " & Mid (dtmInstallDate, 9, 2) & ":" & _
+ Mid(dtmInstallDate, 11, 2) & ":" & Mid(dtmInstallDate, _
+ 13, 2))
+End Function
+
+...Converting standard data to UTC
+strComputer = "."
+Set objSWbemServices = GetObject("winmgmts:" _
+ & "{impersonationLevel=impersonate}!\\" & strComputer & "\root\cimv2")
+Set colTimeZone = objSWbemServices.ExecQuery _
+ ("SELECT Bias FROM Win32_TimeZone")
+For Each objTimeZone in colTimeZone
+ strBias = objTimeZone.Bias
+Next
+
+dtmCurrentDate = "10/18/2002"
+dtmTargetDate = Year(dtmCurrentDate)
+
+dtmMonth = Month(dtmCurrentDate)
+If Len(dtmMonth) = 1 Then
+ dtmMonth = "0" & dtmMonth
+End If
+
+dtmTargetDate = dtmTargetDate & dtmMonth
+
+dtmDay = Day(dtmCurrentDate)
+If Len(dtmDay) = 1 Then
+ dtmDay = "0" & dtmDay
+End If
+
+dtmTargetDate = dtmTargetDate & dtmDay & "000000.000000"
+dtmTargetDate = dtmTargetDate & Cstr(strBias)
+
+Set colFolders = objSWbemServices.ExecQuery _
+ ("SELECT Name FROM Win32_Directory WHERE CreationDate < '" & _
+ dtmtargetDate & "'")
+For Each objFolder in colFolders
+ Wscript.Echo objFolder.Name
+Next
+
+...........display all properties of managed resources!
+strComputer = "."
+strNamespace = "\root\cimv2"
+strClassName = "Win32_Process"
+
+
+Set objSWbemServices = _
+ GetObject("winmgmts:{impersonationLevel=impersonate}!\\" &_
+ strComputer & strNamespace)
+
+Set colInstances = objSWbemServices.ExecQuery("SELECT * FROM " &_
+ strClassName)
+
+Wscript.Echo "Properties of Instances of Class " & strClassName
+Wscript.Echo "================================================="
+
+iCount = 0
+For Each objInstance in colInstances
+ iCount = iCount + 1
+ Set colProperties = objInstance.Properties_
+
+ Wscript.Echo vbCrLf
+ Wscript.Echo "******************"
+ Wscript.Echo "INSTANCE NUMBER: " & iCount
+ Wscript.Echo "******************"
+ Wscript.Echo vbCrLf
+
+ For Each objProperty in colProperties
+ Wscript.Echo objProperty.Name & " : " & objProperty.Value
+ Next
+ Wscript.Sleep(2000)
+Next
+
+...........sending email without SMTP server
+Set objEmail = CreateObject("CDO.Message")
+objEmail.From = "zwa@orsyp.com"
+objEmail.To = "zwa@orsyp.com"
+objEmail.Subject = "test from vbs"
+objEmail.Textbody = "ohoh"
+objEmail.Configuration.Fields.Item _
+ ("http://schemas.microsoft.com/cdo/configuration/sendusing") = 2
+objEmail.Configuration.Fields.Item _
+ ("http://schemas.microsoft.com/cdo/configuration/smtpserver") = _
+"support2"
+objEmail.Configuration.Fields.Item _
+ ("http://schemas.microsoft.com/cdo/configuration/smtpserverport") = 25
+objEmail.Configuration.Fields.Update
+objEmail.Send
+
+
+...........registry
+
+Subtree			Value
+HKEY_CLASSES_ROOT 	&H80000000
+HKEY_CURRENT_USER 	&H80000001
+HKEY_LOCAL_MACHINE 	&H80000002
+HKEY_USERS 		&H80000003
+HKEY_CURRENT_CONFIG 	&H80000005
+
+...........writing to text files
+WriteLine
+Write
+WriteBlankLines
+
+For writing (parameter value 2, constant = ForWriting)
+For appending (parameter value 8, constant = ForAppending).
+
+Const ForAppending = 8
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.OpenTextFile("C:\FSO\ScriptLog.txt", ForAppending)
+objFile.WriteLine Now
+objFile.Close
+
+...........create a text file
+Set objFSO = CreateObject("Scripting.FileSystemObject")
+Set objFile = objFSO.CreateTextFile("C:\FSO\ScriptLog.txt")
+
+Set objFile = objFSO.CreateTextFile("C:\FSO\ScriptLog.txt", False)
+
+When this parameter is False, existing files are not overwritten; when this
+parameter is True (the default value), existing files are overwritten.
+If you set the Overwrite parameter to False and the file already exists, a
+run-time error will occur.
+
+#######################################################
+#######################################################
+To download and upgrade the WSH host to 5.6:
+
+http://www.microsoft.com/downloads/details.aspx?FamilyId=C717D943-7E4B-4622-86EB-95A22B832CAA&displaylang=en
+
+

@@ -1,0 +1,823 @@
+...........
+To list file owner, last modified 
+dir /tc /q #owner and creation time
+dir /ta /q #owner and last access time
+dir /tw /q #owner and last written time
+
+...........
+The return code of a command: %errorlevel%
+
+...........
+if "%1" == "bb" goto PlaceTag
+
+:PlaceTag
+
+...........
+if NOT exist uxsetenv.bat GOTO FIN_ERR
+
+:FIN_ERR
+
+...........
+if "%1" == ""  set DATE_FILTER=NO
+
+...........
+invoke a script or function?
+call %UXMGR%\uxsetenv.bat
+
+...........
+@echo off
+The @ symbol at the start of the line turns off the prompt from displaying for that command. 
+
+...........
+set s=sss
+
+...........
+date /t  # to display date  -
+
+The regular "date" output
+D:\du\TST530\exec>date /t  --
+Fri 07/16/2010
+
+To display the digits only:
+
+D:\du\TST530\exec>set today=%date:~-4%   ; the last 4 digits --
+
+D:\du\TST530\exec>echo %today%
+2010
+
+
+D:\du\TST530\exec>set today=%date:~4,2% ; the 2 digits from the 4th position --
+
+D:\du\TST530\exec>echo %today%
+07
+
+
+D:\du\TST530\exec>set today=%date:~4% ; every thing after the 4th position --
+
+D:\du\TST530\exec>echo %today%
+07/16/2010
+
+
+D:\du\TST530\exec>set today=%date:~-4%%date:~4,2%%date:~7,2% ; pick year, month, date and rearrange them --
+
+D:\du\TST530\exec>echo %today%
+20100716
+
+time /t  # to display time  -
+
+D:\du\TST530\exec>time /t --
+05:47 PM
+
+D:\du\TST530\exec>set t=%time:~,5% ; 5 digits from the beginning. --
+
+D:\du\TST530\exec>echo %t%
+17:47
+
+...........function
+call :function1
+	...
+	...
+	...
+	...
+goto eof:
+
+:function1
+...
+...
+goto :eof
+
+...........cacls 	#to display or modify owner and access right info
+cacls f: 	
+cacls %UXDIR_ROOT% /t : goes into each directory
+
+........... findstr; with regular expression
+net start |findstr Uni
+
+findstr /i char : case insensitive
+findstr /v char : get lines not including the char
+
+dir /b |findstr "^t" #to find the file names begin with "t"
+
+e.g., to run script generated from command result: 
+dir /b |findstr "^t"|findstr /v ~ > dd.bat
+call dd.bat
+del dd.bat
+
+To find "/I"
+findstr/?| findstr \/I
+
+...........&& working also
+
+net start |findstr Uni && echo found it
+
+net start |findstr sdfsdf  && echo found it
+echo %errorlevel%
+1
+
+...........del
+del /q : quite mode, not confirm
+del /f : force
+
+...........rd : delete directory
+rd /q : quiet and 
+rd /s : remove the dir, subdirs and files, the whole tree
+
+...........mkdir or md
+
+    mkdir \a\b\c\d
+
+is the same as:
+
+    mkdir \a
+    chdir \a
+    mkdir b
+    chdir b
+    mkdir c
+    chdir c
+    mkdir d
+
+...........winzip
+wzzip -v tmp.zip 		: tar ztvf tmp.zip
+wzzip tmp.zip .\tmp\		:without the directory structure
+wzzip -rP ddd.zip .\tmp 	:with the directory structure and all subdir
+
+...........mem
+mem /c
+mem /p
+mem /d
+
+#######################################################
+#######################################################
+Hide the Shutdown Scripts (Windows 2000/XP)
+This setting controls whether the output from the shutdown scripts is
+displayed in a console window as the script executes.
+
+Download this tweak with Tweak Manager!	This tweak can be easily applied using
+WinGuides Tweak Manager.
+Download a free trial now!
+
+Open your registry and find or create the key below.
+
+Create a new DWORD value, or modify the existing value, called
+"HideShutdownScripts" and set it according to the value data below.
+
+Exit your registry, you may need to restart or log out of Windows for the
+change to take effect.
+
+Registry Editor Example
+|	Name	Type	Data	|
+|		(Default)	REG_SZ	(value not set)	|
+|		HideShutdownScripts	REG_DWORD	0x00000001 (1)	|
+-
+|	HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion...	|
+-
+
+Registry Settings
+System Key:
+[HKEY_LOCAL_MACHINE\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\
+System]
+Value Name: HideShutdownScripts
+Data Type: REG_DWORD (DWORD Value)
+Value Data: (0 = display, 1 = hide)
+
+#######################################################
+#######################################################
+Could be:
+To run scripts while Windows startup/shutdown, add it to:
+C:\WINDOWS\system32\GroupPolicy
+
+To run scripts while users log on/log off, add it to:
+C:\WINDOWS\system32\GroupPolicy
+
+
+use the ...........gpedit.msc...........
+
+#######################################################
+#######################################################
+To remove windows services manually, modify the registry:
+[HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services]
+It does not remove the entry completely.
+#######################################################
+#######################################################
+If it is not already mounted, to access a network drive within uproc script, the network drive needs to be mounted explicitly again within the script, then unmount it after:
+C:\>net use m: \\caribou\da_documents 
+C:\>net use m: /delete 
+
+If the network drive is already mapped, it can be accessed like: 
+dir \\casplda01\windata
+md \\casplda01\windata\tmp\ttteeesssttt
+However, the created directory may have weird access right. 
+# ls -ld /windata/tmp/ttt*
+drwxrwx---  2 nobody nobody 4096 May 18 13:15 /windata/tmp/ttteeesssttt
+
+#######################################################
+#######################################################
+run "msconfig"  to modify the startup procedure of Windows 
+#######################################################
+#######################################################
+Associates a path with a drive letter.
+
+SUBST [drive1: [drive2:]path]
+SUBST drive1: /D
+#######################################################
+#######################################################
+To check Windows event definition:
+http://www.microsoft.com/technet/support/ee/ee_advanced.aspx
+#######################################################
+#######################################################
+To start Windows event viewer from command line:
+
+eventvwr
+#######################################################
+#######################################################
+Only the Local System user can interact with desktop. 
+http://msdn.microsoft.com/library/default.asp?url=/library/en-us/dllproc/base/interactive_services.asp
+#######################################################
+#######################################################
+WMIC Samples
+
+As promised, here are the sample WMIC commands I demonstrated in the
+Automating Windows Server 2003 session yesterday evening in Reading. Hope they
+are useful to you.
+
+Update static IP address
+wmic nicconfig where index=9 call enablestatic("192.168.16.4"),
+("255.255.255.0")
+
+Change network gateway
+wmic nicconfig where index=9 call setgateways("192.168.16.4",
+"192.168.16.5"),(1,2)
+
+Enable DHCP
+wmic nicconfig where index=9 call enabledhcp
+
+Service Management
+wmic service where caption="DHCP Client" call changestartmode "Disabled"
+
+Start an application
+wmic process call create "calc.exe"
+
+Terminate an application
+wmic process where name="calc.exe" call terminate
+
+Change process priority
+wmic process where name="explorer.exe" call setpriority 64
+
+Get list of process identifiers
+wmic process where (Name='svchost.exe') get name,processid
+
+Information about harddrives
+wmic logicaldisk where drivetype=3 get name, freespace, systemname,
+filesystem, size, volumeserialnumber
+
+Information about os
+wmic os get bootdevice, buildnumber, caption, freespaceinpagingfiles,
+installdate, name, systemdrive, windowsdirectory /format:htable >
+c:\osinfo.htm
+
+Information about files
+wmic path cim_datafile where "Path='\\windows\\system32\\wbem\\' and FileSize>1784088" > c:\wbemfiles.txt
+
+Process list
+wmic process get /format:htable > c:\process.htm
+
+Retrieve list of warning and error events not from system or security logs
+WMIC NTEVENT WHERE "EventType<3 AND LogFile != 'System' AND LogFile !=
+'Security'" GET LogFile, SourceName, EventType, Message, TimeGenerated
+/FORMAT:"htable.xsl":" datatype = number":" sortby = EventType" >
+c:\appevent.htm
+ 
+get all $U user process
+wmic process   where "Caption='UniServUser.exe'"
+
+all $U servcie
+wmic service   where "Caption like '%Uni%'"
+
+all $U process
+wmic process   where "Caption like '%Uni%'"
+
+find out which ord process is using the most memory. The "CommandLine" will give the command execution parameters
+D:\du\ORSYP\USSDMDA007\app\uxtrace>wmic process where "Caption like '%ord%'" get processid,workingsetsize,CommandLine
+
+CommandLine                                 ProcessId  WorkingSetSize
+D:\du\ORSYP\support07\app\bin\UniServOrd.exe   1216       3923968
+D:\du\510\standard\PRE511\exec\UniServord.exe  5016       2891776
+D:\du\530\standard\PRE530\exec\UniServOrd.exe  520        3407872
+D:\du\530\standard\WCI533\exec\UniServord.exe  6992       241348608
+D:\du\530\standard\WCI533\exec\UniServord.exe  12044      4820992
+D:\du\523\standard\INT520\exec\UniServord.exe  12828      2928640
+D:\du\523\standard\TST520\exec\UniServord.exe  7936       3932160
+D:\du\530\standard\NG5REC\exec\UniServord.exe  10500      4726784
+D:\du\530\standard\TST530\exec\UniServOrd.exe  4500       3432448
+
+Find all ORD process which memory usage is more than 4M.
+D:\du\ORSYP\USSDMDA007\app\uxtrace>wmic process where "Caption like '%ord%' and workingsetsize > 4000000" get "processid, workingsetsize,executablepath"
+ExecutablePath                                 ProcessId  WorkingSetSize
+D:\du\530\standard\WCI533\exec\UniServord.exe  12044      5013504
+D:\du\530\standard\NG5REC\exec\UniServord.exe  10500      4726784
+
+To kill all the uxtrace started before 20090214
+wmic process where "commandline like '%uxtrace%' and creationdate < 20090214" delete
+...........
+D:\du\ORSYP\USSDMDA007\app\uxtrace>wmic process where "commandline like '%uxtrace%'" get "processid,workingsetsize,CommandLine,creationdate,parentprocessid"
+
+CommandLine 								CreationDate               ParentProcessId  ProcessId  WorkingSetSize
+
+cscript //nologo uxtrace.vbs /batch:y /target:sc /file_level:0	 	20090216162711.293100-300  13660            7008       1236992
+
+"C:\WINDOWS\system32\cmd.exe" /k .\uxtrace_step1.bat X 0 CS ..\..\data 	20090216162715.011945-300  7008             7608       1818624
+
+cscript //nologo //E:vbscript  ./uxtrace_step2.vbs X  0  CS 		20090216162716.168225-300  7608             4352       35864576
+
+"C:\WINDOWS\system32\cmd.exe" /c unicheckuj.bat>>D:\du\ORSYP\support07\app\uxtrace\uxtrace_result_20090216-162847\analyse.txt 2>&1  20090216163208.878843-300  4352   7232       1826816
+
+wmic process where "commandline like '%uxtrace%'" get processid,workingsetsize,CommandLine,creationdate,parentprocessid 20090216164204.284710-300  1580             8524       5283840
+
+...........
+
+D:\du\ORSYP\USSDMDA007\app\uxtrace>wmic process where "Caption like '%uxext.exe'" get "processid,workingsetsize,CommandLine"
+CommandLine                                          ProcessId  WorkingSetSize
+D:\du\530\standard\NG5REC\exec\uxext upr upr=* repl  12564      3473408
+
+...........To get thread count for all $U processes
+wmic process where "commandline like '%Uni%'" get commandline,processid,workingsetsize,pagefaults,threadcount
+
+WMIC UserAccount GET name,PasswordExpires /Value
+
+To get the hotfix installed:
+WMIC QFE GET /format:CSV >QFE.CSV
+
+To check if there are any $U services installed
+wmic service list |findstr Univer$e
+
+To check how many CPU:
+wmic cpu get /format:list
+
+To check win startup procedure
+wmic startup get /format:list
+
+To check all of the Domain user
+wmic useraccount list brief
+
+To find one specific user name:
+wmic useraccount where "Caption like '%zwa%'" GET Name
+
+To list Windows events
+wmic ntevent list
+
+To find all $U job u_batch processes
+C:\Documents and Settings\Administrator>wmic process where "commandline like '%u_batch%'" get name,processid,parentprocessid,commandline
+
+#######################################################
+These 3 commands are different, and %%a is used in batch files.
+for /f %a in (test.bat) do type %a
+
+for  %a in (test.bat) do type %a
+
+for  %a in (type test.bat) do type %a
+
+...........
+C:\Documents and Settings\zwa>type test.bat
+echo off
+
+dir
+echo hhhahhaha
+...........
+C:\Documents and Settings\zwa>for  %a in (test.bat) do type %a
+
+C:\Documents and Settings\zwa>type test.bat
+echo off
+
+dir
+echo hhhahhaha
+...........
+C:\Documents and Settings\zwa>for  %a in (type test.bat) do type %a 
+REM type and test.bat are considered 2 different files.
+C:\Documents and Settings\zwa>type type
+The system cannot find the file specified.
+
+C:\Documents and Settings\zwa>type test.bat
+echo off
+
+dir
+echo hhhahhaha
+...........
+C:\Documents and Settings\zwa>for /f %a in (test.bat) do type %a
+
+C:\Documents and Settings\zwa>type echo
+The system cannot find the file specified.
+
+C:\Documents and Settings\zwa>type dir
+The system cannot find the file specified.
+
+C:\Documents and Settings\zwa>type echo
+The system cannot find the file specified.
+......................
+At the command prompt, you can see what’s in your DNS’s cache by typing:
+ipconfig /displaydns
+
+To clear your cache, type in the following:
+ipconfig /flushdns
+......................
+......................
+In case 62423: some autorun script can cause the uxtrace fail.
+
+
+It was caused by a registry entry at HKLM\Software\Microsoft\Command Processor, entry AutoRun"="type C:\\EURNTCC\\CAUTION\\caution.txt
+This command is executed after the copyright-line and before the prompt.  In this case the file contained empty lines and these lines were shown before the prompt.
+ 
+The registry entry has been removed and all is working fine again.
+ 
+FYI: The cmd also has a /D option that ignores the execution of Autorun
+commands.
+ 
+CMD Help info:
+?	Executing registry subkeys 
+If you do not specify /d in string, Cmd.exe looks for the following registry
+subkeys:
+  HKEY_LOCAL_MACHINE\Software\Microsoft\Command Processor\AutoRun\REG_SZ 
+  HKEY_CURRENT_USER\Software\Microsoft\Command Processor\AutoRun REG_EXPAND_SZ
+If either one or both registry subkeys are present, they are executed before
+all other variables.
+ 
+#################################
+#################################
+Find find if there are any registry contain string ORSYP:
+reg query HKLM\Software\ /s |findstr ORSYP
+#################################
+#################################
+sometimes, a Windows folder becomes readonly, and can not be changed. To change it:
+1.	Start Registry Editor (Regedit.exe).
+2.	Locate the following registry key:
+HKEY_LOCAL_MACHINE\Software\Microsoft\Windows\Current Version\Explorer
+3.	On the Edit menu, point to New, click DWORD Value, and then type the
+following registry value name:
+UseSystemForSystemFolders
+4.	Right-click the new value, and then click Modify.
+5.	Type 1, and then click OK.
+6.	Quit Registry Editor.
+7.	After you make this change to the registry, you must change the
+Read-Only attribute for all affected folders by using the attrib command at a
+command prompt (Command.com or Cmd.exe). Type attrib /? at the command prompt
+to view the syntax for the attrib command. For example, to change the
+Read-Only attribute to System for the C:\Test folder, use the following
+command:
+attrib -r +s c:\test
+#################################
+#################################
+To repeat or loop a command many times, 
+for /l %a in (1 1 10)  do echo hello
+
+When in a batch file:
+for /l %%a in (1 1 10)  do echo hello
+#################################
+#################################
+How to read user input from within a batch file 
+SET /P cname=[Enter Last Name]
+
+If will ask for "Enter Last Name"
+#################################
+#################################
+sessions contain one or more window stations, and window stations contain one or more desktops. 
+
+Session space is divided into four areas: session image space, session structure, session view space, and session paged pool.  Session image space loads a session-private copy of Win32k.sys modified data, a single global copy of win32k.sys code and unmodified data, and maps various other session drivers like video drivers, TS remote protocol driver, etc.  The session structure holds various memory management (MM) control structures including the session working set list (WSL) information for the session.  Session paged pool allows session specific paged pool allocations.  Windows XP uses regular paged pool, since the number of remote desktop connections is limited.  On the other hand, Windows Server 2003 makes allocations from session paged pool instead of regular paged pool if Terminal Services (application server mode) is installed.  Session view space contains mapped views for the session, including desktop heap. 
+
+Session Space layout:
+
+Session Image Space: win32k.sys, session drivers
+
+Session Structure: MM structures and session WSL
+
+Session View Space: session mapped views, including desktop heap
+
+Session Paged Pool
+
+- Session 0
+
+|   |
+
+|   ---- WinSta0           (interactive window station)
+
+|   |      |
+
+|   |      ---- Default    (desktop)
+
+|   |      |
+
+|   |      ---- Disconnect (desktop)
+
+|   |      |
+
+|   |      ---- Winlogon   (desktop)
+
+|   |
+
+|   ---- Service-0x0-3e7$  (non-interactive window station)
+
+|   |      |
+
+|   |      ---- Default    (desktop)
+
+|   |
+
+|   ---- Service-0x0-3e4$  (non-interactive window station)
+
+|   |      |
+
+|   |      ---- Default    (desktop)
+
+|   |
+
+|   ---- SAWinSta          (non-interactive window station)
+
+|   |      |
+
+|   |      ---- SADesktop  (desktop)
+
+|   |
+
+- Session 1
+
+|   |
+
+|   ---- WinSta0           (interactive window station)
+
+|   |      |
+
+|   |      ---- Default    (desktop)
+
+|   |      |
+
+|   |      ---- Disconnect (desktop)
+
+|   |      |
+
+|   |      ---- Winlogon   (desktop)
+
+|   |
+
+- Session 2
+
+    |
+
+    ---- WinSta0           (interactive window station)
+
+           |
+
+           ---- Default    (desktop)
+
+           |
+
+           ---- Disconnect (desktop)
+
+           |
+
+           ---- Winlogon   (desktop)
+
+In the above tree, the full path to the SADesktop (as an example) can be represented as “Session 0\SAWinSta\SADesktop”. 
+......................
+Desktop Heap – what is it, what is it used for?
+
+Every desktop object has a single desktop heap associated with it.  The
+desktop heap stores certain user interface objects, such as windows, menus,
+and hooks.  When an application requires a user interface object, functions
+within user32.dll are called to allocate those objects.  If an application
+does not depend on user32.dll, it does not consume desktop heap.  Let’s walk
+through a simple example of how an application can use desktop heap. 
+
+1.     An application needs to create a window, so it calls CreateWindowEx in user32.dll.
+
+2.     User32.dll makes a system call into kernel mode and ends up in win32k.sys.
+
+3.     Win32k.sys allocates the window object from desktop heap
+
+4.     A handle to the window (an HWND) is returned to caller
+
+5.     The application and other processes in the same session can refer to the window object by its HWND value
+......................
+
+
+Both of the failure scenarios described above depend on two factors: the total size of session view space, and the size of each desktop heap allocation.  Both of these sizes are configurable. 
+
+...........
+Configuring the size of Session View Space
+Session view space size is configurable using the SessionViewSize registry
+value.  This is a REG_DWORD and the size is specified in megabytes.  Note that
+the values listed below are specific to 32-bit x86 systems not booted with
+/3GB.  A reboot is required for this change to take effect.  The value should
+be specified under:
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management 
+OS 			Size if no registry value configured 	Default registry value
+
+Windows 2000 * 		20 MB 					none
+Windows XP 		20 MB 					48 MB
+Windows Server 2003 	20 MB 					48 MB
+
+HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Control\Session Manager\Memory Management
+
+The sum of the sizes of session view space and session paged pool has a theoretical maximum of slightly under 500 MB for 32-bit operating systems.  The maximum varies based on RAM and various other registry values.  In practice the maximum value is around 450 MB for most configurations. 
+...........
+Configuring the size of individual desktop heaps
+
+Basically, each new service will be a new desktop. If the heap size increased, less services can be created.
+     The desktop belongs to an interactive window station and is a “Disconnect” or “Winlogon” desktop, so its heap size is fixed at 64KB or 128 KB, respectively (for 32-bit x86)
+
+·         The desktop heap belongs to an interactive window station, and is not one of the above desktops.  This desktop’s heap size is configurable.
+
+·         The desktop heap belongs to a non-interactive window station.  This desktop’s heap size is also configurable.
+
+The size of each desktop heap allocation is controlled by the following
+registry value:
+
+            HKEY_LOCAL_MACHINE\System\CurrentControlSet\Control\Session Manager\SubSystems\Windows
+
+ 
+
+ The default data for this registry value will look something like the following (all on one line):
+
+               %SystemRoot%\system32\csrss.exe ObjectDirectory=\Windows SharedSection=1024,3072,512 Windows=On SubSystemType=Windows ServerDll=basesrv,1 ServerDll=winsrv:UserServerDllInitialization,3 ServerDll=winsrv:ConServerDllInitialization,2 ProfileControl=Off MaxRequestThreads=16
+
+The numeric values following "SharedSection=" control how desktop heap is allocated. These SharedSection values are specified in kilobytes.
+The first SharedSection value (1024) is the shared heap size common to all desktops. This memory is not a desktop heap allocation, and the value should not be modified to address desktop heap problems.
+The second SharedSection value (3072) is the size of the desktop heap for each desktop that is associated with an interactive window station, with the exception of the “Disconnect” and “Winlogon” desktops.
+The third SharedSection value (512) is the size of the desktop heap for each desktop that is associated with a "non-interactive" window station. If this value is not present, the size of the desktop heap for non-interactive window stations will be same as the size specified for interactive window stations (the second SharedSection value).  
+
+Every service process created under a user account will be given a new desktop in a "non-interactive" window station created by the Service Control Manager (SCM).  Therefore, each of these services will consume the amount of desktop heap, as specified in the third SharedSection value.  The total desktop heap used in both interactive and non-interactive window stations must fit into the 48MB system-wide buffer.  Consequently, decreasing the second or third SharedSection values will increase the number of desktops that can be created.  However, it will reduce the number of hooks, menus, strings and windows that can be created within each desktop.  Conversely, increasing the second of third SharedSection values will reduce the number of desktops that can be created and increases the number of hooks, menus, strings and windows that can be created within each desktop.  Also, increasing the third SharedSection value will reduce the number of user account services that can run successfully on the system. 
+
+......................
+dheapmon
+
+Once you have dheapmon installed, be sure to run it from the session where you think you are running out of desktop heap.  For instance, if you have problems with services failing to start, then you’ll need to run dheapmon from session 0, not a terminal server session.
+
+Dheapmon output looks something like this:
+
+Desktop Heap Information Monitor Tool (Version 7.0.2727.0)
+
+Copyright (c) 2003-2004 Microsoft Corp.
+
+-------------------------------------------------------------
+
+  Session ID:    0 Total Desktop: (  5824 KB -    8 desktops)
+
+ 
+
+  WinStation\Desktop            Heap Size(KB)    Used Rate(%)
+
+-------------------------------------------------------------
+
+  WinSta0\Default                    3072              5.7
+
+  WinSta0\Disconnect                   64              4.0
+
+  WinSta0\Winlogon                    128              8.7
+
+  Service-0x0-3e7$\Default            512             15.1
+
+  Service-0x0-3e4$\Default            512              5.1
+
+  Service-0x0-3e5$\Default            512              1.1
+
+  SAWinSta\SADesktop                  512              0.4
+
+  __X78B95_89_IW\__A8D9S1_42_ID       512              0.4
+
+-------------------------------------------------------------
+
+ 
+
+As you can see in the example above, each desktop heap size is specified, as is the percentage of usage.  If any one of the desktop heaps becomes too full, allocations within that desktop will fail.  If the cumulative heap size of all the desktops approaches the total size of session view space, then new desktops cannot be created within that session.  Both of the failure scenarios described above depend on two factors: the total size of session view space, and the size of each desktop heap allocation.  Both of these sizes are configurable.  
+......................
+The system creates a window station in which service processes that run under the LocalSystem account are started. This window station is named service-0x0-3e7$. It is named for the LUID for the LocalSystem account, and contains a single desktop that is named Default. However, service processes that run as LocalSystem interactive start in Winsta0 so that they can interact with the user in Session 0 (but still run in the LocalSystem context).  
+Any service process that starts under an explicit user or service account has a window station and desktop created for it by service control manager, unless a window station for its LUID already exists. These window stations are non-interactive window stations.  The window station name is based on the LUID, which is unique for every logon.  If an entity (other than System) logs on multiple times, a new window station is created for each logon.  An example window station name is “service-0x0-22e1$”.
+
+A common desktop heap issue occurs on systems that have a very large number of services.  This can be a large number of unique services, or one (poorly designed, IMHO) service that installs itself multiple times.  If the services all run under the LocalSystem account, then the desktop heap for Session 0\Service-0x0-3e7$\Default may become exhausted.  If the services all run under another user account which logs on multiples times, each time acquiring a new LUID, there will be a new desktop heap created for every instance of the service, and session view space will eventually become exhausted.
+
+    * If the service is running in the LocalSystem account and is not
+    * interactive (that is, the service type does not include the
+    * SERVICE_INTERACTIVE_PROCESS flag), the service will use the following
+    * Window station and Desktop:
+      Service-0x0-3e7$\default
+      where "Service-0x0-3e7$" is the name of the Window station and "default"
+is the name of the desktop.
+
+      This is a noninteractive Window station.
+    * If the service is running in the LocalSystem account and is interacting
+    * with the desktop (that is, the service type includes the
+    * SERVICE_INTERACTIVE_PROCESS flag), the service will use the following
+    * Window station and Desktop:
+      Winsta0\default
+      This is an interactive Window station.
+    * If the service is running in the security context of a user account, the
+    * system will create a unique noninteractive Window station and Desktop
+    * for that service. The name of the Window station will be based on the
+    * Logon Security Identifier (SID) of the user:
+
+      Service-0xZ1-Z2$\default where Z1 is the high part and Z2 is the low
+part of the Logon SID.
+
+Additionally, two services that are running in the same security context (same
+service account name) will not receive the same Window station and Desktop
+because Logon Security Identifier's(SID) are unique to that logon session. 
+......................
+......................
+TCP TIME-WAIT Delay : 
+
+This is more concerning on the client. Reducing this value can remove old TCP connections faster, and to free the TCP port to be reused. Otherwise, there may not enough TCP port available.
+
+When a Transmission Control Protocol (TCP) connection is closed, the socket pair associated with the connection is placed into a state known as TIME-WAIT, which prevents other connections from using that protocol, source Internet Protocol (IP) address, destination IP address, source port, and destination port for a period of time.
+
+This functionality presents a resource-related denial of service opportunity.  Because the ports affected are not immediately returned to the system's pool of available ports, network applications that perform many outbound connections in a short time can use up all available ports before the ports can be recycled. At this point, the application either pauses, waiting for ports to become available, or ends with an error.
+
+ontrolling TIME-WAIT Behavior
+
+Windows Server 2003 TCP/IP offers two methods of controlling TIME-WAIT
+behavior:
+
+    * The TcpTimedWaitDelay registry value under the
+    * HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+    * key can be used to alter the default setting. Windows Server 2003 TCP/IP
+    * allows this value to be set as low as 30 seconds, which should not cause
+    * problems in most environments, or as high as 300 seconds.
+    * The number of user-accessible ephemeral ports that can be used as
+    * sources for outbound connections can be configured using the
+    * MaxUserPorts registry value, also found under the
+    * HKEY_LOCAL_MACHINE\SYSTEM\CurrentControlSet\Services\Tcpip\Parameters
+    * key. By default, when an application requests any socket from the system
+    * to use for an outbound call, a port numbered between 1024 and 5000 is
+    * supplied. MaxUserPorts can be used to set the value of the uppermost
+    * port that the administrator chooses to allow for outbound connections.
+    * For instance, setting this value to 10,000 (decimal) makes approximately
+    * 9000 user ports available for outbound connections. For more details on
+    * this concept, see RFC 793: Transmission Control Protocol DARPA Internet
+    * Program Protocol Specification.
+
+      Note   Although 65,536 ports are available, by default Windows Server 2003 only allocates port numbers up to 5000 as source ports for outbound connections. If an application performs many network connections simultaneously or within a short window of time, the application developer might need to increase this number and reduce the TcpTimedWaitDelay value to avoid receiving a WSAENOBUFS (10055) error: "An operation on a socket could not be performed because the system lacked sufficient buffer space or because a queue was full." 
+#################################
+WinSXS, DLL, Assembly Searching Sequence
+http://msdn.microsoft.com/en-us/library/Aa374224
+
+
+#################################
+The system cannot execute the specified program.
+This error could be a DLL missing, a local seurity control, or the path for the command is too deep.
+
+http://technet.microsoft.com/en-us/library/cc737011%28WS.10%29.aspx
+
+#################################
+ts very easy to remove a service from registry if you know the right path.
+Here is how I did that:
+
+1. Run Regedit or Regedt32
+
+2. Find the registry entry
+"HKEY_LOCAL_MACHINE/SYSTEM/CurrentControlSet/Services"
+
+3. Look for the service there and delete it. You can look at the keys to know what files the service was using and delete them as well (if necessary).  
+alternatively, you can also use command prompt and delete a service using following command:
+
+sc delete < SERVICE name>
+
+or to create, simply type
+sc create <SERVICE name>
+
+Update: 
+If you have space in the file path you need to use quotation marks ("). For
+example: 
+sc create "MySQL" binpath= "C:\Archivos de programa\MySQL\MySQL Server
+5.1\bin\mysqld.exe"
+
+NOTE: You may have to reboot the system to get the list updated in service manager.
+############################################
+chcp: to set the encoding in Windows.
+Displays the number of the active console code page, or changes the console's
+active console code page. Used without parameters, chcp displays the number of
+the active console code page.
+
+############################################
+setx to define varible as enviornment variable, which is accessable for later login session for the specific user. 
+It will write the variable into registry.
+Each time a variable is defined or updated with setx, the submission user service needs to be retarted; for CDM, the new value is only available in a new CMD window. 
+setx xx "test$999" -m
+############################################
+To schedule with win at
+at 10:47 msg zwa sdfdf
+at 00:00 cmd /c copy C:\Documents\*.* C:\MyDocs
+http://support.microsoft.com/kb/313565
+
+Note: always use the path.
+
+To display current schedule:
+at
+
+error message will be in eventvwr.
+############################################
+To install telnet on Win 7
+pkgmgr /iu:"TelnetClient"
+############################################
+For generic supervision script on Windows
+echo %* >> d:\u_spv_job.log
+#################################
+To run multiple command on a single line
+echo %time% & dir & echo %time%
+

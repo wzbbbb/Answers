@@ -1,0 +1,49 @@
+From the readme.txt of RE0020C
+  Call 4475  : New Executable image file uxresnod. This image make a purge within
+               the exchanger files (u_fecl50 and u_fecd50) and the Event wait file
+               (u_fmev50). This image may be used after a Universe node delete,
+               from Graphical user interface or command interface. Each record from
+               these three files, which contain one or more deleted node name,
+               is deleted.
+               This is an new function. (See -3-)
+
+    (-3-) (4475) : The syntax is : $UXEXE/uxresnod <company_name> <area_code> <node_name>,
+             with the following parameters rules:
+             <company_name>  :  6 charaters
+             <area_code>     :  1 charater (A, I, S or X)
+             <node_name>     : ALWAYS the local universe node name.
+       NOTE: Because the control of node name is made from Universe node table, which
+            is ALWAYS read on local node, the use of universe local node as node name
+            is MANDATORY. Use of distant node as node name may produce unpredictable
+             results !!!
+
+#################################
+As requested by Susan, here is the procedure to identify the offending nodes
+and to clean the exchanger data files.
+
+From the $UXLEXE/universe.log, you will find a lot of similar messages:
+<< 2010-07-21 03:09:01 0021710/uxech           /u_io_callsrv        /000000000
+- u_connect error : Errno syserror 110: Connection timed out (host
+  [wbaburl002])
+
+These are from failed exchanger request, which will specify the remote hosts.  
+
+From your universe.log, we find the following offending hosts.
+
+
+wb9iracqasched
+wbaburl002
+wbaburl006
+wbaburl009
+
+To remove the data to be sent to these hosts from the exchanger data file: 
+1. Remote the concerned node names from the node table of pmisors2;
+
+2. Run the command:
+$UXEXE/uxresnod <company_name> <area_code> <node_name>
+
+For example:
+$UXEXE/uxresnod WBPROD X pmisors2
+
+Please note that you don't need to stop $U to run this procedure.
+

@@ -1,0 +1,1882 @@
+#!/bin/ksh
+Variable:
+variablename="some string"
+Or
+variablename=1234 # no spaces are allowed on either side of the equal sign
+var=    #set the variable to NULL
+x=*	#$x is set to contain all of the file/directory names in the current directory
+mv $file ${file}x	#{} is only needed when the var is followed by a alphanumeric char or an underscore.
+
+................................................
+............................................
+........... '' : ignore all of the enclosed chars
+........... "" : ingore most of the enclosed chars
+except: $, `` and \
+
+x=*
+echo $x
+echo '$x'
+echo "$x"
+echo ""$x""
+
+"" can be used to hide '' and vice versa.
+
+........... \ : equivalent to placing single quites around a single char, with a few exceptions. Any special meaning of the char is removed.
+echo \>
+>
+echo \$x
+$x
+echo \\
+\
+lines= one\	#\ removed the meaning of \n at the end of the line.
+> two
+echo $lines
+onetwo
+echo "\$x"
+$x
+echo "\ is the backslash char"
+\ is the backslash char
+
+file=exec.o
+lastchar=`echo $file |sed 's/.*\(.\)$/\1/'` #change all chars in a line to the last char
+echo $lastchar
+
+...........expr #all of the operator and operand must be separate, for integer
+expr 1 + 1
+expr 16 \* 17
+
+expr "$filename" : ".*" #count the number of chars in the var.
+":" : to match the chars in behind to the "$filename"
+............................................
+................................................
+An Example:
+INPUTFILE="$1"
+USERLIST="$2"
+OUTPUTFILE="$3"
+
+count=0
+while [[ $count -gt 0 ]];do
+   print "\$count is $count"
+   (( count -= 1 ))
+done
+
+while read username ; do
+	grep $username $USERLIST >>$OUTPUTFILE
+	count=$(($count+1))
+done < $INPUTFILE	#the while loop is executed in a subshell since input to it is redirected from the file $INPUTFILE	
+
+echo user count is $count
+................................................
+................................................
+
+$1 : the 1st argument
+$* : all the arguments together, list all args $1, $2, ...
+$# : how many arguments are there?
+$? : checks the exiting status of the last command
+$@ : similar to $* just variables will be placed in "", eg "$1", "$2" ...
+
+#####Single-quotes are literal quotes.
+#####Double-quotes can be expanded
+
+
+................................................
+LOOP AND CONDITIONS
+
+...........IF
+string1 = string2
+string1 != string2
+-n string	#true if the string is not null
+-z string	#true if the string is null
+[ expression ] = test "expression"
+int1 -eq int2
+int1 -ge int2
+int1 -gt int2
+int1 -le int2
+int1 -lt int2
+int1 -ne int2
+
+-d file 	#file is a directory;  ! -d
+-f file 	#file is an ordinary file; ! -f
+-r file		#file is readable by the process; ! -r
+-s file		#file isnonzero length; ! -s
+-w file		#file is writable by the process; ! -w
+-x file		#file is executable; ! -x
+
+-a 	# AND
+[ "$count" -ge 0 -a "$count" -lt 10 ] 	# the same as
+[ \( "$count" -ge 0 \) -a \( "$count" -lt 10 \) ]
+
+-o 	# OR
+
+: 	# Null command, do nothing
+
+&& 	# if
+command1 && command2
+[ -z "$EDITOR" ] && EDITOR=/usr/bin/vim
+
+
+|| 	# if not
+command1 || command2 	# command2 run only if command1 return $? != 0
+
+
+
+#
+if [ $? -eq 0] ; then
+	print we are ok
+else 
+	print something failed
+fi
+#
+user=$1
+if who | grep "^$user" > /dev/null
+then echo "$user" is logged on
+fi
+#
+if test "$name" = julie # the space around the equal sign is required!
+then echo "let's play"  # "$name" is a must; otherwise, if $name is null, test will complain "one
+fi			# parameter is missing"
+
+
+...........CASE
+
+echo input yes or no
+read answer
+case $answer in
+	yes|Yes|y)
+		echo got a positive answer
+		# the following ';;' is mandatory for every set
+		# of comparative xxx) that you do
+		;;
+	no)
+		echo got a 'no'
+		;;
+	q*|Q*)
+		#assume the user want to quit
+		exit
+
+	*)
+		echo this is the default clause. we are not sure why or 
+		echo what someone would be typing, but we could take
+		echo action on it here
+		;;
+esac
+
+...........for
+list="MNT500 SUP500 QCL500"
+for s in $list ; do
+	...
+done
+
+#bash only
+for ((i=0;i<$foonum;i++)); do
+   echo ${FOO[${i}]}
+
+done
+...........date)}
+
+To count the number of characters contained in a variable string, use ${#varname}. 
+
+echo num of chars in stringvar is ${#stringvar}
+
+
+
+................................................
+................................................
+
+...........join
+
+file 1: john_s John Smith
+file 2: john_s John Smith 1234 marlebone rd
+
+join file1 file2
+
+--> john_s John Smith 1234 marlebone rd
+
+If the files do not already have a common field, you could either use the paste utility to join the two files, or give each file line numbers before joining them, with 
+
+cat -n file1 >file1.numbered
+
+
+...........comm
+
+
+First, run any two files through "sort". Then you can run 
+'comm file1 file2'
+ to tell you which lines are ONLY in file1, or ONLY in file2, or both. Or any combination
+
+comm -1 file1 file2
+
+...........fmt
+...........pr
+
+...........grep and egrep
+egrep can find 2 strings in "or" condition.
+egrep --color=always -a "U_SUN031  IU_MAINT_H"\|"Maintenance: Header" u_fmsb50.dta
+
+...........sed
+
+sed 's/oldstring/newstring/'
+sed 's/oldstring/newstring/g'
+
+If you want to substitute either an oldstring or a newstring that has slashes in it, you can use a different separator character: 
+
+
+sed 's:/old/path:/new/path:'
+
+
+...........awk
+
+How do I print out the first and fifth columns/fields of the password file?
+awk -F: '{print $1,$5}' /etc/passwd 
+
+"-F:" defines the "field separator" to be ":"
+ 
+You must use single-quotes for the mini-program, to avoid $1 being expanded by the shell itself. In this case, you want awk to literally see '$1' 
+
+"$x" means the 'x'th column
+The comma is a quick way to say "put a space here".
+
+
+................................................
+................................................
+
+FUNCTION
+
+printmessage () {
+	echo "Hello, this is the printmessage function"
+}
+printmessage
+
+Remember: Just like its own separate shellscript. Which means if you access "$1" in a function, it is the first argument passed in to the function, not the shellscript. 
+
+........... exit vs return
+
+'exit' will exit the entire script, whether it is in a function or not.
+'return' will just quit the function. Like 'exit', however, it can return the default "sucess" value of 0, or any number from 1-255 that you specify.
+
+...........read and set
+
+read varname ; #from the standard input. exit with 0 unless an end of file is detected.
+set $varname ; # set the argument variables $1, $2 , etc
+
+read text < data 	# the same as
+text=`line < data`
+
+........... [[]] and []
+
+The main difference being that wildcard expansion does not work within [[]]. 
+
+...........Built-in math
+
+four=$((2+2))
+eight=$(($four+4))
+print $(($four * $eight))
+
+
+...........inlin redirection
+
+command << EOF
+
+means, "run 'command', but make its stdin come from this file right here, until you see the string 'EOF'"
+EOF is the traditional string. But you can actually use any unique string you want. Additionally, you can use variable expansion in this section! 
+
+DATE=`date`
+HOST=`uname -n`
+mailx -s 'long warning' root << EOF
+Something went horribly wrong with system $HOST
+at $DATE
+EOF
+
+To send attachment.
+mail -s "title" root@xxx.com < filename
+
+To send Binary attachment
+uuencode xxx.jpep xxx.jpeg |mail xxx@xxx.com
+cat file.txt; unencode xxx.jpeg xxx.jpeg |mail xxx@xx.com
+
+................................................
+
+it is possible to get an interactive view of the process, by using 
+
+tar cvf - dirname | compress > file.tar.Z
+
+stdout has been redirected to the pipe, but stderr is still being displayed to your terminal, so you will get a file-by-file progress report. Or of course, you could redirect it somewhere else, with 
+
+tar cvf - dirname 2>/tmp/tarfile.list | compress > file.tar.Z 
+
+
+........... tput
+
+tput init
+tput clear
+tput cup 3 2
+print -n "Here is a clean screen, with these words near the top"
+endline=`tput cols`
+tput cup $(($endline - 2)) 
+print "and now, back to you"
+sleep 2
+
+tput reset
+
+
+................................................
+................................................
+
+........... Number-based menus
+
+select word in one two three exit; do 
+	echo word is $word
+	echo reply is $REPLY
+	if [[ "$word" = "exit" ]] ; then 
+		break;
+	fi
+done
+
+break : to break the immediate loop.
+break n : to break the immediate n loops.
+
+continue n : the remaining commands in the n loops will be skipped.
+
+
+
+
+
+
+
+
+
+
+
+
+.......................................................
+.......................................................
+
+........... Raw TCP access
+
+#!/bin/ksh -p
+
+MAILHOST=127.0.0.1
+exec 3<>/dev/tcp/$MAILHOST/25 || exit 1
+
+read -r BANNER <&3
+echo BANNER is $BANNER
+print -u3 HELO myhost.com
+read -r REPLY <&3
+echo REPLY is $REPLAY
+
+the output:
+
+BANNER is 220 yourhost.domain.com ESMTP Sendmail 8.11.6+Sun/8.11.6; Tue, 3 Dec 2002 17:30:01 -0800 (PST)
+REPLY is 250 yourhost.domain.com Hello localhost [127.0.0.1], pleased to meet you
+
+"-r" - give the data "raw"
+To dump the rest of the data waiting on the socket,
+cat <&3 > somefile
+
+
+
+................................................
+................................................
+
+........... cron job
+
+1.So set your PATH=/whatever:/usr/bin explicitly in your cron scripts. 
+
+2. cron by default saves anything that gets send to 'stderr', and MAILS IT to the owner of the cron job. 
+So, sometimes, if you just want a minor error logged somewhere, it is sufficient to just do 
+
+print "Hey, this is kinda wierd" >/dev/fd/2
+
+which will send the output of the print to stderr, which will then go to email. Another way of doing it, if your system does not have /dev/fd, could be 
+print "Wow, this is tortured" 1>&2
+
+Contrariwise, if you want to throw away ALL output, use 
+
+command >/dev/null 2>&1
+
+
+If you do not regularly read email for the user in question, you can either set up an alias for that user, to forward all its email to you, or do 
+
+export MAILTO=my@address.here
+
+The MAILTO trick does not work on all cron demons, however. 
+
+
+................................................
+................................................
+
+........... Matching
+
+[0-9]
+[!a-z]
+[a-np-z]*
+*[!o]
+[a-z]*[!0-9]
+
+................................................
+................................................
+
+........... Standard error
+
+ls n* 2> error_file
+
+NO SPACE is permitted between the 2 and the >.
+
+
+................................................
+................................................
+
+...........Regular Expression
+
+"." : any single character
+/ ... / : any 3 chars word surrund by spaces
+^George : George at the beginning of a line
+$s/p.o/XXX/g : replacing
+$s/^/>>/ : insert >> at the beginning of each line 
+word$ : word at the end of a line
+\.$ : any line end with a period
+^\. : any line start with a period
+^ $ : any empty line with a single space
+$s/..$// : delete the last two chars from each line.
+[^A-Za-z]: like [!A-Za-z] in shell
+* : match zero or mulitple occurences of the previous chars
+XXX* : match at least 2 X's --> XX
+$s/  */ /g : replace multiple spaces with one
+$s/\r/\r/g : replacy ^M with a cartage return
+
+[A-Za-z][A-Za-z]* : match all words
+[-0-9] : match - and a number
+[]a-z] : match ] and a char
+
+X\{1,10\}: match 1 to 10 consecutive X's
+[A-Za-z]\{4,7\} : match a word 4-7 char long
+[A-Za-z]\{7\} : match a word with 7 char long
+.\{10\} : match 10 chars, anything
+$s/^.\{10\}// : delete the first 10 chars
+$s/.\{5\}$// : delete 5 chars from the end
++\{5,\} : match 5 and more +
+
+^\(.\) : same the first char of a line into regester 1
+^\(.\).*\1$ : match the line that has the same char as the first and the last.
+^\(...\)\(...\) : first 3 chars save in regester1, next 3 in regester 2
+$s/\(.*\)	\(.*\)/\2 \1/ : switch two fields saparated by tab.
+%s/\([0-9]\)) /\1)\. /g : to change (any NO.) 1) to 1). First caputure the number to \1 then ...
+.......................................................
+.......................................................
+
+exec --> replace the current shell, never return.
+
+.......................................................
+.......................................................
+
+......................Editting the crontab
+
+minute hour dom month dow user cmd
+
+echo '10 * * * 1,2,3,4,5 root ~zwa/s-mail' >> /etc/crontab
+
+The user could be obmited.
+1,3,4,5,7
+1-6 = 1,2,3,4,5,6
+*/5 = 0,5,10,15 ...
+.......................................................
+.......................................................
+
+...........cut
+
+cut -cchars file
+cut -c5
+cut -c1,13,50
+cut -c20-50
+who | cut -c20- |sort  # to the end of the line
+cut -c1-8,18-
+
+cut -ddchar -ffields file
+cut -d: -f1,6 /etc/passwd # -d : the delimitor, f : the field
+
+...........paste
+paste names numbers
+paster -d'+' names addresses numbers
+passte -s name # paste itself, all into one line
+ls | paste  -d' ' -s - # all listed file name into one line and separated by space.
+
+...........sed
+sed 's/Unix/UNIX/' filename
+sed 's/Unix/UNIX/g' filename
+who |cut -c1-8 |sed 's/  *//g' #remove the spaces
+who |sed 's/ .*$//g' #remove from the first space to the end of the line
+
+sed -n '20,25p' filename  # print from line 20 to line 50 of a file
+sed -n '/a_string/p' filename  # print only the lines contain the "a_string" 
+sed  '1,2d' filename # delete the first 2 lines fo the file
+sed '/a_string/d' filename # delete the lines that contain the "a_string"
+sed '/[Tt]est/d' filename # delete all lines with test or Test in .
+sed '1,10s/unix/UNIX/g' file # change unix to UNIX in the first 10 lines
+sed '/jan/s/unix/UNIX/' # change the fist unix to UNIX in all lines containing "jan"
+sed 's/...//' file # delete first 3 chars from all lines
+sed 's/...$//' file # delete the last 3 chars from all lines
+sed -n 'l' file # print all lines of a file, showing nonprinting chars.
+sed 's/$/=/g' tmmmm| tr '=' "\n" #add an empty line after each line.
+sed G file #the same as above; double space of a file.
+sed -n '$=' filename # count lines, the same as; wc -l tmmmm |sed 's/^  *//g'|cut -d' '  -f1 
+sed -e '10a\' -e 'on line 11' # to append text on line 11.
+sed -e '10i\' -e 'on line 10' # to insert text on line 10
+sed -e '/ScDir/a\' -e "ScDir=$ScDir" $tmp > $tmp1 # append to the line 
+#the same as
+sed -e "/ScDir/a\ ScDir=$ScDir" $tmp > $tmp1 # append to the line 
+#to edit a line with containing a  special word
+line_no=`grep -n ux_vrf_rgz_rst $UXMGR/uxstartup|cut -f1 -d":"` #1st. get is line No.
+sed "${line_no}s/#//g" $UXMGR/uxstartup  > $tmp #edit the line
+
+ls -F | grep /$ |sed -e :a -e '/\/$/N; s/\/\n/ /; ta' # join every line ending with / into one line
+ll |sed 's/$/\\/g' |sed -e :a -e '/\\$/N; s/\\\n//; ta' # to join every thing in one line; by add a \ at the end of each line; the join
+
+...........tr
+cut -d: -f1,6 /etc/passwd | tr : ' ' # can only translate from one to one, can't be one->many
+tr : '\11' # from : --> tab (\11)
+
+	Bell		7
+	Backspace	10	\b
+	Tab		11	\t
+	Newline		12	\n
+	Linefeed	12
+	Formfeed	14
+	Carriage return	15	\r
+	Escape		33
+\c : The line without a terminateing newline
+echo "overwirte (yes/no)?  \c"
+
+tr '[a-z]' '[A-Z]' # the same as the following	
+echo "lower case letters" | tr [:lower:] [:upper:]
+
+tr -s '	' ' ' lotofspaces  # squeeze out multiple occurrences of chars
+tr -d ' ' file # delete all space in the file
+the same as :
+sed 's/ //g' file
+tr '()' '{}' file
+tr '[A-Z]' '[N-Z][A-M]' file 
+tr -d '[0-9]' file # delte all digits
+tr -d '\r'	# remove the ^M from a DOS file
+tr  '\r' '\n'	#For file from Mac
+	
+	
+...........grep
+$grep '*' stars
+************* the stars
+
+grep '[Tt]he' filename
+grep -i 'the' filename	#ignore the case
+grep '\.pic$' filelist  #file names ended with .pic
+grep -v 'UNIX' filename # to find the lines that does NOT contain the word UNIX
+grep -l 'a_name' *.c # list only the file names that contain the word a_name
+grep -l 'a_name' *.c| wc -l # to find out how many files contain the a_name
+grep -n 'a_name' file.c # list the line number also!
+grep  '.'  file # delete all blank lines 
+grep -a # for binary file
+grep -v \^\$ dqm3.log >dqm4.log # to remove all the empty lines
+
+...........sort
+sort names #sort the input into many lines 
+sort -u names # to eliminate the duplicate lines
+sort -r names # list in reverse order
+sort names -o outputfile #the same as sort names >outputfil
+sort names -o names #replace itself!
+sort -n data # sort it according to the fist column numbers
+sort +5n data #sort it according to the sixth column, skip first 5 columns
+sort +2n -t: /etc/passwd # use : as the delimiter
+
+...........uniq
+sort names|uniq # remove only the consecutive duplicate lines
+sort names |uniq -d # list only the duplicate lines, only once
+sort /etc/passwd |cut -f1 -d:| uniq -d # list the duplicated user entries
+sort names |uniq -c # coute the occurences of each lines.
+1 mike
+1 joe
+1 tom
+2 cathy
+1 nick
+
+
+
+............................................
+............................................
+To trap singal, to trigger a command or function when received a signal.
+
+trap commands signals
+
+trap 'rm -f "$Tmp" 2>/dev/null' 0
+trap "exit 2" 1 2 3 5 
+
+............................................
+............................................
+PS1="$PWD $"
+PATH=${PATH}:./bin
+$ type l
+l is an alias for 'ls -l'
+
+To define the PS1
+PS1="[\u@\h \W]\\$ "
+export PS1
+The profile loading sequence for bash is:
+
+/etc/bashrc
+~/.bash_profile
+............................................
+............................................
+To set the title bar of the xterm
+Ctrl-V Esc; Ctrl-V Ctrl-G
+echo "^[]0; this is a title^G"
+
+............................................
+............................................
+use root account in between a script
+command ...
+...
+su root <<EOF!
+command ...
+...
+<<EOF!
+
+
+### just to change the color of the text below ###
+EOF!
+##################################################
+............................................
+............................................
+...........To add/remove an entry from a file
+
+echo "$1	$2" >> phonebook
+sort -o phonebook phonebook
+
+...........
+grep -v "$1" phonebook > /tmp/phonebook
+mv /tmp/phonebook phonebook
+........... or
+sed "$1/d" phonebook > /tmp/phonebook
+
+............................................
+............................................
+...........shift 	#to access the 10th and more args
+arg1=$1
+shift
+arg10=$9
+
+
+............................................
+............................................
+...........getopts
+OPTARG : store the actual argument inside 
+OPTIND : initially set to 1, and is updated each time "getopts" returns to reflect the number of the next command line argument to be processed.
+
+mailopt=FALSE
+interval=60
+
+#process command options
+while getopts mt: options
+do 	
+	case "$option"
+	in 
+		 m) mailopt=TRUE;;
+		 t) interval=$OPTARG;;
+		\?) echo "Usage: mon [-m] [-t n] user"
+		    echo "   -m means to be informed by email"
+		    echo "   -t means check every n secs."
+		exit 1;;
+	esac
+done
+
+#make sure a user name was specified
+if  [ "$OPTIND" -gt "$#" ] ; then
+	echo "Missing user name!"
+	exit 2
+fi
+hiftcount=`expr #OPTIND - 1`
+shift $shiftcount
+user=$1
+	
+.................................
+.................................
+........... the . command
+
+. file 	#the commands from file are executed by the current shell just as if they were typed at that point. A subshell is not spawned to execute the program.
+
+
+.................................
+.................................
+...........eval
+eval command-line 	#the shell scans the command line twice before running it.
+pipe="|"
+eval ls $pipe wc -l	#ls |wc -l
+
+.................................
+.................................
+........... date
+date '+%F-%H-%M' # 2004-03-24-15-56
+date '+%Y%m%d'   # 20040324
+
+date -s "11/20/2003 12:48:00" - Set the date to the date and time shown.
+
+date '+DATE: %m/%d/%y%nTIME:%H:%M:%S' - Would list the time and date in the below format:
+
+DATE: 02/08/01
+TIME:16:44:55
+
+today_=`date '+%m/%d/%Y'`
+07/09/12
+$UXEXE/uxadd fla ses=UX_STORT_J upr=UXSTORTJ00 mu=CASDLSUP06 user=univa pdate=$today_
+
+
+.................................
+.................................
+...........$U Variable: Batch mode detection
+[ ! "${PROCESS_MODE:-NONE}" = "BATCH" ]
+area_=${area_:-APP} #assign APP to area_ if it is not defined.
+echo $area_
+==APP
+area_=${area_:-exp}
+echo $area_
+==APP
+
+
+To detect if a variable has been defined, e.g.
+[ ! $1 ] && echo "The first argument is not specified"
+
+.................................
+.................................
+...........To enable vi edit in command line input
+set -o vi
+
+.................................
+.................................
+...........touch a file to a different date
+touch testdate -d 040701
+#creating a file "testdate" with a date 040701
+
+.................................
+.................................
+...........find 
+find ./ -perm +4000 -exec ls -l {} \;	
+#find all set uid file
+find ./ -type f -perm -o=w  -exec ls -l {} \; 
+# to find all the file that is writable by others
+find ./ -type f -perm -0002  -exec ls -l {} \; 
+# the same as above 
+find /somedir -mtime +10 -exec rm -f {} \; 
+#find the file that was modified 10 days or earlier
+find ./ -mtime -10
+#find the file modified within 10 days
+find ./ -mtime 5
+#find the file modified on 5th day
+find ./ -mtime -1 -exec ls {} \;
+#list file modified within 1 day
+find ./ -mtime +1 -exec ls {} \;
+#list file modified at least 1 day ago
+find ./ -atime 100   -exec ls -lh   {} \;
+#list file accessed at least 100 days ago
+find ${re_d_dir}  -name "*${s_name1}*" -exec rm -f {} \;
+#maxdepth 1: only search for the current directory
+find ./ -mtime +20 -maxdepth 1 -exec rm -rf {} \;
+#to find all number directory like 69891
+find ./ -name 69\[0-9\]\[0-9\]\[0-9\]
+#to find all file larger than 100M
+find ./ -size +100M -exec ls -lh {} \;
+ find ./  \( -nouser -o -nogroup \) -exec ls -la {} \;
+#to find those files whose owners' user/group does not exist.
+.................................
+.................................
+...........array
+# This is an OPTIONAL way to quickly null out prior values
+set -A array
+#
+array[1]="one"
+array[2]="two"
+array[3]="three"
+three=3
+
+print ${array[1]}
+print ${array[2]}
+print ${array[3]}
+print ${array[three]}
+
+.................................
+.................................
+...........shell flags
+- : to turn on
++ : to trun off
+
+-x : turn on the trace mode
++x : trun it off.
+
+-a : Automatically export all variables that are subsequently defined or modified 
+
+-v : Print each shell command line as it is read
+
+-e : Executes the ERR trap, if set, and exits if a command has a nonzero exit
+status. This mode is disabled while reading profiles.
+
+.................................
+.................................
+...........KSH man page
+ksh [-a] [-b] [-C] [-e] [-f] [-h] [-i] [-k] [-m] [-n] [-o] [-p] [-s] [-t] [-u]
+[-v] [-x] [+ o option ] [+A name] [ arg ] 
+
+-a    All subsequent variables that are defined are automatically exported. 
+-b    Causes the shell to notify the user asynchronously of background job
+      completions. The following message will be written to standard error: 
+      "[%d]%c %s%s\n", <job-number>, <current>, <status>, <job-name>
+
+      where the fields are as follows:
+
+      <current> The character + identifies the job that would be used as a default
+      for the fg or bg utilities; this job can also be specified using the job_id %+
+      or %%. The character - identifies the job that would become the default if the
+      current default job were to exit; this job can also be specified using the
+      job_id %-. For other jobs, this field is a space character. At most one job
+      can be identified with + and at most one job can be identified with -. If
+      there is any suspended job, then the current job will be a suspended job. If
+      there are at least two suspended jobs, then the previous job will also be a
+      suspended job. 
+      
+      <job-number> A number that can be used to identify the process group to the
+      wait , fg , bg , and kill utilities. Using these utilities, the job can be
+      identified by prefixing the job number with %. 
+      
+      <status> Unspecified.
+      
+      <job-name> Unspecified.
+      
+      When the shell notifies the user a job has been completed, it may remove the
+      job's process ID from the list of those known in the current shell execution
+      environment. Asynchronous notification will not be enabled by default.
+ 
+-C    -C Prevent existing files from being overwritten by the shell's >
+      redirection will override this noclobber option for an individual file. 
+-e    If a command has a non-zero exit status, execute the ERR trap, if set, and
+      exit. This mode is disabled while reading profiles. 
+-f    Disables file name generation. 
+-h    Each command becomes a tracked alias when first encountered. 
+-k    All variable assignment arguments are placed in the environment for a
+      command, not just those that precede the command name. 
+-m    Background jobs will run in a separate process group and a line will print
+      upon completion. The exit status of background jobs is reported in a
+      completion message. On systems with job control, this flag is turned on
+      automatically for interactive shells. 
+-n    Read commands and check them for syntax errors, but do not execute them.
+      Ignored for interactive shells. 
+-o   The following argument can be one of the following option names: 
+ 
+
+      allexport Same as -a. 
+      errexit Same as -e. 
+      bgnice All background jobs are run at a lower priority. This is the default
+      mode. 
+      emacs Puts you in an emacs style in-line editor for command entry.  
+      gmacs Puts you in a gmacs style in-
+      line editor for command entry. 
+      ignoreeof  The shell will not exit onEOF. The command exit must be used. 
+      keword Same as -k. 
+      markdirs All directory names resulting from file name generation have a
+      trailing / appended. 
+      monitor Same as -m. 
+      noclobber Prevents redirection > from truncating existing files. Require >| to
+      truncate a file when turned on. Equivalent to -C. 
+      noexec Same as -n. 
+      noglob Same as -f. 
+      nolog Do not save function definitions in history file. 
+      notify Equivalent to -b. 
+      nounset Same as -u. 
+      privileged    Same as -p. 
+      verbose Same as -v. 
+      trackall Same as -h. 
+      vi Puts you in insert mode of a vi style in-line editor until you hit escape
+      character 033.  This puts you in control mode. A return sends the line. 
+      viraw Each character is processed as it is typed in vi mode. 
+      xtrace Same as -x. 
+      
+      If no option name is supplied, the current option settings are printed.
+ 
+-p    Disables processing of the $HOME/.profile file and uses the file
+      /etc/suid_profile instead of the ENV file. This mode is on whenever the
+      effective uid is not equal to the real uid, or when the effective gid is not
+      equal to the real gid. Turning this off causes the effective uid and gid to be
+      set to the real uid and gid. 
+ 
+ 
+-s    Sort the positional parameters lexicographically. 
+-t    Exit after reading and executing one command. 
+-u    Treat unset parameters as an error when substituting. 
+-v    Print shell input lines as they are read. 
+-x    Print commands and their arguments as they are executed. 
+-     Turns off -x and -v flags and stops examining arguments for flags. 
+--    Do not change any of the flags; useful in setting $1 to a value beginning
+      with -. If no arguments follow this flag then the positional parameters are
+      unset.  
+      Using + rather than - causes these flags to be turned off. These flags can
+      also be used upon invocation of the shell. The current set of flags may be
+      found in $-. Unless -A is specified, the remaining arguments are positional
+      parameters and are assigned, in order, to $1 $2 .... If no arguments are
+      given, the names and values of all variables are printed on the standard
+      output.
+ 
+    
++ o option   
++A name Array assignment. Unset the variable name and assign values
+        sequentially from the list arg. If +A is used, the variable name is not unset
+        first. 
+arg   
+
+##################################################################
+##################################################################
+...........set -o noclobber
+
+
+It is general understanding that once a noclobber is set in ksh, it does not
+allow user to create a file with same name, but in reality, noclobber does not
+provide exclusive file creation, but it just provides a way to prevent
+truncating file by redirection. 
+ksh with noclobber will check for the existence of the file prior to opening
+the file. So there can be a race condition between this check and open. If
+multiple ksh processes check the same file at same time, all ksh would see the
+file does not exist,and they all could go to open and truncate the file. Also
+ksh does not open the file exclusively. 
+
+ksh does not use O_EXCL, but simply checks the existence of the file before
+opening it, which leads to above problem. 
+
+change the redirection command '>' to be '>|' as this
+will override the 'set -o noclobber' option.
+
+
+##################################################################
+##################################################################
+This is apparently a known issue with OpenSSH, when redirecting input/output
+in s                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                IN (-20) to PRIO_MAX Useful priorities are: 20 (the
+affected processes will run only when nothing else in the system wants to), 0
+(the ``base'' scheduling priority), anything negative (to make things go very
+fast). 
+
+##################################################################
+use tar to copy symbolic links
+
+##################################################################
+To use keys in Unix shell
+
+For protocol 1
+
+put the private key under ~/.ssh/identity
+then:
+ssh -1 support5
+
+~/.ssh/id_rsa and ~/.ssh/id_dsa for protocol version 2
+##################################################################
+To use scp to copy file in batch mode:
+1. follow the above step to set up the key pair
+2. scp  -1 ./test_scp.txt support5:/tmp
+To specify which protocol to use
+##################################################################
+To create services on Linux
+
+a) Création d'un petit script dans /etc/init.d : universe (voir pièce jointe) ce script utilise les commandes uxstartup et uxshutdown de Dollar Universe   
+a) create a script in /etc/init.d : universe (see the attachment). This script
+use the command uxstartup and uxshutdown of Dollar Universe
+
+b) L'enregistrement de ce  "service" est ensuite réalisé par la commande : chkconfig --add universe
+b) The registration of the service is done by : chkconfig --add universe
+
+c) Le démarrage pour les niveau de boot 3, 4 et 5 est enregistré par la commande : chkconfig --level 345 universe on
+c) make it for boot level 3,4,5 with command: chkconfig --level 345 universe on
+
+d) En mode commande sous root, le "service" universe peut être démarré et arrêté par les commandes "service universe start" et "service universe stop"
+d) under root, use "service universe start" and "service universe stop" tostart and stop the service
+
+e) Lors d'un shutdown ou d'un boot, Dollar Universe est arrêté et démarré "proprement".
+e) when shutdown or bootup, Dollar Universe will be stopped and started early (?)
+
+##################################################################
+For Suse use "yast" for update and patches
+yast online_update .url <url>
+http://www.novell.com/documentation/suse91/suselinux-adminguide/html/ch03s04.html
+
+##################################################################
+in vim
+set fileformat=dos
+set fileformat=unix
+
+syntax hightlighting:
+
+:syntax on
+:syntax off
+
+...........To highlight multiple search result:
+
+sy keyword comment uxdqmsrv
+
+...........to search ignorecase
+:set ignorecase
+
+...........To search multiple word
+use a \ to protect the |
+e.g.
+/motif\|job monitor
+##################################################################
+To use the very secure FTP server.
+# service vsftpd start
+Starting vsftpd for vsftpd:                                [  OK  ]
+##################################################################
+sh-keygen: password-less SSH login
+
+SSH is often used to login from one system to another without requiring
+passwords.
+
+A number of methods may be used for that to work properly, one of which is to
+setup a .rhosts file (permission 600) with its content being the name of the
+remote system you trust, followed by the username your trust:
+
+    nickel.sao.nrc.ca cantin 
+
+would mean you trust user cantin from nickel.sao.nrc.ca to connect to your
+account, without requiring a password.
+
+But for that to work, SSH itself must be configured to trust .rhosts files
+(which it does not for most OpenSSH installations - but we do on most systems
+RCSG maintains), and the private/public key pair of each system must be
+properly set in the system-wide ssh_known_hosts public key file.
+
+This, of course, requires help from the local systems administrator.
+
+The second method does not require any help from the systems administrator.
+And it does not require modifications to the .rhosts file. Instead, it
+requires you generate your own personal set of private/public pair.
+
+ssh-keygen is used to generate that key pair for you. Here is a session where
+your own personal private/public key pair is created:
+
+cantin@sodium:~> ssh-keygen -t rsa
+Generating public/private rsa key pair.
+Enter file in which to save the key (/home/cantin/.ssh/id_rsa):
+Enter passphrase (empty for no passphrase):
+Enter same passphrase again:
+Your identification has been saved in /home/cantin/.ssh/id_rsa.
+Your public key has been saved in /home/cantin/.ssh/id_rsa.pub.
+The key fingerprint is:
+f6:61:a8:27:35:cf:4c:6d:13:22:70:cf:4c:c8:a0:23 cantin@sodium
+
+The command ssh-keygen -t rsa initiated the creation of the key pair.
+
+No passphrase was entered (Enter key was pressed instead).
+
+The private key was saved in .ssh/id_rsa. The private key file name can not be another name.
+This file is read-only and only for
+you. No one else must see the content of that file, as it is used to decrypt
+all correspondence encrypted with the public key.
+
+The public key is save in .ssh/id_rsa.pub.
+
+In this case, the content of file id_rsa.pub is
+
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEArkwv9X8eTVK4F7pMlSt45pWoiakFkZMw
+G9BjydOJPGH0RFNAy1QqIWBGWv7vS5K2tr+EEO+F8WL2Y/jK4ZkUoQgoi+n7DWQVOHsR
+ijcS3LvtO+50Np4yjXYWJKh29JL6GHcp8o7+YKEyVUMB2CSDOP99eF9g5Q0d+1U2WVdB
+WQM= cantin@sodium
+
+It is one line in length.
+
+Its content is then copied in file .ssh/authorized_keys of the system you wish
+to SSH to without being prompted for a password.
+
+The example shown here generated keys on sodium by user cantin. If the public
+key generated, file .ssh/id_rsa.pub, was copied to your account, file
+.ssh/authorized_keys on nickel.sao.nrc.ca, then user cantin@sodium is allowed
+to SSH into your own account on nickel.sao.nrc.ca without the use of a
+password.
+
+To summarize, a personal private/public key pair is generated using the
+ssh-keygen command. The public key is then copied onto a remote systems'
+.ssh/authorized_keys file. And you can now SSH to the remote systems's account
+without the use of a password. 
+##################################################################
+##################################################################
+ssh -t frsplda01 ls /tmp
+
+hangs, and the "ls" becomes <defunct> on  frsplda01. 
+
+The "-t" is to force sshd to open tty for the command "ls /tmp"
+
+The issue is caused by the configuration of the sshd. Just to start the daemon
+in VERBOSE mode instead of DEBUG.
+...........
+Setting LogLevel in /etc/ssh/sshd_config to VERBOSE instead of DEBUG
+solves that issue, no zombie processes anymore.
+
+See: http://bugzilla.mindrot.org/show_bug.cgi?id=967
+...........
+###########################################################
+###########################################################
+wait 
+this command will get the return code of the last back ground job.
+#######################################################
+#######################################################
+frsdhpi2,
+192.168.1.54
+rlogin,
+root,
+ors12a90
+
+casdaix511:
+root
+infpnppdc
+#######################################################
+#######################################################
+in KSH
+
+set -o bgnice 
+bgnice      runs background jobs at a lower priority.
++option turn off each of the shell flags specified as an option.
+e.g. to turn off the bgnice 
+set +x bgnice
+#######################################################
+#######################################################
+dirname: to get the path of a full filename
+basename: to get the file name from a full filename
+#######################################################
+#######################################################
+To define and use the "backspace" button 
+stty erase ^s
+#######################################################
+#######################################################
+When a process has forked a child and the child ends, its exit value is stored in the process table and the process table entry is labeled as "defunct" (also called zombie). The parent process has to call wait() to fetch the exit value.  When it does, the defunct process disappears from the process table.
+
+In fact, the defunct is a normal and necessary status during the life cycle of a process. 
+When a process is completed, it will be labeled as defunct, until its parent process gets its return code.
+If the system is highly loaded, it may take sometimes for the parent process to collect the return code from the "defuncted" process. At this time, the defunct process will show up in the "ps" command output.
+If the parent process is running but does not call to collect the exit information of the defunct process. It becomes a Zombie. The zombie will go away if its parent dies 
+#######################################################
+#######################################################
+To edit Chinese in vim
+
+For Windows
+set encoding=cp936
+and select the font NSimSun
+For Unix, should be
+
+set encoding=euc-cn
+#######################################################
+#######################################################
+" \ " can not be used to break a line into 2, when in a function "{" "}"
+
+#######################################################
+#######################################################
+
+Automatic yum update
+2.3.1.5.1	/etc/cron.daily/yum.cron
+Add the following lines at the end of the script :
+# Executes the yum monitoring script
+/etc/daenv/sys/yum_upd_mon.sh
+
+
+2.3.1.5.2	Activate the yum update
+chkconfig --add yum
+chkconfig  yum on
+service yum start
+ls -al /var/lock/subsys/yum
+
+2.3.2	Red Hat Enterprise
+2.3.2.1	Installation of the Keys
+rpm --import /usr/share/rhn/RPM-GPG-KEY
+2.3.2.2	Register the system
+(Before executing this step please contact the Orsyp Red Hat Responsible.
+Currently GMU or FCT).
+Contacts info :
+user=orsyp1986
+pwd=universe2007
+up2date -register
+Apply the patches
+Go to the to the https://rhn.redhat.com/network/systems web page and select
+the updates to be applied.
+
+#######################################################
+#######################################################
+When to place one wildcard in a command , use "."
+
+grep 57.....V u_fmtp50.dta
+#######################################################
+#######################################################
+diff -b : to ignore spaces differences between 2 files
+#######################################################
+#######################################################
+It is the job of the linux 'oom killer' to sacrifice one or more processes in
+order to free up memory for the system when all else fails. It will also kill
+any process sharing the same mm_struct as the selected process, for obvious
+reasons. Any particular process leader may be immunized against the oom killer
+if the value of it's /proc/<pid>/oomadj is set to the constant OOM_DISABLE
+(currently defined as -17).'
+
+Indications that this has happened
+appear in /var/log/messages:
+Out of Memory: Killed process [PID] [process name].
+
+The kernel uses low memory to track allocations of all memory thus a system with 16GB of memory will use significantly more low memory than a system with 4GB, perhaps as much as 4 times. This extra pressure happens from the moment you turn the system on before you do anything at all because the kernel structures have to be sized for the potential of tracking allocations in four times as much memory.  
+When low memory is exhausted, it does not matter how much high memory is available, the oom-killer will begin whacking processes to keep the server alive.
+If possible, upgrade to 64-bit Linux. This is the best solution because
+*all* memory becomes low memory. If you run out of low memory in this case, then you're *really* out of memory. ;-)
+'
+If limited to 32-bit Linux, the best solution is to run the hugemem kernel. This kernel splits low/high memory differently, and in most cases should provide enough low memory to map high memory. In most cases this is an easy fix - simply install the hugemem kernel RPM & reboot.
+#######################################################
+#######################################################
+tuning firefox to browse faster:
+in URL bar:
+about:config
+in filter:
+network
+-->find and couble click it to set it to TRUE
+network.http.pipelinling
+
+--> double clock on ..., and make it 10
+network.ipelining.maxrequests
+#######################################################
+#######################################################
+casdaix511
+root/infpnppdc
+#######################################################
+#######################################################
+let a+=1
+#######################################################
+#######################################################
+Flush DNS cache for LINUX
+
+In linux if you want to flush DNS cache you need to restart nscd daemon
+
+    * type /etc/rc.d/init.d/nscd restart in your terminal
+    * or sudo /etc/init.d/nscd restart
+    * Once you run the command your linux DNS cache will flush.
+#######################################################
+#######################################################
+To understand AIX OS version:
+# uname -a
+AIX frsdaix512 3 5 00484B0C4C00
+# oslevel
+5.3.0.0
+To list all known recommended maintenance and technology levels on the system, type:
+
+            oslevel -rq
+
+To list which software is below the recommended maintenance and technology level, AIX 5L Version 5.3 with the 5300-03 Recommended Maintenance package, type:
+
+            oslevel -r -l 5300-03
+
+#######################################################
+#######################################################
+vmstat
+[univa@casdlsup06 UXDEX]$ vmstat
+procs -----------memory---------- ---swap-- -----io---- --system-- -----cpu------
+ r  b   swpd   free   buff  cache   si   so    bi    bo   in    cs us sy id wa st
+ 0  0    132  13748  86124 227176    0    0     2     3    2     9  0  1 97  2 0
+   procs
+       r: The number of runnable processes (that is, processes running or
+          waiting to run).
+       b: The number of processes in uninterruptible sleep.
+
+   memory
+       swpd  : the amount of memory paged to disk (in KB by default)
+       free  : the amount of free physical memory (in KB by default)
+       buff  : the amount of memory consumed by buffers (in KB by default)
+       inact : the amount of memory on the inactive list (in KB by default)
+       active: the amount of memory on the active list (in KB by default)
+
+   swap
+       si: the amount of memory paged in from disk (in KB/s by default)
+       so: the amount of memory paged out to disk (in KB/s by default)
+
+   io
+       bi: blocks received from a block device (in blocks/s).
+       bo: blocks sent to a block device (in blocks/s).
+
+   system
+       in: the number of interrupts received (in interrupts/s)
+       cs: the number of context switches (in switches/s)
+
+   cpu
+       us: percentage of total processor time consumed by user-space
+       sy: percentage of total processor time consumed by the kernel
+       wa: percentage of total processor time spent in I/O wait
+       id: percentage of total processor time spent idle
+       wa: Time spent waiting for IO. Prior to Linux 2.5.41, shown as zero.
+       st: Time spent the virtual CPU waiting for physical CPU.
+############################################
+############################################
+To get thread count of a process
+The "ps -eflL" will display thread count for an IO. The PID is all 23189 , and 13 threads each has different thread ID.
+
+# ps -eflL|grep "uxioserv TST530 X casdlsup06"
+1 S univa    23189     1 23189  0   13  76   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23216  0   13  76   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23225  0   13  75   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23226  0   13  76   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23240  0   13  76   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23259  0   13  76   0 - 41747 -      Feb17 ?  00:02:30 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23272  0   13  75   0 - 41747 -      Feb17 ?  00:09:27 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23285  0   13  76   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23298  0   13  75   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 23488  0   13  75   0 - 41747 -      Feb17 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 11327  0   13  76   0 - 41747 -      15:38 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 11328  0   13  76   0 - 41747 -      15:38 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+1 S univa    23189     1 11331  0   13  76   0 - 41747 -      15:38 ?  00:00:00 ./uxioserv TST530 X casdlsup06
+############################################
+TIME_WAIT: means both sides have agreed to close and TCP must now wait a prescribed time before taking the connection down.
+
+CLOSE_WAIT: means the remote system has finished sending and your system has yet to say it is finished.  
+############################################
+############################################
+ENOTTY
+Not a typewriter or, what it should be: Not a terminal
+
+One of the more obscure error messages that Unix generates :) They were expecting to have a terminal (TTY), but instead got passed something else (a file, a pipe, a socket or something). This often occurs in shell scripts that want to use stty(1) to configure the terminal, but are being run from crond(8)? or perhaps your .profile when you're logging in using something that doesn't create a terminal (eg: issuing a remote command using ssh(1)).
+
+############################################
+############################################
+in truss output, strace is similar.
+ioctl(26, TCGETA, 0x77ff9488)                              ERR#25 ENOTTY
+
+An ioctl is part of the user-to-kernel interface of a conventional operating system. Short for "Input/output control", ioctls are typically employed to allow userspace code to communicate with hardware devices or kernel components.
+############################################
+############################################
+WIFEXITED checks Status and returns True if the status indicates that the process terminated normally, i.e. was not stopped by a signal. 
+vfork()                                                    = 15431
+waitpid(15431, WIFEXITED(0), 0)                            = 15431
+...
+...
+getpid()                                                   = 28680 (1)
+unlink("/var/spool/sockets/pwgr/client28680")              = 0
+exit(0)                                                    WIFEXITED(0)
+############################################
+############################################
+To find out file descriptors used by a PID use
+/usr/sbin/lsof -p PID
+
+or go to (on linux, this gives less result? )
+ls -l /proc/PID/fd |wc -l
+############################################
+############################################
+To find out which process are using a file or file from a partition, for
+example, preventing umount, 
+find /proc/*/fd -type f -links 0 -exec ls -l {} \;
+The idea is to find if a file descriptor is in user in that partition.
+############################################
+############################################
+ksh redirections
+
+0             stdin
+1             stdout
+2             stderr
+
+<&-           close stdin
+>&-           close stdout
+<>filename    open filename for read-write
+2>&1          open 2 for write and dup as 1
+
+Examples:
+  cmd 2>/dev/null
+  cmd >/dev/null 2>&1
+  exec 1<&-           # close descriptor 1
+  exec 2<&-           # close descriptor 2
+  exec 1< /dev/null   # open descriptor 1
+  exec 2< /dev/null   # open descriptor 2
+n<&- 
+    Close input file descriptor n.
+0<&-, <&-
+
+    Close stdin.
+n>&-
+
+    Close output file descriptor n.
+1>&-, >&-
+
+    Close stdout.
+
+Child processes inherit open file descriptors. This is why pipes work. To prevent an fd from being inherited, close it. 
+
+$U will close the FD stdin, 0. Some application for example: TARA server needs stdin to work. In this case, the stdin can be reopen within uproc script. 
+
+exec 0< /dev/null
+
+#/opt/fedex/tdinfust/INFRA_SCRIPTS/ARC_DEL/bin/launch_archive.ksh
+/opt/fedex/tdinfust/INFRA_SCRIPTS/ARC_DEL/bin/taralaunch -u administrator -p password -j archive_group_4_db -s fedx4bbar1.prod.fedex.com -v 3 -w
+exec 0<&-
+
+
+############################################
+############################################
+to check a core: 
+1). start gdb
+gdb
+
+2). then run
+core core_filename
+
+or just
+
+gdb -c core_filename
+
+ gdb ./uxioserv -c core.7464
+
+1. under AIX : dbx <path>/<component name> core 
+under Linux: gdb <path>/<component name> core 
+2. then before quit the debug mode, type "where" for more detail. 
+
+############################################
+############################################
+The following message in core, mostly means log file size too big.
+Program terminated with signal 25, File size limit exceeded.
+############################################
+CLOSE_WAIT
+CLOSE_WAIT means that the local end of the connection has received a FIN from the other end, but the OS is waiting for the program at the local end to actually close its connection.
+
+The problem is your program running on the local machine is not closing the socket. It is not a TCP tuning issue. A connection can (and quite correctly) stay in CLOSE_WAIT forever while the program holds the connection open.
+
+Once the local program closes the socket, the OS can send the FIN to the remote end which transitions you to LAST_ACK while you wait for the ACK of the FIN. Once that is received, the connection is finished and drops from the connection table (if you're end is in CLOSE_WAIT you do _not_ end up in the TIME_WAIT state)
+
+CLOSE_WAIT connections indicate an error in the software. It's a connection which has been torn down but your side of things still has a filedescriptor open.  '
+
+CLOSE_WAIT on the server side of the connection means that the server has received a FIN from the client, will have acknowledged this back to the client and then informed the application that it can close the connection. It is then up to the application to relinquish the connection once it is satisfied that all the data has been read from the connection. Once it relinquishes the connection the server will send a final FIN back to the client and the connection will be fully closed.  
+
+If you are seeing a large number of connections persisting in CLOSE_WAIT state it's probably a problem with the app itself, restarting it will clear the connections temporarily but obviously further investigation will be required to find the cause of the problem. '
+############################################
+############################################
+# egrep 'High|Low' /proc/meminfo
+HighTotal: 5111780 kB
+HighFree: 1172 kB
+LowTotal: 795688 kB
+LowFree: 16788 kB
+
+# free -lm
+	total 	used 	free 	shared 	buffers cached
+Mem: 	5769 	5751 	17 	0 	8 	5267
+Low: 	777 	760 	16 	0 	0 	0
+High: 	4991 	4990 	1 	0 	0 	0
+-/+ buffers/cache: 475 5293
+Swap: 4773 0 4773
+############################################
+############################################
+
+kill -19 to stop a process, like Ctrl+Z for forgeround process.
+kill -18 to resume it, SIGCONT
+1 T univa    18580     1  0  75   0    -  4108 finish Mar19 ?        00:00:03 ./uxcdjsrv ABCPRD A lnx12
+
+the process status 'T' means, it is being traced or stopped by a job control signal.
+For instance the above scenario occur if you run gdb on an existing process(tracing) or if you send stop signal such as 'kill -19' to a process or if you press CTRL+Z if the process is running on foreground (process stopped in last 2 cases and it is being trace in the first case).  
+
+Also please let us know whether the process was actually stopped ? Because the T state also occurs normally for a traced process. If it was stopped(not traced) then did you try sending a SIGCONT (Continue if stopped) to see whether the process continue. (for eg: kill -18 <pid>).
+Example:
+
+1 S univa    28621     1  0  76   0 -  3821 stext  Apr21 ?        00:00:00 ./uxioserv FLS510 A casdlsup06
+
+root@casdlsup06 exec]# kill -19 28621
+
+1 T univa    28621     1  0  76   0 -  3821 finish Apr21 ?        00:00:00 ./uxioserv FLS510 A casdlsup06
+
+It looks exactly like the uxcdjsrv process above. However, it can be killed with with kill -9.
+############################################
+############################################
+When debugging a process with gdb, the process should halt.
+gdb process_name PID
+run "detach" after will resume the process.
+############################################
+############################################
+When umount a device, sometimes, it showing:
+# umount /dsk2
+umount: /dsk2: device is busy
+
+To find out which process is using this device, try
+# /sbin/fuser -m /dsk2
+/dsk2:               24097
+# ps -efl|grep 24097
+5 S root     24097  3305  0  76   0 -  2786 -      Apr29 ?        00:00:58 smbd -D
+
+# /sbin/fuser -u libuxos.so
+libuxos.so:            918m(univa)   922m(univa)   928m(root)  1412m(univa)
+1413m(univa)  1416m(univa)  1421m(univa)  1445m(univa)  1461m(root)
+1548m(univa)  1665m(root)
+#
+############################################
+############################################
+In Aix, PID is not used in sequence, and always an even No, normally 8 digits.
+       F S      UID      PID     PPID   C PRI NI ADDR     SZ       WCHAN   STIME     TTY TIME   CMD
+   40001 A     root 18407462        1   2  60 20 15006400 64732        *   May 05      - 639:21 ./uxdqmsrv ACNPRD X valprd01 
+  250005 Z   nrspdu 18526300 18407462  22 117 40                                           0:00 <defunct>
+  250005 Z   nrspdu 18530488 18407462  18  69 20                                           0:00 <defunct>
+The "C" field:
+            CPU utilization of process or thread, incremented each time the system clock ticks and the
+            process or thread is found to be running. The value is decayed by the scheduler by dividing
+
+            it by 2 once per second. For the sched_other policy, CPU utilization is used in determining
+            process scheduling priority. Large values indicate a CPU intensive process and result in
+            lower process priority whereas small values indicate an I/O intensive process and result in
+            a more favorable priority. The default header for this field is C.
+
+A process that is blocked trying to exit is marked <exiting>. This is a status before defunct. A defunct process has already exited.
+To display thrount count on AIX
+$ ps -eo pid,ppid,vsz,thcount,command|egrep PID\|uxioserv
+   PID   PPID   VSZ THCNT COMMAND
+331932      1  3272    17 uxioserv
+368722      1  1056     4 uxioserv
+393296      1  1156     4 uxioserv
+454686      1  5696    27 uxioserv
+
+############################################
+############################################
+VmSize: The size of the virtual memory allocated to the process (commited, not actually allocated.)
+VmLck: The amount of locked memory
+VmRSS: The amount of memory mapped in RAM ( instead of swapped out )
+VmData: The size of the Data segment
+VmStk: The stack size
+VmExe: The size of the executable segment
+VmLib: The size of the library code
+VmPTE: Size of the Page Table entry
+############################################
+############################################
+How big could be the core size? --
+Try instrumenting your code during a couple of test runs:
+You can call getrusage() at the end of a run to see the amount of stack and
+heap memory your program has used. Then you can add the size of the "text"
+data segment (output of size command).
+
+This sum will be very close to the max core size. 
+
+So core size will be roughly:
+stack + heap + "text" = core size
+So, it should be the same as scale as the 
+[univa@casdlsup06 zwa]$ cat /proc/28330/statm
+44408 1355 474 2 0 42277 0
+
+44M for the above case.
+############################################
+############################################
+For AIX
+oslevel -s
+# echo $TZ
+NFT-1DFT
+if the time zone variable ends in DT, DST is enabled.
+############################################
+############################################
+To test if LDAP or NIS or remote user profile is avaiable all the time:
+
+To test if this issue is from DUAS, please run it from command line. This script will test the "su -" command and print out how much time it taken. 
+
+1. Creating a simple script:
+---------------------------------
+#!/bin/bash
+TEST_LDAP () {
+echo "=========" `date` "========="
+su - notesi -c "echo Within the su - command"
+echo "=========" `date` "========="
+}
+TEST_LDAP >> /tmp/test_ldap.txt  2>&1
+exit $?
+---------------------------------
+
+2. Schedule a cron job to run the script with root once every 10 minute. 
+
+Please let the cron job run untile the issue occurs again, and send us the output file /tmp/test_ldap.txt.
+############################################
+############################################
+To fix the pstree display problem on putty, in putty setttings, in
+Translastion select UTF-8
+############################################
+############################################
+Change system time zone
+   1. Logged in as root, check which timezone your machine is currently using
+by executing `date`. You'll see something like Mon 17 Jan 2005 12:15:08 PM
+PST, PST in this case is the current timezone.
+   2. Change to the directory /usr/share/zoneinfo here you will find a list of
+time zone regions. Choose the most appropriate region, if you live in Canada
+or the US this directory is the "America" directory.
+   3. If you wish, backup the previous timezone configuration by copying it to
+a different location. Such as
+
+      mv /etc/localtime  /etc/localtime-old
+
+   4. Create a symbolic link from the appropiate timezone to /etc/localtime.
+Example:
+
+      ln -sf /usr/share/zoneinfo/Europe/Amsterdam /etc/localtime
+
+   5. If you have the utility rdate, update the current system time by
+executing
+
+      /usr/bin/rdate -s time-a.nist.gov
+
+   6. Set the ZONE entry in the file /etc/sysconfig/clock file (e.g.
+"America/Los_Angeles")
+   7. Set the hardware clock by executing:
+
+      /sbin/hwclock --systohc
+
+############################################
+To define a time zone different from the system time:
+export TZ=America/Los_Angeles
+
+You can find the list of time zone here
+cd /usr/share/zoneinfo/
+############################################
+to config VNC server on Linux:
+
+1. To stop and restart the VNC server. Do not need to start it automatically.
+/sbin/service vncserver restart
+
+2. Define the following in the ~/.vnc/xstartup, and make sure it is executable. Restart the VNC server after changing the file. 
+
+[root@support1 .vnc]# cat xstartup
+#!/bin/sh
+unset SESSION_MANAGER
+exec /etc/X11/xinit/xinitrc
+
+[ -x /etc/vnc/xstartup ] && exec /etc/vnc/xstartup
+[ -x $HOME/.Xrexources ] && xrdb $HOME/.Xresources
+xsetroot -solid grey
+vncconfig -iconic &
+xterm -geometry 80x24+10+10 -ls -titile "$VNCDESKTOP Desktop" &
+twm &
+
+3. Define the following:
+[root@support1 .vnc]# cat /etc/sysconfig/vncservers
+VNCSERVERS="1:root"
+# VNCSERVERARGS[2]="-geometry 1024x768 -nolisten tcp -nohttpd -localhost"
+VNCSERVERARGS[1]="-geometry 1024x768 -nolisten tcp -nohttpd"
+
+It means it has one user root, and using hostname:1 to conect.
+
+4. When starting vnc client, use support1:1 to connect.
+############################################
+To get fonts installed on a Linux node
+xlsfonts
+
+To install chinese font:
+yum info "fonts-chinese*"
+yum install fonts-chinese
+yum groupinstall development-tools
+yum grouplist
+############################################
+tab auto completion, if the EDITOR is vi
+use "Escape" + "\" 
+############################################
+To see all the thread and thread count:
+ ps -eLo pid,lwp,nlwp,command
+############################################
+AIX maintenance command:
+smitty or smit
+
+To enable DST
+smit chtz 
+
+Try export TZ=bst0gmt and set the time with the date command.
+############################################ -
+# md5sum FX24848.taz
+e9e6f5a6287de5ad4ef028120069793f  FX24848.taz
+# cat FX24848.taz.md5
+e9e6f5a6287de5ad4ef028120069793f  FX24848.taz
+
+
+To see every process running as root (real & effective ID) in user format:
+   ps -U root -u root u
+############################################
+On HPUX:
+maxuprc
+    maximum number of processes per user 
+
+sysdef |egrep maxuprc\|NAME
+
+#################################
+You can check if the VMware tools are installed with this commmand:
+. VM solaris
+# ls -l /usr/lib/vmware-tools/lib
+
+. VM linux (x64)
+# ls -l /usr/lib/vmware-tools/lib64
+
+. VM linux (x86)
+# ls -l /usr/lib/vmware-tools/lib32
+############################################
+To send file to FTP server with curl
+
+# curl -T ./uxtrace.txt ftp://1708:PAT54538@ftp.orsyp.com/private/issues/ca102785/
+  % Total    % Received % Xferd  Average Speed   Time    Time     Time
+  % Current
+                                 Dload  Upload   Total   Spent    Left  Speed
+100 86173    0     0  100 86173      0  26664  0:00:03  0:00:03 --:--:-- 53978
+# curl ftp://1708:PAT54538@ftp.orsyp.com/private/issues/ca102785/
+-rw-rw-rw-    1 500      500         86173 Mar 25 21:25 uxtrace.txt
+
+# to get geolocation and client IP
+curl http://freegeoip.net/csv/
+"64.254.253.219","CA","Canada","QC","Québec","Montréal","","45.5000","-73.5833","",
+
+curl http://freegeoip.net/csv/204.197.178.250
+"204.197.178.250","CA","Canada","ON","Ontario","Toronto","","43.6667","-79.4167","",""
+
+s=`curl http://freegeoip.net/csv/`
+echo $s |cut -d"," -f3,4,5
+"Canada","QC","Québec
+
+Or use this php on a http server:
+
+# cat clientip.php
+<?php echo $_SERVER['REMOTE_ADDR']; ?>
+
+################################# 
+tcpdump -p -s 1600 -i eth3 -w /tmp/taralaunch.txp ip host 203.135.109.19
+
+19:58:16.217140 IP 204.135.108.19.53065 > 204.135.40.116.54323: S 2109492321:2109492321(0) win 5840 <mss 1460,sackOK,timestamp 3812247084 0,nop,wscale 7>
+        0x0000:  0026 b962 ef43 0026 51ce a242 0800 4500  .&.b.C.&Q..B..E.
+        0x0010:  003c 0a4d 4000 3b06 07d9 cc87 6c13 cc87  .<.M@.;.....l...
+        0x0020:  2874 cf49 d433 7dbc 4c61 0000 0000 a002  (t.I.3}.La......
+        0x0030:  16d0 6c97 0000 0204 05b4 0402 080a e33a  ..l............:
+        0x0040:  462c 0000 0000 0103 0307                 F,........
+19:58:16.217157 IP 204.135.40.116.54323 > 204.135.108.19.53065: S 3792798902:3792798902(0) ack 2109492322 win 5792 <mss 1460,sackOK,timestamp 710977180 3812247084,nop,wscale 2>
+        0x0000:  0000 0c07 ac65 0026 b962 ef43 0800 4500  .....e.&.b.C..E.
+        0x0010:  003c 0000 4000 4006 0d26 cc87 2874 cc87  .<..@.@..&..(t..
+        0x0020:  6c13 d433 cf49 e211 84b6 7dbc 4c62 a012  l..3.I....}.Lb..
+        0x0030:  16a0 34f6 0000 0204 05b4 0402 080a 2a60  ..4...........*`
+        0x0040:  a69c e33a 462c 0103 0302                 ...:F,....
+19:58:16.220307 IP 204.135.108.19.53065 > 204.135.40.116.54323: . ack 1 win 46 <nop,nop,timestamp 3812247088 710977180>
+        0x0000:  0026 b962 ef43 0026 51ce a242 0800 4500  .&.b.C.&Q..B..E.
+        0x0010:  0034 0a4e 4000 3b06 07e0 cc87 6c13 cc87  .4.N@.;.....l...
+        0x0020:  2874 cf49 d433 7dbc 4c62 e211 84b7 8010  (t.I.3}.Lb......
+        0x0030:  002e 7a2b 0000 0101 080a e33a 4630 2a60  ..z+.......:F0*`
+        0x0040:  a69c                                     ..
+19:58:16.220319 IP 204.135.108.19.53065 > 204.135.40.116.54323: F 1:1(0) ack 1 win 46 <nop,nop,timestamp 3812247088 710977180>
+        0x0000:  0026 b962 ef43 0026 51ce a242 0800 4500  .&.b.C.&Q..B..E.
+        0x0010:  0034 0a4f 4000 3b06 07df cc87 6c13 cc87  .4.O@.;.....l...
+        0x0020:  2874 cf49 d433 7dbc 4c62 e211 84b7 8011  (t.I.3}.Lb......
+        0x0030:  002e 7a2a 0000 0101 080a e33a 4630 2a60  ..z*.......:F0*`
+        0x0040:  a69c                                     ..
+19:58:16.220405 IP 204.135.40.116.54323 > 204.135.108.19.53065: F 1:1(0) ack 2 win 1448 <nop,nop,timestamp 710977181 3812247088>
+        0x0000:  0000 0c07 ac65 0026 b962 ef43 0800 4500  .....e.&.b.C..E.
+        0x0010:  0034 222a 4000 4006 eb03 cc87 2874 cc87  .4"*@.@.....(t..
+        0x0020:  6c13 d433 cf49 e211 84b7 7dbc 4c63 8011  l..3.I....}.Lc..
+        0x0030:  05a8 74ae 0000 0101 080a 2a60 a69d e33a  ..t.......*`...:
+        0x0040:  4630                                     F0
+19:58:16.221157 IP 204.135.108.19.53065 > 204.135.40.116.54323: . ack 2 win 46 <nop,nop,timestamp 3812247089 710977181>
+        0x0000:  0026 b962 ef43 0026 51ce a242 0800 4500  .&.b.C.&Q..B..E.
+        0x0010:  0034 0a50 4000 3b06 07de cc87 6c13 cc87  .4.P@.;.....l...
+        0x0020:  2874 cf49 d433 7dbc 4c63 e211 84b8 8010  (t.I.3}.Lc......
+        0x0030:  002e 7a27 0000 0101 080a e33a 4631 2a60  ..z'.......:F1*`
+        0x0040:  a69d
+#################################
+No one can access /cases from samba. On casplda01 the following shows up in the /var/log/samba/smbd.log
+
+[2011/09/20 03:37:41, 1] smbd/sesssetup.c:reply_spnego_kerberos(316)
+  Failed to verify incoming ticket with error NT_STATUS_LOGON_FAILURE!
+
+It could be that the time stamp is wrong. Fix it with date -s, the sambe /cases will start to work again.
+#################################
+SUID, SGID
+http://www.bashguru.com/2010/03/unixlinux-advanced-file-permissions.html
+To set SGID on a directory, so, all file created under the directory will have the same group as the parent directory.
+$ chmod g+s directory     or     $ chmod 2755 directory
+$ chmod g-s directory     or     $ chmod 755 directory
+#################################
+BEGIN{}
+{ printf "%s\t %s\n",$6, $10}
+
+ awk -f ./"atac_exec.txt" UXEXE_ls_lai.txt
+#################################
+To manage patch on HPUX
+swlist
+
+1. U can see patches by swlist command
+#swlist -l product patchname
+or u can check all patches by taking nikel
+
+2. U can download patches from below link,
+http://www13.itrc.hp.com/service/patch/mainPage.do
+
+3.install patches as follows,
+a. #sh patch name
+it will create depot file
+b. swinstall -s /tmp/patchname.depot
+
+4. if need to revert just use
+
+#swremove patchname
+
+5. it depends on patch level whether u need to reboot the server or not. Before installing patches , check the read me file then go for install patche
+
+#################################
+To install mysql
+yum install mysql-sever
+
+......................
+To start
+/sbin/service mysqld start
+
+......................
+To define password
+/usr/bin/mysqladmin -u root password "ors12a90"
+
+......................
+To configure remote connection
+/usr/bin/mysql_secure_installation
+
+......................
+To login locally
+mysql -u root -p
+
+......................
+To allow remote connection
+$ mysql -u root -p
+Enter password:
+
+mysql> use mysql
+
+mysql> GRANT ALL ON *.* to root@'192.168.1.4' IDENTIFIED BY
+'your-root-password'; 
+
+mysql> FLUSH PRIVILEGES;
+......................
+To create a user
+mysql> USE mysql;
+mysql> UPDATE user SET Password=PASSWORD('new-password') WHERE user='root';
+mysql> FLUSH PRIVILEGES;
+
+Then to allow to access specific DB to specific user
+mysql> CREATE DATABASE foo;
+mysql> GRANT ALL ON foo.* TO bar@'202.54.10.20' IDENTIFIED BY 'PASSWORD';
+
+anonymous can login remotely without password.
+ grant all on test.* to anonymous ;
+#################################
+http://www.cyberciti.biz/faq/bash-shell-script-generating-random-numbers/
+echo $RANDOM
+To generate a number < 200 
+echo $(( RANDOM %= 200))
+
+return a number between 100 and 300
+echo $((RANDOM%200+100)) 
+
+Random port number for dump end with 10 and between 10000 - 20000
+ echo $(($(($(($((RANDOM %= 90000000))%1000))*10))+10000))
+#################################
+To untar a tar ball, use -o to make the unpacked file have local ownership.
+#################################
+Ephemeral port
+An ephemeral port is a short-lived transport protocol port for Internet Protocol (IP) communications allocated automatically from a predefined range by the TCP/IP software.
+#################################
+For AIX, 
+svmon -P  PID
+To check memory segment usage
+http://aix4admins.blogspot.ca/2011/09/statistics-reported-by-svmon-are.html
+############################################
+
+To resize a partition increase the logical volume, then expend the concerned FS with "resize2fs".
+/usr/sbin/lvscan
+/usr/sbin/lvdisplay
+/usr/sbin/lvremove
+/usr/sbin/pvcreate
+/usr/sbin/lvextend
+############################################
+To access http in bash
+#!/bin/bash
+
+exec 5<> /dev/tcp/myhost.com/80
+cat <&5 &
+printf "GET /getuser/Default.aspx?username=b772643 HTTP/1.0\r\n\r\n" >&5

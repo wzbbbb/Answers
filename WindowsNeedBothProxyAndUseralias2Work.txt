@@ -1,0 +1,214 @@
+The useralias.txt
+..................................................................
+..................................................................
+support4                qcl500a                   qcl500a 
+support4                qcl500e                   qcl500e 
+ORSYP                   zwa                       qcl500a
+..................................................................
+..................................................................
+
+E:\qcl500\exec>uxlst atm exp
+ Command : uxlst atm exp all partage
+
+Motor : Launcher
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 2004
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192014
+      Wakeup    : 06/23/2004 ,   at  : 160000
+Motor : Calculator
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 1984
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192014
+      Wakeup    : 06/23/2004 ,   at  : 161000
+Motor : Exchanger
+      State     : Started    , Cycle : 000120
+      Machine   : DA_US_W_04 ,   Pid : 2024
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192015
+      Wakeup    : 06/23/2004 ,   at  : 140701
+Motor : Supervisor
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 1996
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192015
+      Wakeup    : 07/02/2004 ,   at  : 000000
+
+E:\qcl500\exec>lstproxy
+
+SIO proxy file : e:\QCL500\mgr\u_ioproxy.dta (3 def)
+
+SYSTEM  U_NODE        GROUPNAME            USERNAME              UNIVERSE_USERNAME
+----------------------------------------------------------------------------------
+REP     DA_US_U_05    *                    univa                 qcl500a
+W32     DA_US_W_04    *                    zwa                   qcl500a
+*       *             *                    *                     *SAME (*)
+
+===========Everything is fine till this point.
+===========
+
+E:\qcl500\exec>delproxy
+delproxy system u_node groupname username
+
+E:\qcl500\exec>delproxy W32 DA_US_W_04 * zwa
+
+E:\qcl500\exec>lstproxy
+
+SIO proxy file : e:\QCL500\mgr\u_ioproxy.dta (2 def)
+
+SYSTEM  U_NODE        GROUPNAME            USERNAME              UNIVERSE_USERNAME
+----------------------------------------------------------------------------------
+REP     DA_US_U_05    *                    univa                 qcl500a
+*       *             *                    *                     *SAME (*)
+
+
+E:\qcl500\exec>loadproxy_io DA_US_W_04 QCL500 A
+
+E:\qcl500\exec>loadproxy_io DA_US_W_04 QCL500 X
+
+E:\qcl500\exec>uxlst atm exp
+ Command : uxlst atm exp all partage
+
+UxCmd_LoadUniverse Initialization error
+Update to an unknown User
+command in error!!
+
+===========After removed the entry with user name zwa, but keeping the "SAME" entry, the uxlst command failed.
+===========
+
+E:\qcl500\exec>setproxy W32 DA_US_W_04 * * *SAME(*)
+
+E:\qcl500\exec>lstproxy
+
+SIO proxy file : e:\QCL500\mgr\u_ioproxy.dta (3 def)
+
+SYSTEM  U_NODE        GROUPNAME            USERNAME              UNIVERSE_USERNAME
+----------------------------------------------------------------------------------
+REP     DA_US_U_05    *                    univa                 qcl500a
+W32     DA_US_W_04    *                    *                     *SAME (*)
+*       *             *                    *                     *SAME (*)
+
+
+E:\qcl500\exec>loadproxy_io DA_US_W_04 QCL500 X
+
+E:\qcl500\exec>loadproxy_io DA_US_W_04 QCL500 A
+
+E:\qcl500\exec>lstproxy
+
+SIO proxy file : e:\QCL500\mgr\u_ioproxy.dta (3 def)
+
+SYSTEM  U_NODE        GROUPNAME            USERNAME              UNIVERSE_USERNAME
+----------------------------------------------------------------------------------
+REP     DA_US_U_05    *                    univa                 qcl500a
+W32     DA_US_W_04    *                    *                     *SAME (*)
+*       *             *                    *                     *SAME (*)
+
+
+E:\qcl500\exec>uxlst atm exp
+ Command : uxlst atm exp all partage
+
+UxCmd_LoadUniverse Initialization error
+Update to an unknown User
+command in error!!
+
+===========Added the entry with W32 ... SAME, still not working
+===========
+
+E:\qcl500\exec>setproxy W32 DA_US_W_04 * zwa qcl500a
+
+E:\qcl500\exec>lstproxy
+
+SIO proxy file : e:\QCL500\mgr\u_ioproxy.dta (4 def)
+
+SYSTEM  U_NODE        GROUPNAME            USERNAME              UNIVERSE_USERNAME
+----------------------------------------------------------------------------------
+REP     DA_US_U_05    *                    univa                 qcl500a
+W32     DA_US_W_04    *                    zwa                   qcl500a
+W32     DA_US_W_04    *                    *                     *SAME (*)
+*       *             *                    *                     *SAME (*)
+
+
+E:\qcl500\exec>loadproxy_io DA_US_W_04 QCL500 A
+
+E:\qcl500\exec>loadproxy_io DA_US_W_04 QCL500 X
+
+E:\qcl500\exec>uxlst atm
+ Command : uxlst atm all partage
+
+Motor : Launcher
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 2004
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192014
+      Wakeup    : 06/23/2004 ,   at  : 160000
+Motor : Calculator
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 1984
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192014
+      Wakeup    : 06/23/2004 ,   at  : 161000
+Motor : Exchanger
+      State     : Started    , Cycle : 000120
+      Machine   : DA_US_W_04 ,   Pid : 2024
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192015
+      Wakeup    : 06/23/2004 ,   at  : 141101
+Motor : Supervisor
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 1996
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192015
+      Wakeup    : 07/02/2004 ,   at  : 000000
+
+===========Added the entry with zwa back, the uxlst worked again
+===========
+..................................................................
+..................................................................
+support4                qcl500a                   qcl500a 
+support4                qcl500e                   qcl500e 
+#ORSYP                   zwa                       qcl500a
+..................................................................
+..................................................................
+
+E:\qcl500\exec>uxlst atm
+ Command : uxlst atm all partage
+
+UxCmd_LoadUniverse Initialization error
+Mandatory data
+command in error!!
+
+===========After commented the entry in the useralias.txt file, the uxlst stopped working.
+===========
+
+E:\qcl500\exec>uxlst atm
+ Command : uxlst atm all partage
+
+Motor : Launcher
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 2004
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192014
+      Wakeup    : 06/23/2004 ,   at  : 160000
+Motor : Calculator
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 1984
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192014
+      Wakeup    : 06/23/2004 ,   at  : 161000
+Motor : Exchanger
+      State     : Started    , Cycle : 000120
+      Machine   : DA_US_W_04 ,   Pid : 2024
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192015
+      Wakeup    : 06/23/2004 ,   at  : 141301
+Motor : Supervisor
+      State     : Started
+      Machine   : DA_US_W_04 ,   Pid : 1996
+      Launched  : 06/21/2004 ,   at  : 185811
+      Stopped   : 06/18/2004 ,   at  : 192015
+      Wakeup    : 07/02/2004 ,   at  : 000000
+
+E:\qcl500\exec>
+
+===========Modified back, the uxlst worked again.

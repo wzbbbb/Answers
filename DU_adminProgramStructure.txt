@@ -1,0 +1,31 @@
+Flow charts
+1. $U Company detection
+
+Main Function ()
+	conf_files creating/detecting
+	search uxsetenv and populate the two files
+	comparing the two files and send out the result
+	
+Funcations ()
+
+
+if DuMaint.conf exsit
+	new_install=1
+else
+	Create DuMaint.conf	
+
+Create a DuFound.log.
+ 
+find / -name uxsetenv > temp_list
+Loop through temp_list
+	find the definatin for $UXMGR
+	if $UXMGR is point to the directory of the uxsetenv file
+		found a $U
+		input this entry to DuFound.log 
+
+
+
+2. Log Cleaning:
+
+need to do : 
+	Check DuMaint.conf to find out the d

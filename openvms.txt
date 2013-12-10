@@ -1,0 +1,132 @@
+SYS$SYSROOT:[000000] sh dev /mounted
+
+Device                  Device           Error    Volume         Free  Trans Mnt
+ Name                   Status           Count     Label        Blocks Count Cnt
+ITA01$DKA0:             Mounted              0  I64SYS        98047584   746   1
+SYS$SYSROOT:[000000] set def dka0:[000000]
+SYS$SYSROOT:[000000] sh def
+  DKA0:[000000]
+
+SYS$SYSROOT:[000000] sh sym cd
+  CD == "@sys$manager:cd.com"
+SYS$SYSROOT:[000000] sh sym pwd
+  PWD == "sh def"
+SYS$SYSROOT:[000000] sh symb df
+  DF == "sh dev d"
+
+SYS$SYSROOT:[000000] sh user /full
+      OpenVMS User Processes at 28-JUN-2010 19:35:37.98
+    Total number of users = 1,  number of processes = 2
+
+ Username Process Name    PID     Terminal
+ SUPPORT  SUPPORT       00027CE0  TNA85:
+                                      (Host: calpmzwa.orsypgroup.com Port:
+3200)
+ SUPPORT  _FTA239:      00027CEF  FTA239:
+
+system logical name start with SYS$
+SYS$INPUT
+SYS$OUTPUT
+SYS$ERROR
+
+disk quota
+show quota
+
+run command in batch mode 
+SUBMIT
+
+IN DETACH mode 
+RUN /DETACH
+
+to run in a subprocess:
+spawn
+
+to show all process
+show system /page 
+
+show user /full
+
+#################################
+HIB: hibernating
+LEF: waiting for IO
+CUR: actively on CPU 
+COM: ready to be handled by a CPU, waiting in queue
+
+DNFS4:[000000.USERS.ZWA] sh sys
+OpenVMS V8.3  on node ITA01  29-JUN-2010 14:28:32.13  Uptime  155 05:00:58
+  Pid    Process Name    State  Pri      I/O       CPU       Page flts  Pages
+00000401 SWAPPER         HIB     16        0   0 00:00:26.27         0      0
+00000404 USB$UCM_SERVER  HIB      6      334   0 00:00:00.23       217    446
+00000405 LANACP          HIB     14      103   0 00:00:00.19       160    208
+00000407 FASTPATH_SERVER HIB     10        8   0 00:00:00.00       108    134
+00000408 IPCACP          HIB     10        7   0 00:00:00.04        78    109
+00000409 ERRFMT          HIB      9   814382   0 00:00:43.99       165    200
+0000040B OPCOM           HIB      8   204198   0 00:00:35.12      3141     95
+0000040C AUDIT_SERVER    HIB     10      725   0 00:00:00.11       170    214
+0000040D JOB_CONTROL     HIB     10   236827   0 00:00:19.07       134    199
+00000411 SECURITY_SERVER HIB     10    53719   0 00:00:14.67       447    593
+00000412 ACME_SERVER     HIB      9       75   0 00:00:00.04       372    511 M
+00000413 QUEUE_MANAGER   HIB     10   139864   0 00:00:21.77       590    663
+00000415 TP_SERVER       HIB     10   894877   0 00:04:06.06  10775525    112
+0000041C TCPIP$INETACP   HIB     10    86072   0 00:05:18.45       473    434
+0000041D TCPIP$FAILSAF_1 HIB      9 23263464   0 00:05:15.72      1608   1544 N
+0000041F TCPIP$FTP_1     LEF     10    11769   0 00:00:00.50      1042    638 N
+00000420 TCPIP$NTP_1     LEF     10 13675393   0 05:52:13.65       512    577 N
+00000422 TCPIP$XDM_1     LEF     10     7584   0 00:00:00.86       689    669 N
+00000423 DNFS1ACP        HIB     10   152578   0 00:00:05.36       482    603
+00000424 DNFS8ACP        HIB     10  1001550   0 00:01:12.40       437    558
+00000425 DNFS7ACP        HIB     10 36897898   0 01:06:27.15       837    958
+0000042A DECW$XFS        HIB      6     2368   0 00:00:00.11       281    353
+0000042C DECW$SERVER_0   HIB      8     1079   0 00:00:04.10      3176   1758
+00000431 DTLOGIN         LEF      5      292   0 00:00:00.04       566    645
+00000432 DTGREET         LEF      6     4930   0 00:00:00.83       608    767 S
+00007C3D SYSTEM_15271    LEF      8      301   0 00:00:00.04      1041    633 S
+00025444 SYSTEM_47911    LEF      8      143   0 00:00:00.05       931    628 S
+00027CBA SYSTEM_13725    LEF      8      598   0 00:00:00.01       418    525 S
+000268BF SYSTEM_11814    LEF      8       77   0 00:00:00.01       338    358 S
+00027CE0 SUPPORT         CUR  0   4    26380   0 00:00:03.08     12938    258
+00027123 TCPIP$SS_BG3362 LEF      8     1313   0 00:00:00.16      1012    933 N
+
+#################################
+
+To suspend a proces, it will be in SUSP
+set process /suspend
+"MUTEX" status indicate a problem
+
+show process /ID=pid /cont
+to check what the proces is doing, live.
+show process /ID=pid /all
+#################################
+
+SYS$SYSTEM
+SYS$MANAGER
+SYS$SHARE
+SYS$LIBRARY
+SYS$MESSAGE
+#################################
+To see logical name of a disk
+SYS$SYSROOT:[SYSEXE] sh logical disk$user
+   "DISK$USER" = "DKA0:[USERS.]" (LNM$SYSTEM_TABLE)
+
+to show all the file opened on a disk, without files opened by system process
+ sh dev /fil dka0 /nosys
+
+to show all the file opened by a process
+
+To define date and time
+set time=time
+
+To check the return code of a command
+sh symb $status
+
+to define a new symble
+s = $status
+
+set on  to enable to catch error
+set noon
+
+F$PARSE : grep?
+F$SEARCH to search for a file in a directory
+F
+
+For no-homo VMS cluster, install in AXP first then itanium.

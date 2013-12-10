@@ -1,0 +1,32 @@
+-.- Installation :
+Shutdown tomcat.
+Copy the DollarUniverse.war file in the webapps subdirectory.
+/usr/tomcat/jakarta-tomcat-4.1.27/webapps
+Restart tomcat
+
+-- License Workaround :
+- Close Internet Explorer
+- Shutdown tomcat
+- Remove your current u_fali02.txt file and replace it with one containing only the following line :
+ITOWTC06       DOLLAR-UNIVERSE:WCO   2     USER=999       20060330    M01LD01VBECTK2GEGMF
+
+- Rename your current users.dta under backup name (users_bkp.dta) for example
+- Restart tomcat
+- Open internet explorer and go to the Dollar Universe administration page.
+For example :
+http://support3:8080/DollarUniverse/servlet/Admin
+- click on the CONFIGURATION window
+- set the proxy node to ITOWTC06
+- choose for the users file like "users.dta" a file name which does not exist (users.dta for example )
+- leave blanks the fields "default node" and "default company"
+- Confirm and reload
+
+- Then go to USERS (please do not mind the error message about "users.dta" not found)
+- Click on Add, create your users
+- Confirm and reload
+
+- At last, go to LICENCE, you will see the licence already
+
+- click on RELOAD.
+The license should be successfully reloaded.
+

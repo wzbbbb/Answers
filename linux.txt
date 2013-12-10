@@ -1,0 +1,11 @@
+To export partation with NFS
+
+1. On the server side, define it in the /etc/exports file, e.g.
+/apps support5(rw,no_root_squash) support120(rw,no_root_squash) support3(rw,no_root_squash) support4(rw,no_root_squash) support1(rw,no_ro
+
+2. On the client side, define it in the /etc/fstab file:
+support2:/apps    /mnt/apps nfs     rw,suid,hard,intr,noauto
+
+3. may need to restart the NFS daemon,
+
+service nfs restart

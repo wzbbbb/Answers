@@ -1,0 +1,2 @@
+A resource event can be generated when the quota of a resource is used up.
+For example, a resource "RES1" has quota1=999, and a Uproc "Upr1" depends on RES1. If Upr1 use 999 quota, RES1 is used up after  one launch of Upr1, and hence a resource event is generated after one launch of Upr1.

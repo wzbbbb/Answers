@@ -1,0 +1,6 @@
+For Windows NT/2000,  there are 2 kinds of services should be defined to start "automaticly".
+
+1. Univer$se Universe service
+2. User service(s)	
+
+The above 2 processes should be started before you can start up a company.

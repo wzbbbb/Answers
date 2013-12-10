@@ -1,0 +1,82 @@
+SAP connection issue repro FAQ 46378
+
+PB: you have issue of communication between Global control and a SAP manager, typically one of these cases: 
+- you cannot see the status of SAP manager (display always idle)
+- you cannot get the SAP manager log from the Global Control interface ("Comm error" pop up message)
+- you cannot get the SAP systems avalible from the Global Control interface
+- you cannot get the list of reports/infopackage/processchain when creating an uproc type XPB20/IPACK/PCHAIN
+
+here are the points to check to have a full communication bewteen SAP manager and Global Control: 
+
+
+1/ In uxsaprfc.ini (in SAP manager environment): you have to have an entry in of this type: 
+{company_name}/*/*
+and/or this type: 
+*/*/*
+
+
+otherwise you have this type of error in unverse.log of the Global Control when trying to get status or display log of SAP manager log from Global control: 
+<< 2006-07-04 11:14:49 0002128/Dollar_Universe /u_getport_c         /000000000 - ERROR: cannot find the port number for Company : [SUP512] node : [FRSDHP11], server [SAP] area [*]
+<< 2006-07-04 11:14:49 0002128/Dollar_Universe /u_api_call_agtsap_gu/000000000 - u_getserv_c: cannot find the port number for Company : [SUP512] node : [frsdhp11], server [SAP] area [**] 
+<< 2006-07-04 11:14:49 0002128/Dollar_Universe /u_api_agentsap_log_r/000000000 - fails in communication with SAP agent [-1]
+
+2/ you have to add the follwing entry in uxsrsrv.alias of the Global Control:
+uxsrsrv.alias
+{company_name}_SAP_X _SAP_
+{company_name}_SAP_S _SAP_
+{company_name}_SAP_I _SAP_
+{company_name}_SAP_A _SAP_
+{company_name}_SAP_* _SAP_
+
+Otherwise you want see the right status of SAP manager and you want be able to dsiplay SAP manager log from Global Control. 
+
+3/ check the value of the field "Management Unit" in default values of Global Control, in the tab uproc. It should be set to an existing MU, different of *, in coherence with agtsap.host of the remote Dollar Universe node on which you wish to create the SAPuproc (check variable UXSAP_HOSTS_FILE of remote Dollar Universe environment to know the location of this file)
+otherwise you get "comm error" with this messages in universe.log of SAP manager when you trying get the list of reports/infopackage/processchain when creating an uproc type XPB20/IPACK/PCHAIN
+<< 2006-07-31 19:09:54 0001792/UprocApp        /u_api_call_agtsap_gu/000000000 - Warning: SAP agent node not found (mat status [50]). Assume node of the request [frsdaix413]
+<< 2006-07-31 19:09:55 0001792/UprocApp        /u_api_call_agtsap_gu/000000000 - Network error sending data to Dollar Universe Manager for SAP port=13252 host=frsdaix413.orsypgroup.com: (WinSock): Connection refused (connect returns error)
+<< 2006-07-31 19:09:55 0001792/UprocApp        /u_api_variant_info_g/000000000 - fails in communication with SAP agent [-1]
+
+4/ check the alias of the port number in uxsrsrv.alias and in etc/services file, for all the component (GC node, $U node, SAP manager node). They should all point towrd the same port number. 
+
+5/ check that aliases of the nodename in uxsrsrv.sck of all the components are presents in all the node. (if the three components are on three differnet box, the three uxsrsrv.sck should contains the alias for the three node names) 
+
+
+
+The first 3 points are related to some bugs in the Global Control interface which will be corrected in the next release. A FAQ is in preparation about the provided workarounds. 
+We apologize for the inconvenients. 
+
+If after this modification  you stil have a connection issue  please answer to following questions and provide request documents after proceeding to requested test: 
+from the global control interface:
+- what the hostname and OS type for each component (Global Control, Dollar Universe, SAP manager, SAP instance)
+- Does the job submission to SAP works OK from Global Control?
+- Is it a recent installation of Global Control?
+- Is it a recent installation of SAP manager?
+- what is the version of your SAP_BASIS and your support package level? 
+- Is there any cluster node involved? If yes please describe the configuration. 
+
+
+Test to proceed in this order: 
+1- Display SAP manager status from Global Control  ("manager for SAP Solutions"  item) ?
+2- Display the SAP manager log from Global Control (right click on the "manager for SAP Solutions"  item) ?
+3- Display  SAP systems from Global Control (right click on the "manager for SAP Solutions"  item)
+4- Display "managed SAP jobs" from Global Control (item "managed SAP jobs")
+5- Create a uproc of type SAP_XBP2 and try get the list of SAP report while creating the step of the job. 
+
+Documents to send: 
+- universe.log of Globlal Control node
+- For each point of the test:
+	*  the date and time of the test
+	*  a screenshot of the entire window of Global Control, including pop up error if any
+
+
+ For a complete analyse of your whole configuration please provide also: 
+- uxagtsap.host of the remote $U node (check variable UXSAP_HOSTS_FILE of remote $U node environment to know the location of this file)
+- uxagtsap.host of Global Control node (check variable UXSAP_HOSTS_FILE of Global Control environment to know the location of this file)
+- uxtrace of all concerned nodes (to run while the SAP manager is active)
+- .taz of the directory of the sap manager 
+
+If SAP manager is installed on a different host from $U company:  
+- etc/services of this host
+- etc/host of this host
+- hostname of OS type of this node
+- result of nestat -na (while SAP manager is started)

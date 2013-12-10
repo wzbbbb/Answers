@@ -1,0 +1,4 @@
+uxbck is not protected, nor traced by the audit trail and does not have an online help entry.
+
+uxbck UNI [soc=SOC_NM] [node=NODE_NM] [exp/app/int/sim] [timeout=NB_MIN] [dir=DIR_NM] [idx]
+

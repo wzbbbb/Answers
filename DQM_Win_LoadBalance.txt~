@@ -1,0 +1,240 @@
+Configuring DQM load balancing on Windows
+
+
+
+To use DQM on Windows, the DQM server has to be installed along with the installation of the Dollar Universe Company. It can not be installed separately. 
+
+Note: throughout this document, we will use the 'CompanyName' as the discussed Dollar Universe Company name. You will have to replace it with your acctual Dollar Universe Company name.
+
+1. Multi-company installations on Windows
+
+It is possible to run multiple Dollar Universe Companies the same time on one Windows node. However, it is necessary to do some modifications before the DQM server(s) can work properly. The default Windows based Dollar Universe Company installation doesn't consider multiple Company coexsiting case; some manual interventions are needed to overcome this limitation. For those of you who don't believe me or are really curious, please read the reasons at the last part of the document.
+ 
+In this document, we promote a solution to this issue : Company dedicated DQM server. 
+Note: If you have Dollar Universe Companies that have different patch levels on one Windows node, we strongly recommend you to adopt this configuration.
+We will use 3 Dollar Universe Companies to discuss this issue and the 3 companies have name:
+'CompanyName1', 'CompanyName2' and 'CompanyName3'.
+
+
+2.  Company dedicated DQM server
+
+A) Uninstall the _DQM_ service
+By default, after a Dollar Universe Company installation, the DQM service has a alias name _DQM_, which could casue some problems if more than one Dollar Universe Companies installed. So the first step is to uninstall the _DQM_ service. First, shutdown the Dollar Universe Company and run the following command.
+
+%UXEXE%\uniservdqm.exe -remove 'CompanyName' X
+
+Note: even you have more than one DQM services to modify, this command needs only to be run once.
+
+B) Modifying the C:\WINNT\system32\drivers\etc\services file
+In this file, you will find the TCP/UDP ports definations for all of your network services. Find the part for your Dollar Universe Company. For instance, for 'CompanyName1' , you should find 16 lines like the following:
+
+'CompanyName1'_IO      10600/tcp 
+'CompanyName1'_IO_X    10600/tcp 
+'CompanyName1'_IO_S    10601/tcp  
+'CompanyName1'_IO_I    10602/tcp  
+'CompanyName1'_IO_A    10603/tcp  
+'CompanyName1'_CMD     10604/tcp  
+'CompanyName1'_CMD_X   10604/tcp  
+'CompanyName1'_PMP_X   10605/tcp  
+'CompanyName1'_PMP_S   10606/tcp  
+'CompanyName1'_PMP_I   10607/tcp  
+'CompanyName1'_PMP_A   10608/tcp  
+'CompanyName1'_LNM     10610/tcp  
+'CompanyName1'_CDJ_X   10611/tcp  
+'CompanyName1'_CDJ_S   10612/tcp  
+'CompanyName1'_CDJ_I   10613/tcp  
+'CompanyName1'_CDJ_A   10614/tcp  
+_DQM_       10615/tcp 
+
+
+Note: the TCP port numbers may vary, they depend on your specific TCP port definations. 
+As you can see, the last line is for the DQM server, and it is not associated with a Dollar Universe Company name. It is fine if there is only one Dollar Universe Company using the DQM server. For our case, we need to modify it to the following:
+'CompanyName1'_DQM_ 	10615/tcp
+The first column of the 16 lines act as aliases of the followed TCP ports.  
+
+
+C) Modifying the %UXMGR%\uxsrsrv.alias file
+There should be 8 lines look like the following:
+
+'CompanyName1'_DQM_X	_DQM_
+'CompanyName1'_DQM_S 	_DQM_
+'CompanyName1'_DQM_I 	_DQM_
+'CompanyName1'_DQM_A 	_DQM_
+_DQM_X       	 _DQM_
+_DQM_S      	 _DQM_
+_DQM_I       	 _DQM_
+_DQM_A     	 _DQM_
+
+The first column defines the services and the second column specifies the TCP ports with the TCP port aliases defined in the C:\WINNT\system32\drivers\etc\services file (see step B). Since we have modified the alias from "_DQM_" to "'CompanyName1'_DQM_", the  %UXMGR%\uxsrsrv.alias file also needs to be modified accordingly. The result should be like the following:
+
+'CompanyName1'_DQM_X 'CompanyName1'_DQM_
+'CompanyName1'_DQM_S 'CompanyName1'_DQM_
+'CompanyName1'_DQM_I 'CompanyName1'_DQM_
+'CompanyName1'_DQM_A 'CompanyName1'_DQM_
+_DQM_X        'CompanyName1'_DQM_
+_DQM_S        'CompanyName1'_DQM_
+_DQM_I        'CompanyName1'_DQM_
+_DQM_A        'CompanyName1'_DQM_
+
+
+D) Reinstalling the DQM service
+We have removed the DQM service in step A; now we have to reinstall the service. 
+%UXEXEC%\uniservdqm.exe -install 'CompanyName1' X
+If you check again, you will see that the DQM service has been reinstalled but with a different name: 
+Univer$e 'CompanyName1'_DQM_
+
+E) Restart the Dollar Universe Company
+
+Repeat the steps from (B) to (E) for each Dollar Universe Company with the corresponding Dollar Universe Company Name. 
+The configuration is done.
+
+Conclusion:
+Now, the Dollar Universe Companies will submit their jobs to their DQM servers. The startup and shutdown of each DQM server is controled by its related Dollar Universe Company's startup and shutdwon scripts.
+
+
+3. Load balancing 
+
+3.1 Prerequisite
+DQM server can balance load amoung a set of predefined nodes:
+
+3.1.1 DQM servers are installed and started on every node.
+3.1.2 Queues are created and started. See the next section for more details.
+3.1.3 Having the same  Dollar Universe Company name. 
+3.1.4 Using the same TCP ports.
+3.1.5 Having the same directory structure.
+3.1.6 Having all the Uprocs, Sessions stored locally under the same directory structure.
+
+3.2 Creating Logical and Physical queues
+
+3.2.1 Adding DQM to the Windows GUI (desktop). 
+By default, the DQM queues will not show in the Windows GUI. To add the items:
+a). Right click on the User Desktop --> Object folder --> DQM --> Dqm queue (see Figure 1)
+b). Right click on the just created "Dqm Queue" item --> Selection folder --> Node --> select the nodes where the DQM servers will run (see Figure 2). If you are want to do load balancing, you should have all of the involved nodes selected.
+c). Right click on the just created "node" item --> Selection folder --> Area --> select the area to monitor (see Figure 3)
+d). Left click on one of the just added areas, for example: Application area, you may see something like Figure 4. If your pannel on the right side is empty, don't worry, that means you haven't create any queue yet. We will create some together in the next section.
+
+3.2.2 Creating queues
+
+3.2.2.1 Creating a physical queue
+a). Select an area, for example, the production area, then right click on the right pannel; (see Figure 5) then select "Create".
+b). You should get a window like Figure 6. In this Window, you can specify the parameters for the queue. For now, all you need to do is to enter a name for the queue. You should have the following parameters for the queue.
+	Name: 'some_queue_name'
+	State: Stopped
+	Node: Specifying the node where the queue is located
+	Type: Physical
+	Maximum number of ... : 999
+
+Save the changes.
+c). Now you should have the just created queue shown on the right panel. Right click on the queue name and select "Start" from the drop down menu.
+OK, so far we have created and started a physical queue.
+
+3.2.2.2 Creating a logical queue
+Before we start, let's take a look at the defination of a logical queue.
+Quoted from the "DQM Manual"
+"A logical queue does not allow direct execution of a job.
+It enables the jobs submitted to be dynamically distributed across its associated physical queues in order to optimize the machine occupancy rate." For more information, please check the "DQM Manual"
+
+a). The same as creating a physical queue.
+b). Specifying the "Type" as "Generic" and save, but do not close the window.
+c). Selecting the "Attached queues" tab (see Figure 7)
+d). From the drop down list, select the node names that you need to balance load with and then, attach the physical queues from that node with the add button. 
+e). Save and close the window.
+
+3.3 Balancing load with DQM servers
+
+After all above steps, load balanceing amoung DQM servers on different Windows nodes becomes easy. You just submit jobs to the logical queue you have created. The local DQM server will automatically assign the jobs to the attached physical queues according to their load.
+You can fine tune the amount of load assigned to each physical queue by adjusting their parameters, such as "Max No. executions", "Priority", etc. For more details, please refer to the DQM Manual.
+
+3.3.1 Global availability
+However, all of the tasks, sessions and uprocs, which could be launched on remoted nodes, have to be stored locally to every load balancing node and under the idential directory structure. Otherwise, remote DQM servers won't be able to find them. 
+
+3.3.2 Accessing the job log of remote launched job
+One environment variable has to be defined before you can access remotely launched jobs' logs. 
+In %UXMGR%/uxsetenv.bat, add: 
+
+set DQM_COPY_LOG=Y
+
+In %UXEXE%/UNIVERSE.def and  %UXEXE%/[CompanyName].def add:
+
+set DQM_COPY_LOG=Y
+
+Then restart the $U Company.
+
+3.3.3 Management criteria: displaying the real launch location
+After the launcher submits a job to the DQM, the $U Company has no control over the job any more. The DQM server will select a physical queue (local or remote)to launche the job. The $U Company only knows that the job was submitted to a logical queue. Therefore, in the job monitor, it will show the job is launched locally to the logical queue, although the job may be run on the remote node. 
+It is possible to find out where the job is run from the job log. However, to check the job log of each uproc is not so efficient. Management criteria can be used to display the real physical queue and node name in the job monitor. 
+We will not explain detailly how it works in this artical (maybe in another tip doc?). Just play with it, you will find out.
+Here, we provide an example of how it can be done. You can always customize it to your own way. 
+
+Find this file u_ffcg42.txt in you $U Company root directory and modify it to the following.
+
+CRITERE1:NOM=PHY_QUEUE,Libelle=Physical queue,LG=200
+CRITERE2:NOM=NODE,Libelle=Node,LG=200
+
+Create a Uproc containing the following lines:
+
+%UXEXE%\uxset mgt name=PHY_QUEUE value=%DQM_QUEUE%
+%UXEXE%\uxset mgt name=NODE value=%S_NOEUD%
+set resexe=0
+
+The first two lines of this script will set the management criteria information for this uproc, then will be displayed in the job monitor.
+Trun on the management criteria in the job monitor; launch this Uproc to a remote physical queue; and check the result.
+
+
+3.4 The check list 
+
+3.4.1 Uproc, sessions and tasks copies everywhere
+3.4.2 The same directory structure 
+3.4.3 All DQM servers are using the TCP port
+3.4.4 Define the variable to receive remote job logs 
+3.4.5 Setup the management criteria information to display the remote queue and node name in the job monitor
+
+
+4. To disable/enable DQM on Windows
+
+DQM is independent of Dollar Universe Company. A Dollar Universe Company can work with or without DQM. If a DQM server is enabled, the Dollar Universe Company will submit its jobs to the DQM server instead of its interal job queue. 
+ 
+4.1  To disable DQM
+
+By default, if a DQM server is installed with a Dollar Universe Company, it will be started with and used by the Dollar Universe Company. To disable a DQM, 3 files are needed to be modified.
+
+a)  %UXMGR%\uxsetenv.bat 
+Find the following line: 
+set    UNIVERSE_DQM_'CompanyName'=Y 
+and change it to 
+set    UNIVERSE_DQM_'CompanyName'=N
+
+b)   %UXEXEC\UNIVERSE.def and %UXEXEC\'CompanyName'.def
+Find the following line: 
+UNIVERSE_DQM_'CompanyName' yes 
+and change it to    
+UNIVERSE_DQM_'CompanyName' no 
+After changing the 3 files, you need to shutdow the company and restart it. You will see that the DQM server will not be started any more.
+
+
+4.2  To enable DQM 
+
+The procedure is simliar to above, just to modify those 3 files. Change the negative answers to positive, for example "no" to "yes" or "N" to "Y". Then, restart the company.
+After you have a DQM server enabled, donot forget to create at least one physical queue and start it.
+
+
+Appendix: Protential issues with default Windows DQM configuration
+
+Still using the 3 Dollar Universe Companies we used above, 'CompanyName1', 'CompanyName2' and 'CompanyName3'. By default installation, you will have only one DQM service "_DQM_", since you cann't modify the service name during installation. After the installations of the 3 Dollar Universe Companies, there is only have one DQM service survive. Depending on the sequence that you installed the Dollar Universe Companies, the "_DQM_" service could link to (use) anyone of the 3 DQM binaries that came with the 3 Dollar Universe Companies.
+
+This issue could cause some very strange symptoms.    
+
+Symptom 1.  There are two companies started; and everything is working fine. Then, you stop one of the companies, the jobs of the other company suddently all aborted. 
+
+Symptom 2. You find a mix of jobs from  different companies are waiting to run in the same queue. 
+
+Symptom 3. You manually started the DQM server for a Dollar Universe Company, and find out that suddently all of the queues are disappeared.
+
+Symptom 4. You upgraded your Dollar Universe Companies, and find out that the DQM server is not updated
+
+Reason: 
+Since the two companies are sharing the same DQM, when you shutdwon one of them, the DQM server is also shutted down. Although you have installed DQM server for each Dollar Universe Company, there is only service registerd with Windows. That means only one of the DQM server can run.
+
+
+
+

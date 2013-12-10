@@ -1,0 +1,21 @@
+To tests the connection to a remote node please use the following procedure :
+If the IO Server of the Dollar Universe Node "du_node_1" is unreachable ("du_node_1" is linked to "node_1" hostname) try the command (1):
+telnet node_1 "Dollar Universe Company Name"_IO_X
+If the command (1) gives you a connection to the IO Server, the issue comes from the Dollar Universe configuration (uxsrsrv.sck, uxsrsrv.alias, node declaration.)
+
+If the command (1) does not give you any connection, the issues come from the network configuration.
+In this case you can try the following command (2):
+telnet "IP address of the node node_1" "Dollar Universe Company Name"_IO_X
+If the command (2) gives you a connection to the IO Server, and the command (1) doesn't, the issue comes from the hostname -> IP address translation.
+
+If the command (2) does not give you any connection, the issues come from the network configuration.
+In this case you can try the following command (3):
+telnet node_1 "IO_X port number of the Dollar Universe Company"
+If the command (3) gives you a connection to the IO Server, and the command (1),(2) don't, the issue comes from the port name -> Port number translation.
+
+If the command (3) does not give you any connection, the issues come from the network configuration.
+In this case you can try the following command (4):
+telnet "IP address of the node node_1" "IO_X port number of the Dollar Universe Company"
+If the command (4) gives you a connection to the IO Server, and the command (1),(2),(3) don't, the issue comes from the  port name -> Port number translationand the port name -> Port number translation.
+
+

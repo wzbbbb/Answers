@@ -1,0 +1,57 @@
+For example: 
+Dollar Universe Company : UNIV50 
+Dollar Universe Node    : earth
+Within the following directory
+C:\Documents and Settings\All Users\Start Menu\Programs\UNIV500
+
+====Shortcut name
+Graphic Job Monitor UNIV50
+
+====start in
+e:\univ50\exec
+
+====Target
+E:\UNIV50\exec\GraphicJobMonitor.exe -company UNIV50 -node earth -oper -create -sessionname * -uprocname * -mu * -multinode
+..................................................................
+..................................................................
+====Shortcut name
+Shut Down UNIV50
+
+====start in
+C:\WINNT
+
+====Target
+E:\UNIV50\mgr\uxshutdown.bat
+
+..................................................................
+..................................................................
+====Shortcut name
+Start Up UNIV50
+
+====start in
+E:\UNIV50\mgr
+
+====Target
+E:\univ50\mgr\uxstartup.bat
+
+..................................................................
+..................................................................
+====Shortcut name
+Uninstall UNIV50 & $U 5.0.0
+
+====start in
+"c:\program files\orsyp\universe\UNIV50"
+
+====Target
+"C:\Program Files\orsyp\universe\UNIV50\UNINSTALL.CMD"  e:\univ50\exec UNIV50 c:\program files\orsyp\universe\UNIV50\DeIsL1.isu e:\UNIV50\mgr
+
+..................................................................
+..................................................................
+====Shortcut name
+Univer$e UNIV50
+
+====start in
+e:\univ50\exec
+
+====Target
+E:\UNIV50\exec\Dollar_Universe500.exe -company UNIV50 -node earth -oper -l en -create

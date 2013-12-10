@@ -1,0 +1,39 @@
+Basicly, for Windows NT/2000, you will need 2 lines in your useralias.txt file.
+For example,  you have the following environment,
+Windows Domain: Win_domain
+Node name: NT1
+Dollar Universe company: DU_Company
+Windows User name: user1
+
+your useralias.txt file should contains the following 2 lines
+
+
+NT1              DU_companya            DU_Companya
+Win_domain       user1      		DU_Companya
+
+1. Make sure the company is not started 
+2. Create a user that "password never expires"  and "user cannot change password" (with the "Advanced User Management") 
+3. Load the $U Company environment
+4. Check the %UXEXE%\[CompanyName]ServInstall.bat and find the line for UniServUser -install  
+5. Run the command manually to install the user service
+For example,
+
+E:\QCL500\exec>UniServUser -install test support4 test
+Univer$e test installed.
+
+6. Edit the user service in the Windows Service Interface. You should see the "Display name": Univer$e [UserName]
+a) Make it "Automatic" startup
+b) Input the passwd for "Log On"
+
+
+##################################################################
+##################################################################
+##################################################################
+##################################################################
+
+Case study: to run a uproc to access a NT domain exchanger server
+
+1. create a user service with name "mail", with NT domain user access right, (NT domain username & password). For example, the NT Domain user is NTUser1, which defines the user service "mail"'s access right.
+2. To use this user service to launch a job within Dollar Universe, there has to be a $U user with the same name as the user service; then it has to be the user "mail"
+3. the $U user mail now can launch a job to access the exchange server. However, it can't launch a $U command, e.g. uxlst fla,  yet. Next add an entry to the  useralias.txt file.
+NTDomain   NTUser1	univa

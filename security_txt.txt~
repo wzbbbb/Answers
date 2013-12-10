@@ -1,0 +1,31 @@
+...........29007 Pass
+Reproduced on REFERA (SPRE0021D)
+Using user univa with the profile PROFADM
+Editted the security.txt file for the PROFADM profile to
+   AREA=X*
+   -
+   DISPLAY
+
+The Motif interface still shows exp area.
+The command line:
+# ./uxlst ctl exp
+ Command : uxlst ctl exp status=* inf
+
+api_cmd_SetEnv Initialization error
+Access denied - insufficient rights
+command in error!!
+
+And got the following error message in the universe.log file.
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+<< 2004-06-09 02:30:34 0015141/uxlst           /u_io_callsrv_gen    /000000000 - error connecting IO server on host [localhost] : Errno syserror 111 : Connection refused
+...
+<< 2004-06-09 18:38:34 0021174/cuxxmuproc      /u_io_callsrv_gen    /000000000 - error connecting IO server on host [localhost] : Errno syserror 111 : Connection refused
+<< 2004-06-09 18:39:16 0021190/cuxxmctrl       /u_io_callsrv_gen    /000000000 - error connecting IO server on host [localhost] : Errno syserror 111 : Connection refused
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+Corrected in  AVALID.
+With Motif interface, the EXP area could not be displayed.
+
+
+The security.txt file used is in the /etc 
+/etc/UNIVERSE_SECURITY_AVALID

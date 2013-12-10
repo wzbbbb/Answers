@@ -1,0 +1,32 @@
+-rw-r--r--    1 univa    users        7861 May 28 14:07 A.ext
+uid=700(univa) gid=100(users) groups=100(users),500(da)
+
+be careful with the pending and ahead spaces in the field.
+
+When set A.ext, SIZE =10 ; SIZE<10
+size : works
+
+SIZE 	=10 		EVENT WAIT
+SIZE 	=7861 		COMPLETED	
+SIZE 	>7861 		EVENT WAIT
+SIZE 	<7861 		EVENT WAIT
+
+DATCREA <06/28/2004 	COMPLETED.	
+DATCREA =06/28/2004 	EVENT WAIT.	
+DATCREA >06/28/2004 	EVENT WAIT.	
+
+#######################################################
+The test in between is wrong. The DATMOD should related to the modification date. But it does not work anyway. as long as you put ">", the job will run, even it is empty "> ".
+DATMOD =644		EVENT WAIT
+DATMOD #644		COMPLETED
+DATMOD #666		COMPLETED
+DATMOD #0		COMPLETED
+DATMOD =0		EVENT WAIT
+DATMOD >0		COMPLETED
+DATMOD =0644		EVENT WAIT
+
+#######################################################
+
+GROUP  =100		COMPLETED
+GROUP  =222		EVENT WAIT
+GROUP  #222		COMPLETED

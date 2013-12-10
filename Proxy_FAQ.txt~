@@ -1,0 +1,8 @@
+The structure of the FAQ for proxy
+1. Why Proxy? The main purpose
+2. Implementation requirements (patch levels)
+3. Command introduction: lstproxy, setproxy, delproxy, getproxy and loadproxy_io
+4. Case studies.
+4.1 The same user for all Windows client , eg. univa
+4.2 Using "SAME" for all Unix users.
+4.3 WCO

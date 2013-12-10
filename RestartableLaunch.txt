@@ -1,0 +1,11 @@
+
+1. creating a session that includes an error path; (see the attached screenshot: Session_with_error_path.bmp)
+In the screenshot:
+Uproc A is the one that needs to be "restartable",
+Uproc AA is a duplication of A. When A is failed, AA will be tried.
+The Uprocs HEADER and TAIL are just used for demonstration purpose.
+
+2. scheduling a task for above session;
+
+3. defining a provoked task for AA in the above session. (See the screenshot: Provoked_task.bmp) The interval between the two launches can be adjusted with the launch window of the provoked task. If the relaunch of the job should be 2 hours after the failur of the first launch, and the first lanuch is at 0 am, the launch window of the provoked task could start at 2am.
+

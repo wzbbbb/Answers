@@ -1,0 +1,113 @@
+To install on CentOS 5.7
+
+sudo yum install python-setuptools python-devel gcc -y
+sudo easy_install Mercurial
+
+To create repository : -
+
+hg init
+
+add all these source files to it. That.s easy, too: just type   -
+
+hg add
+
+commit with message --
+hg com -m "Change crunch to smoosh"   
+hg commit
+
+To see a history of changes -
+ hg log
+
+This will immediately revert your directory back to the way it was at the time of the last commit. -
+ hg revert
+
+Revert all files back to their original state. -
+ hg revert --all
+
+Give you a list of files that have changed.-
+hg status
+M. means .Modified..the file has been changed. .
+!. means missing.the file is supposed to be there, but it disappeared. 
+?. means unknown
+R. means .Removed. so the next time we commit in Mercurial this file will be removed. 
+A. means .Added..
+
+tells you exactly what.s changed with a file since the last commit. -
+hg diff 
+
+can be used to print any old version of a file. -
+hg diff -r 0:1 a.txt
+
+To remove a file to hg , no revert -
+hg remove favicon.ico
+
+can be used to print any old version of a file. -
+hg cat 
+hg cat -r 0 a.txt
+
+hg update -
+hg update is actually modifying every file in the directory that changed to go backwards and forwards through time. If a file was added or removed, it adds or removes it. Without any arguments, hg update goes to the latest version.
+
+hg update -r 0
+hg up -r 1
+
+.................................
+setting up for a team -
+C:\> mkdir CentralRepo
+
+C:\> cd CentralRepo
+
+C:\CentralRepo> hg init
+
+C:\CentralRepo> hg serve
+
+By default it will be served on port 8000.
+
+http://joel.example.com:8000/ 
+
+hg clone http://joel.example.com:8000/ recipes
+To copy "recipes" directory from the central server
+
+cd recipes
+
+To push changes to the central server
+hg push
+
+.hg\hgrc on the server -
+[web]
+push_ssl=False
+allow_push=*
+
+
+hg outgoing  -
+ will show a list of changes that are waiting to be sent up to the central repository. These are the changes that hg push would send, 
+
+
+get all those changes that are in the central repository that I don.t have yet, so I can merge them. -
+hg incoming    # to list the difference to bring back from central
+
+hg pull        # to get the difference from central
+
+hg merge       # to merge different verions, when the changes are at different part of the file
+
+hg commit -m "merge"
+ hg com -m "removed = True" -u zwa
+
+hg parent     # to see what's the current version you working on
+After a hg pull, this may not be the latest version any more. Use hg up to update to the latest version.
+
+
+When you.re working on a team, your workflow is going to look a lot like this: -
+
+If you haven't done so in a while, get the latest version that everyone else is working off of:
+hg pull
+hg up
+Make some changes
+Commit them (locally)
+Repeat steps 2-3 until you.ve got some nice code that you.re willing to inflict on everyone else
+When you're ready to share:
+hg pull to get everyone else's changes (if there are any)
+hg merge to merge them into yours
+test! to make sure the merge didn.t screw anything up
+hg commit (the merge)
+hg push

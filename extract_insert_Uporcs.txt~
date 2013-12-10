@@ -1,0 +1,7 @@
+The commands "uxins" and "uxext" can be used to transfer Uprocs from one area to another. Please note that transfering from area X or S to area A I is not allowed. That means Uprocs transfering can only happen in one direction A->I->S->X.
+
+For example, to transfer Uprocs from A to X:
+# $UXEXE/uxext upr app  upr=* output=./temp/upr_app.ext
+# $UXEXE/uxins upr exp input=./temp/upr_app.ext
+
+Uprocs can not be transfered directly to a remote node through command lines. You have to transfer the extracted file (in binary mode) to the remote node and run the command there to insert the Uprocs.
