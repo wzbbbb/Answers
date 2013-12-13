@@ -70,6 +70,7 @@ root@cookbook:/etc/puppet# git commit -m "initial commit"
  create mode 100644 manifests/utils.pp
  ...
 
+git commit -a # to commit everything
 env GIT_SSL_NO_VERIFY=true  git push -u origin master
 .................................
 Here’s a notify resource that depends on a file resource:
