@@ -1880,3 +1880,58 @@ To access http in bash
 exec 5<> /dev/tcp/myhost.com/80
 cat <&5 &
 printf "GET /getuser/Default.aspx?username=b772643 HTTP/1.0\r\n\r\n" >&5
+############################################
+:set syntax=markdown
+Add to _vimrc or .vimrc
+au BufRead,BufNewFile *.md set filetype=text
+
+
+markdown language:
+
+# h1 Heading
+## h2 Heading
+### h3 Heading
+#### h4 Heading
+##### h5 Heading
+###### h6 Heading
+
+adding line breaks in between paragraphs
+
+___: three consecutive underscores
+---: three consecutive dashes
+***: three consecutive asterisks
+
+
+**rendered as bold text**
+__bold__
+
+_rendered as italicized text_
+or *italicized*
+
+***bold italicized***
+___bold italicized___
+~~Strike through this text.~~
+
+Add `>` before any text you want to quote. 
+
+* valid bullet
+- valid bullet
++ valid bullet
+
+1. sdfdsf
+2. sdfds
+3. iosdf
+
+Wrap inline snippets of code with `.
+
+Or indent several lines of code by at least four spaces, as in:
+Use "fences" ``` to block in multiple lines of code.
+
+
+Basic link:
+[Assemble](http://assemble.io)
+[Upstage](https://github.com/upstage/ "Visit Upstage!")
+
+image:
+![Minion](http://octodex.github.com/images/minion.png)
+

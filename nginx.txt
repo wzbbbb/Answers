@@ -86,7 +86,7 @@ If use "*", nginx will not complain even if no file exists.
 To check config:  
 ./nginx .t    +
 
-alex@example.com sbin]$ ./nginx .t .c /home/alex/test.conf +
+alex@example.com sbin]$ ./nginx -t .c /home/alex/test.conf +
 
 This command will parse /home/alex/test.confand make sure it is a valid Nginx
 configuration file.
@@ -102,10 +102,11 @@ Restart the nginx:
 # /usr/local/nginx/sbin/nginx -s reload
 
 nginx .s stop Stops the daemon immediately (using the TERM signal)
-nginx .s quit Stops the daemon gracefully (using the QUIT signal)  +
-nginx .s reopen Reopens the log files  +
-nginx .s reload Reloads the configuration
-nginx -v to check built option switches +
+nginx -s quit Stops the daemon gracefully (using the QUIT signal)  +
+nginx -s reopen Reopens the log files  +
+nginx -s reload Reloads the configuration
+nginx -V to check built option switches +
+nginx -v ,version info
 
 killall nginx
 .................................
@@ -1240,3 +1241,18 @@ http {
          }
     }
 }
+SD server config:
+
+    server {
+        listen       80;
+        server_name  localhost;
+        client_max_body_size 100M;
+        #charset koi8-r;
+        #access_log  logs/host.access.log  main;
+         location / { try_files $uri @app; }
+         location /download/ { root /home/SD/;} # to provide binary download
+         location @app {
+             include uwsgi_params;
+             uwsgi_pass unix:/tmp/uwsgi.sock;
+         }
+
