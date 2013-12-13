@@ -1,0 +1,681 @@
+fpm : package builder
+http://www.tuxz.net/blog/archives/2012/09/08/how_to_easily_build_native_packages_of_everything/
+https://github.com/jordansissel/fpm
+
+mrepo(yam)
+reprepo
+pulp
+.................................
+package { "vim": 
+	ensure => present, 
+} 
+
+type { title: 
+	attribute => value, 
+} 
+
+save as test.pp, then:
+puppet apply test.pp
+
+...........
+factor
+......................
+Installing on Red Hat Enterprise Linux and Fedora
+# yum install ruby ruby-libs ruby-shadow
+
+Next, to get the latest releases of Puppet, you will need to add the EPEL repository (see sidebar) to your host and then install packages from that repository. You can add the EPEL repository by adding the epel-releaseRPM (.rpm package manager). 
+# rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm 
+
+On the master,
+# yum install puppet puppet-server facter
+On the agent,
+# yum install puppet facter 
+
+If puppet is not avaialbe in yum, run the following to add the puppet repository for yum, then run yum install
+
+http://docs.puppetlabs.com/guides/puppetlabs_package_repositories.html
+
+CentOS5:
+i386
+$ sudo rpm -ivh http://yum.puppetlabs.com/el/5/products/i386/puppetlabs-release-5-7.noarch.rpm
+
+x86_64
+$ sudo rpm -ivh http://yum.puppetlabs.com/el/5/products/x86_64/puppetlabs-release-5-7.noarch.rpm
+
+Enterprise Linux 6:
+i386
+$ sudo rpm -ivh http://yum.puppetlabs.com/el/6/products/i386/puppetlabs-release-6-7.noarch.rpm
+
+x86_64
+$ sudo rpm -ivh http://yum.puppetlabs.com/el/6/products/x86_64/puppetlabs-release-6-7.noarch.rpm
+.................................
+config file
+/etc/puppetlabs/puppet/puppet.conf
+
+If not exist:
+# puppetmasterd --genconfig > puppet.conf 
+.................................
+github
+git config --global user.name 'zwa'
+git config --global user.email 'zwa@orsyp.com'
+
+To add /etc/puppetlabs to git repository.
+root@cookbook:/etc/puppet# git init
+Initialized empty Git repository in /etc/puppet/.git/
+root@cookbook:/etc/puppet# git add manifests/ modules/
+root@cookbook:/etc/puppet# git commit -m "initial commit"
+[master (root-commit) c7a24cf] initial commit
+ 59 files changed, 1790 insertions(+), 0 deletions(-)
+ create mode 100644 manifests/site.pp
+ create mode 100644 manifests/utils.pp
+ ...
+
+env GIT_SSL_NO_VERIFY=true  git push -u origin master
+.................................
+Here’s a notify resource that depends on a file resource:
+
+    file {'/tmp/test1':
+      ensure  => present,
+      content => "Hi.",
+    }
+
+    notify {'/tmp/test1 has already been synced.':
+      require => File['/tmp/test1'],
+    }
+
+.................................
+    file { '/etc/ssh/sshd_config':
+      ensure => file,
+      mode   => 600,
+      source => 'puppet:///modules/ssh/sshd_config',
+    }
+    service { 'sshd':
+      ensure    => running,
+      enable    => true,
+      subscribe => File['/etc/ssh/sshd_config'],    
+    }
+
+In this example, the sshd service will be restarted if Puppet has to edit its
+config file.
+This "source" 'puppet:///modules/ssh/sshd_config' is a local file.
+.................................
+creat a file:
+
+    # /root/examples/file-1.pp
+
+    file {'testfile':
+      path    => '/tmp/testfile',
+      ensure  => present,
+      mode    => 0640,
+      content => "I'm a test file.",
+    }
+.................................
+
+    # /root/examples/file-2.pp
+
+    file {'/tmp/test1':
+      ensure  => file,
+      content => "Hi.\n",
+    }
+
+    file {'/tmp/test2':
+      ensure => directory,
+      mode   => 0644,
+    }
+
+    file {'/tmp/test3':
+      ensure => link,
+      target => '/tmp/test1',
+    }
+
+    user {'katie':
+      ensure => absent,
+    }
+
+    notify {"I'm notifying you.":}
+    notify {"So am I!":}
+
+.................................
+puppet resource service
+
+puppet describe -l — List all of the resource types available on the system.
+puppet describe -s <TYPE> — Print short information about a type, without describing every attribute
+puppet describe <TYPE> — Print long information, similar to what appears in the type reference.
+
+user  puppet@example.com  
+password  learningpuppet 
+https://<IP ADDRESS>;  
+facter ipaddress 
+
+$::ipaddress
+
+puppet resource user root
+
+# puppet resource user katie ensure=present shell="/bin/zsh" home="/home/katie" managehome=true
+
+notice: /User[katie]/ensure: created
+
+user { 'katie':
+  ensure => 'present',
+  home   => '/home/katie',
+  shell  => '/bin/zsh'
+}
+.................................  ensure
+As a normal file (ensure => file)
+As a directory (ensure => directory)
+As a symlink (ensure => link)
+As any of the above (ensure => present)
+As nothing (ensure => absent)
+
+.................................before, require, notify, and subscribe metaparameters.
+file {'/tmp/test1':
+      ensure  => present,
+      content => "Hi.",
+    }
+
+    notify {'/tmp/test1 has already been synced.':
+      require => File['/tmp/test1'],
+    }
+
+Type['title']
+File['/tmp/test1'] is a resource reference. 
+
+......................Before and Require
+
+"before" and "require" make simple dependency relationships, where one resource must be synced before another. "before" is used in the earlier resource, and lists resources that depend on it; "require" is used in the later resource, and lists the resources that it depends on.
+
+These two metaparameters are just different ways of writing the same relationship — our example above could just as easily be written like this:
+
+    file {'/tmp/test1':
+      ensure  => present,
+      content => "Hi.",
+      before  => Notify['/tmp/test1 has already been synced.'],
+    }
+
+    notify {'/tmp/test1 has already been synced.':}
+
+......................Notify and Subscribe
+A few resource types (service, exec, and mount) can be “refreshed” — that is, told to react to changes in their environment.
+
+The "notify" and "subscribe" metaparameters make dependency relationships the way before and require do, but they also make notification relationships. Not only will the earlier resource in the pair get synced first, but if Puppet makes any changes to that resource, it will send a refresh event to the later resource, which will react accordingly.
+
+    file { '/etc/ssh/sshd_config':
+      ensure => file,
+      mode   => 600,
+      source => 'puppet:///modules/ssh/sshd_config',
+    }
+    service { 'sshd':
+      ensure    => running,
+      enable    => true,
+      subscribe => File['/etc/ssh/sshd_config'],
+    }
+
+In this example, the sshd service will be restarted if Puppet has to edit its config file.
+......................
+    file {'/tmp/test1':
+      ensure  => present,
+      content => "Hi.",
+    }
+
+    notify {'after':
+      message => '/tmp/test1 has already been synced.',
+    }
+
+    File['/tmp/test1'] -> Notify['after']
+
+Is the same as:
+
+    file {'/tmp/test1':
+      ensure  => present,
+      content => "Hi.",
+    }
+    ->
+    notify {'after':
+      message => '/tmp/test1 has already been synced.',
+    }
+.................................
+.................................
+common service config:
+
+    # /root/examples/break_ssh.pp
+    file { '/etc/ssh/sshd_config':
+      ensure => file,
+      mode   => 600,
+      source => '/root/examples/sshd_config',
+    }
+    service { 'sshd':
+      ensure     => running,
+      enable     => true,
+      subscribe  => File['/etc/ssh/sshd_config'],
+    }
+
+.................................
+.................................
+common package config:
+
+    package { 'openssh-server':
+      ensure => present,
+      before => File['/etc/ssh/sshd_config'],
+    }
+    file { '/etc/ssh/sshd_config':
+      ensure => file,
+      mode   => 600,
+      source => '/root/examples/sshd_config',
+    }
+    service { 'sshd':
+      ensure     => running,
+      enable     => true,
+      subscribe  => File['/etc/ssh/sshd_config'],
+    }
+
+...................... variable
+
+Fully qualified variables look like $scope::variable. Top scope variables are
+the same, but their scope is nameless. (For example: $::top_scope_variable.)
+
+    $longthing = "Imagine I have something really long in here. Like an SSH
+key, let's say."
+
+    file {'authorized_keys':
+      path    => '/root/.ssh/authorized_keys',
+      content => $longthing,
+    }
+
+
+    file {'motd':
+      ensure  => file,
+      path    => '/etc/motd',
+      mode    => 0644,
+      content => "This Learning Puppet VM's IP address is ${ipaddress}. It
+thinks its
+    hostname is ${fqdn}, but you might not be able to reach it there
+    from your host machine. It is running ${operatingsystem}
+${operatingsystemrelease} and
+    Puppet ${puppetversion}.
+    Web console login:
+      URL: https://${ipaddress_eth0}
+      User: puppet@example.com
+      Password: learningpuppet
+    ",
+    }
+
+...................... if
+if condition {
+  block of code
+}
+elsif condition {
+  block of code
+}
+else {
+  block of code
+}
+
+    if str2bool("$is_virtual") {
+      service {'ntpd':
+        ensure => stopped,
+        enable => false,
+      }
+    }
+    else {
+      service { 'ntpd':
+        name       => 'ntpd',
+        ensure     => running,
+        enable     => true,
+        hasrestart => true,
+        require => Package['ntp'],
+      }
+    }
+
+...................... case
+    case $operatingsystem {
+      centos: { $apache = "httpd" }
+      # Note that these matches are case-insensitive.
+      redhat: { $apache = "httpd" }
+      debian: { $apache = "apache2" }
+      ubuntu: { $apache = "apache2" }
+      default: { fail("Unrecognized operating system for webserver") }
+    }
+    package {'apache':
+      name   => $apache,
+      ensure => latest,
+    }
+
+or
+
+    case $operatingsystem {
+      centos, redhat: { $apache = "httpd" }
+      debian, ubuntu: { $apache = "apache2" }
+      default: { fail("Unrecognized operating system for webserver") }
+    }
+
+    case $ipaddress_eth0 {
+      /^127[\d.]+$/: {
+        notify {'misconfig':
+          message => "Possible network misconfiguration: IP address of $0",
+        }
+      }
+    }
+String matching is case-insensitive, like the == comparison operator. Regular
+expressions are denoted with the slash-quoting used by Perl and Ruby; they’re
+case-sensitive by default, but you can use the (?i) and (?-i) switches to turn
+case-insensitivity on and off inside the pattern. Regex matches also assign
+captured subpatterns to $1, $2, etc. inside the associated code block, with $0
+containing the whole matching string. See the regular expressions section of
+the Puppet reference manual’s data types page for more details.
+
+......................Selectors
+
+    $apache = $operatingsystem ? {
+      centos                => 'httpd',
+      redhat                => 'httpd',
+      /(?i)(ubuntu|debian)/ => 'apache2',
+      default               => undef,
+    }
+...................... classes
+Classes are named blocks of Puppet code, which can be created in one place and
+invoked elsewhere.
+
+Defining a class makes it available by name, but doesn’t automatically
+evaluate the code inside it.
+Declaring a class evaluates the code in the class, and applies all of its
+resources.
+
+    class ntp {
+      case $operatingsystem {
+        centos, redhat: {
+          $service_name = 'ntpd'
+          $conf_file    = 'ntp.conf.el'
+        }
+        debian, ubuntu: {
+          $service_name = 'ntp'
+          $conf_file    = 'ntp.conf.debian'
+        }
+      }
+
+      package { 'ntp':
+        ensure => installed,
+      }
+      file { 'ntp.conf':
+        path    => '/etc/ntp.conf',
+        ensure  => file,
+        require => Package['ntp'],
+        source  => "/root/examples/answers/${conf_file}"       ----
+      }
+      service { 'ntp':
+        name      => $service_name,
+        ensure    => running,
+        enable    => true,
+        subscribe => File['ntp.conf'],
+      }
+    }
+
+    include ntp
+
+.....................Modules.
+
+The Modulepath is defined in: /etc/puppetlabs/puppet/puppet.conf
+
+
+[main]
+    vardir = /var/opt/lib/pe-puppet
+    logdir = /var/log/pe-puppet
+    rundir = /var/run/pe-puppet
+    modulepath =
+/etc/puppetlabs/puppet/modules:/opt/puppet/share/puppet/modules
+    user = pe-puppet
+    group = pe-puppet
+    archive_files = true
+    archive_file_server = learn.localdomain
+
+[master]
+    ... etc.
+
+
+You can also get the value of the modulepath by running puppet master
+--configprint modulepath. The --configprint option lets you get the value of
+any Puppet setting; by using the master subcommand, we’re making sure we get
+the value the puppet master will use.
+
+
+...........Module Structure -
+
+A module is a directory. 
+The module’s name must be the name of the directory.
+It contains a manifests directory, which can contain any number of .pp files.
+The manifests directory should always contain an init.pp file. It contains a
+single class definition.
+
+This file must contain a single class definition. The class’s name must be the
+same as the module’s name.
+
+put it in the site.pp
+include ntp    ----
+
+Then:
+ puppet agent --test   ----
+
+........... Resource-Like Class Declarations --
+class {'ntp':}
+can be declared only once
+
+we’ll use the special puppet:/// URL format to tell Puppet where the files
+are: could be a local directory under "modules"
+
+    # ...
+      file { 'ntp.conf':
+        path    => '/etc/ntp.conf',
+        ensure  => file,
+        require => Package['ntp'],
+        source  => "puppet:///modules/ntp/${conf_file}",
+      }
+    }
+
+
+...................... The Puppet Module Subcommand
+
+sudo puppet module install puppetlabs-mysql   ----
+
+sudo puppet module list  ----
+
+...................... template 
+
+The template function expects file paths to be in a specific format:
+
+<MODULE NAME>/<FILENAME INSIDE TEMPLATES DIRECTORY>
+
+    file {'/etc/foo.conf':
+      ensure  => file,
+      require => Package['foo'],
+      content => template('foo/foo.conf.erb'),
+    }
+
+..........Variables in Templates  ---
+
+Facts, global variables, and local variables from the current scope are
+available to a template as Ruby instance variables — instead of Puppet’s $
+prefix, they have an @ prefix. (e.g. @fqdn, @memoryfree, @operatingsystem,
+etc.)
+
+Variables from other scopes can be accessed with the scope.lookupvar method,
+which takes a long variable name without the $ prefix. (For example,
+scope.lookupvar('apache::user').)
+
+inbedded ruby code
+...........Non-Printing Tags ----
+<% tag containing Ruby code %>
+
+
+........... Printing an Expression ----
+
+    <%= sectionheader %>
+      environment = <%= gitrevision[0,5] %>
+
+........... Comments ----
+ <%# This comment will be ignored. %>
+
+
+...........Suppressing Line Breaks and Leading Space ----
+    <%- document += thisline -%>
+
+    # /etc/puppetlabs/puppet/modules/ntp/manifests/init.pp
+
+    class ntp {
+      case $operatingsystem {
+        centos, redhat: {
+          $service_name    = 'ntpd'
+          $conf_file   = 'ntp.conf.el'
+          $default_servers = [ "0.centos.pool.ntp.org",
+                               "1.centos.pool.ntp.org",
+                               "2.centos.pool.ntp.org", ]
+        }
+        debian, ubuntu: {
+          $service_name    = 'ntp'
+          $conf_file   = 'ntp.conf.debian'
+          $default_servers = [ "0.debian.pool.ntp.org iburst",
+                               "1.debian.pool.ntp.org iburst",
+                               "2.debian.pool.ntp.org iburst",
+                               "3.debian.pool.ntp.org iburst", ]
+        }
+      }
+
+      $servers_real = $default_servers
+
+      package { 'ntp':
+        ensure => installed,
+      }
+
+      service { 'ntp':
+        name      => $service_name,
+        ensure    => running,
+        enable    => true,
+        subscribe => File['ntp.conf'],
+      }
+
+      file { 'ntp.conf':
+        path    => '/etc/ntp.conf',
+        ensure  => file,
+        require => Package['ntp'],
+        content => template("ntp/${conf_file}.erb"),
+      }
+    }
+
+
+The template:
+    <%# /etc/puppetlabs/puppet/modules/ntp/templates/ntp %>
+
+    # Managed by Class['ntp']
+    <% @servers_real.each do |this_server| -%>
+    server <%= this_server %>
+    <% end -%>
+
+    # ...
+
+Using a non-printing Ruby tag to start a loop. We reference the $servers_real
+Puppet variable by the name @servers_real, then call Ruby’s each method on it.
+Everything between do |server| -%> and the <% end -%> tag will be repeated for
+each item in the $servers_real array, with the value of that array item being
+assigned to the temporary this_server variable.
+Within the loop, we print the literal word server, followed by the value of
+the current array item.
+This snippet will produce something like the following:
+
+# Managed by Class['ntp']
+server 0.centos.pool.ntp.org
+server 1.centos.pool.ntp.org
+server 2.centos.pool.ntp.org
+
+.................................
+
+    <% if @is_virtual == "true" -%>
+    # Keep ntpd from panicking in the event of a large clock skew
+    # when a VM guest is suspended and resumed.
+    tinker panic 0
+
+    <% end -%>
+
+
+    <% if @is_virtual == "false" -%>
+    # Undisciplined Local Clock. This is a fake driver intended for backup
+    # and when no outside source of synchronized time is available.
+    server 127.127.1.0 # local clock
+    fudge 127.127.1.0 stratum 10
+
+    <% end -%>
+
+
+.................................
+for puppet test run or  dry-run use : --noop
+puppet apply prepack.pp --noop
+
+.................................
+  package {'nfs-utils':
+    ensure => '1.2.2-7.el6',
+    notify => Service ['rpcgssd'],
+    require => Exec ['downgrade-nfs-utils'], 
+	}
+  exec {'downgrade-nfs-utils': 
+    command => 'yum -y downgrade nfs-utils-1.2.2-7.el6', 
+    path    => ['/sbin', '/bin', '/usr/sbin', '/usr/bin'], 
+    unless  => 'rpm -qa | grep nfs-utils-1.2.2-7', 
+  }
+                      
+................................. install rpm from controlled source
+http://silviud.blogspot.ca/2012/10/puppet-install-rpms-via-http-sources.html
+
+rpm -ivh http://example.com/package.rpm
+
+class examplerpm ( $src ) {
+
+  package { 'package':
+     provider => 'rpm',
+     ensure => installed,
+     #source => "${examplerpm::rpm}"
+     source => "${examplerpm::src}"
+ }
+}
+
+class { 'examplerpm':
+  src => 'https://example.com/package.rpm',
+}
+
+puppet apply --debug --no-daemonize test.pp
+
+puppet help module
+
+puppet module uninstall puppetlabs/nginx # not good
+
+puppet module install jfryman/nginx
+
+############################################
+To build GW with puppet:
+puppet module install jfryman/nginx
+
+save this as nginx.pp
+.................................
+class { 'nginx': }
+nginx::resource::upstream { 'proxy':
+     ensure  => present,
+     members => [ 'casplda02:443', ],
+}
+nginx::resource::vhost { "$::ipaddress":
+    ensure => present,
+    proxy  => 'https://proxy',
+}
+.................................
+then, run:
+puppet apply nginx.pp
+
+curl -s 192.168.115.41/download/gw5.sh|bash
+
+# cat gw5.sh
+
+#!/bin/bash
+yum -y -q install ruby ruby-libs ruby-shadow
+rpm -ivh
+http://yum.puppetlabs.com/el/5/products/i386/puppetlabs-release-5-7.noarch.rpm
+yum -y -q install puppet facter
+puppet module install jfryman/nginx
+curl -s -O 192.168.115.41/download/nginx.pp
+puppet apply nginx.pp
+/sbin/service iptables stop
+
