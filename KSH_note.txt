@@ -1934,4 +1934,16 @@ Basic link:
 
 image:
 ![Minion](http://octodex.github.com/images/minion.png)
+############################################
+change hostname on redhat
+update in /etc/sysconfig/network
+and 
+hostname NEWNAME
+############################################
+To install java on centos
+yum search java | grep 'java-'
+yum install java-1.7.0-openjdk.x86_64
+
+To install directly a file with path
+yum install /lib/ld-linux.so.2
 

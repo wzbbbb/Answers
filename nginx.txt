@@ -31,7 +31,7 @@ For some configuration, to start nginx:
 /usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
 
 To start uwsgi
-uwsgi -s /tmp/uwsgi.sock --module hello --callable app
+uwsgi -s /tmp/uwsgi.sock --module hello --callable app &; chmod 777 /tmp/uwsgi.sock
 
 Make sure the /tmp/uwsgi.sock is accessible to nginx 
 .................................

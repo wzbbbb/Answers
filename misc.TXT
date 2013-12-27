@@ -926,6 +926,15 @@ $UXEXE/uxrazfic u_fecd60 X
 $UXEXE/uxrazfic u_fppf60 X
 $UXEXE/uxrazfic u_fmpf60 X
 
+%UXEXE%\uxrazfic u_fmph60 X
+%UXEXE%\uxrazfic u_fmcx60 X
+%UXEXE%\uxrazfic u_fmfu60 X
+%UXEXE%\uxrazfic u_fmsb60 X
+%UXEXE%\uxrazfic u_fmsp60 X
+%UXEXE%\uxrazfic u_fmtp60 X
+%UXEXE%\uxrazfic u_fmhs60 X
+%UXEXE%\uxrazfic u_fmpi60 X
+
 %UXEXE%\uxrazfic u_fmcm60 X
 %UXEXE%\uxrazfic u_fmcx60 X
 %UXEXE%\uxrazfic u_fmer60 X
@@ -2388,6 +2397,9 @@ They may have the following error:
 
 [root@lxx0095 exec]# ./UNIVERSE EN
 ./cuxxm: error while loading shared libraries: libXaw.so.7: wrong ELF class: ELFCLASS64
+
+one compatibility package to install
+yum install compat-glibc.x86_64
 #######################################################
 #######################################################
 For Windows GCO, if the registry for each profile are removed. They will be recreated automatically when restarting the GCO.
