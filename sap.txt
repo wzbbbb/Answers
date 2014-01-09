@@ -1143,7 +1143,7 @@ http://help.sap.com/saphelp_nw73/helpdata/en/f1/1cc79e845a4671b32d5fc43a71a33f/c
 From SAP manager 441, the variable is supported.
 UXMAXFD = 4096
 #################################
-To increase SAP manager memory on AIX, in uxstartjbs.ksh 
+To increase SAP manager memory on AIX, in uxstartjcs.ksh 
 # ------------------------------------------------------------------
 # SAP Job Control Server start
 # ------------------------------------------------------------------

@@ -6894,3 +6894,19 @@ To access associated file list:
 cat $S_DIR_UPROC/tt.txt
 #################################
 In $U 6, ORA and SAP license are in u_fali01.txt in $U, not in UVMS.
+#################################
+For this error, during upgrade:
+The temporary IO server must be reachable inorder to use the upgrade wizard
+
+1. stop $U 6
+bin/unistop
+
+2. Run this to remove the old $U node info (including IP),stored in VUMS
+./unims -rollback5 -host 192.168.114.133
+
+3. Reload env
+. ./unienv.ksh
+
+4. Restart $U 6
+
+

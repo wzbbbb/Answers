@@ -1235,6 +1235,7 @@ http {
          location /SDC/ { #still need to add the header check
                 proxy_pass http://sd_clusters;
                 proxy_set_header User-Agent SD_TRAFFIC;
+				proxy_set_header Customer-Id 88989;
          }
 
             }
