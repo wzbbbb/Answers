@@ -1947,3 +1947,66 @@ yum install java-1.7.0-openjdk.x86_64
 To install directly a file with path
 yum install /lib/ld-linux.so.2
 
+.................................
+Installing RHEL EPEL Repo on Centos 5.x or 6.x
+
+Install the extra repositories
+
+Centos 5.x
+
+wget http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
+wget http://rpms.famillecollet.com/enterprise/remi-release-5.rpm
+sudo rpm -Uvh remi-release-5*.rpm epel-release-5*.rpm
+
+Centos 6.x
+
+wget http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm
+wget http://rpms.famillecollet.com/enterprise/remi-release-6.rpm
+sudo rpm -Uvh remi-release-6*.rpm epel-release-6*.rpm
+
+Once installed you should see some additional repo definitions under the
+/etc/yum.repos.d directory.
+
+$ ls -1 /etc/yum.repos.d/epel* /etc/yum.repos.d/remi.repo
+/etc/yum.repos.d/epel.repo
+/etc/yum.repos.d/epel-testing.repo
+/etc/yum.repos.d/remi.repo
+
+
+...........Enable the remi repository
+sudo vim /etc/yum.repos.d/remi.repo
+
+Edit the [remi] portion of the file so that the enabled option is set to 1.
+This will enable the remi repository.
+
+name=Les RPM de remi pour Enterprise Linux $releasever - $basearch
+#baseurl=http://rpms.famillecollet.com/enterprise/$releasever/remi/$basearch/
+mirrorlist=http://rpms.famillecollet.com/enterprise/$releasever/remi/mirror
+enabled=1
+gpgcheck=1
+gpgkey=file:///etc/pki/rpm-gpg/RPM-GPG-KEY-remi
+failovermethod=priority
+#################################
+To install locate:
+yum install mlocate
+Then: 
+updatedb
+#################################
+logrotate
+default config, defined frequency etc., can be defined specificly for each log in /etc/logrotate.d/
+/etc/logrotate.conf
+
+A typical file in this directory is this one for Apache (
+/etc/logrotate.d/httpd ):
+
+/var/log/httpd/*log {
+    missingok
+    monthly
+    notifempty
+    sharedscripts
+    postrotate
+        /sbin/service httpd reload > /dev/null 2> /dev/null || true
+    endscript
+}
+
+Just add a file to /etc/logrotate.d/

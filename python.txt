@@ -1511,6 +1511,19 @@ for line in f:
 ............................................
 Regular expression
 
+To compile regular expression:
+>>> import re, string; pattern = re.compile('[\W_]+')
+>>> pattern.sub('', string.printable)
+'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ'
+>>> string.printable
+'0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!"#$%&\'()*+,-./:;<=>?@[\\]^_`{|}~\t\n\r\x0b\x0c'
+
+>>> st
+'an example word:cat!!'
+>>> re.sub(r'\W+', '', st)
+'anexamplewordcat'
+
+
 match = re.search(pat, str)
 
 str = 'an example word:cat!!'

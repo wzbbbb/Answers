@@ -27,7 +27,7 @@ To add in the http part of the configuraiotn file.
          }
      }
 
-For some configuration, to start nginx:
+to specify a config file , to start nginx:
 /usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
 
 To start uwsgi
@@ -109,6 +109,20 @@ nginx -V to check built option switches +
 nginx -v ,version info
 
 killall nginx
+................................. log rotation
+/usr/local/nginx/logs/*log {
+    missingok
+    notifempty
+    sharedscripts
+    nomail
+    rotate 3
+    size=5M
+    daily
+    postrotate
+        /usr/local/nginx/sbin/nginx -s reload
+    endscript
+}
+
 .................................
 
 events {

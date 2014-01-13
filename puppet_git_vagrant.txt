@@ -26,6 +26,8 @@ Installing on Red Hat Enterprise Linux and Fedora
 Next, to get the latest releases of Puppet, you will need to add the EPEL repository (see sidebar) to your host and then install packages from that repository. You can add the EPEL repository by adding the epel-releaseRPM (.rpm package manager). 
 # rpm -Uvh http://download.fedora.redhat.com/pub/epel/5/i386/epel-release-5-3.noarch.rpm 
 
+rpm -Uvh http://dl.fedoraproject.org/pub/epel/5/x86_64/epel-release-5-4.noarch.rpm
+
 On the master,
 # yum install puppet puppet-server facter
 On the agent,
@@ -654,31 +656,79 @@ puppet module install jfryman/nginx
 save this as nginx.pp
 .................................
 class { 'nginx': }
+#}
 nginx::resource::upstream { 'proxy':
      ensure  => present,
      members => [ 'casplda02:443', ],
 }
-nginx::resource::vhost { "$::ipaddress":
+nginx::resource::vhost { "$::ipaddress_eth0":
     ensure => present,
     proxy  => 'https://proxy',
+    proxy_set_header => [ 'Customer-Id 88989',
+                          'User-Agent SD_TRAFFIC',
+                        ]
+}
+nginx::resource::vhost { "$::ipaddress_eth1":
+    ensure => present,
+    proxy  => 'https://proxy',
+    proxy_set_header => [ 'Customer-Id 88989',
+                          'User-Agent SD_TRAFFIC',
+                        ]
 }
 .................................
 then, run:
 puppet apply nginx.pp
 
+
+...........gw5.sh
 curl -s 192.168.115.41/download/gw5.sh|bash
 
-# cat gw5.sh
+#For CentOS 5 i386
+#!/bin/bash
+yum -y -q install ruby ruby-libs ruby-shadow #-y: to always answer 'y'
+rpm -ivh
+http://yum.puppetlabs.com/el/5/products/i386/puppetlabs-release-5-7.noarch.rpm
+# to build puppet repository
+yum -y -q install puppet facter # -q to install quietly
+puppet module install jfryman/nginx
+curl -s -O 192.168.115.41/download/nginx.pp  # -s: silent mode
+puppet apply nginx.pp
+/sbin/service iptables stop
+curl -s -O 192.168.115.41/download/nginx.logrotate #enable logrotate
+cp ./nginx.logrotate /etc/logrotate.d/nginx
+
+
+...........gw6.sh
+curl -s 192.168.115.41/download/gw6.sh|bash
 
 #!/bin/bash
 yum -y -q install ruby ruby-libs ruby-shadow
-rpm -ivh
-http://yum.puppetlabs.com/el/5/products/i386/puppetlabs-release-5-7.noarch.rpm
+yum install curl
+rpm -Uvh
+http://dl.fedoraproject.org/pub/epel/6/x86_64/epel-release-6-8.noarch.rpm #use
+the new repo
 yum -y -q install puppet facter
 puppet module install jfryman/nginx
 curl -s -O 192.168.115.41/download/nginx.pp
 puppet apply nginx.pp
 /sbin/service iptables stop
+curl -s -O 192.168.115.41/download/nginx.logrotate #enable logrotate
+cp ./nginx.logrotate /etc/logrotate.d/nginx
+
+......................nginx.logrotate
+/var/log/nginx/*log {
+    missingok
+    notifempty
+    sharedscripts
+    nomail
+    rotate 3
+    size=5M
+    daily
+    postrotate
+        /usr/local/nginx/sbin/nginx -s reload
+    endscript
+}
+
 #################################  -
 vagrant -
 ################################# -
