@@ -1238,6 +1238,10 @@ list
   print len(colors)  ## 3
 
  b = colors   ## Does not copy the list, it is a pointer to the same part of memeory
+To copy 1D list:
+b=a[::]
+For 2D list:
+b = [x[:] for x in a]
 
 The "empty list" is just an empty pair of brackets [ ]. The '+' works to append two lists, so [1, 2] + [3, 4] yields [1, 2, 3, 4] (this is just like + with strings).
 To measure number of items in list or the lenght of the list:
@@ -1715,6 +1719,15 @@ import subprocess
 subprocess.call("command1")
 subprocess.call(["command1", "arg1", "arg2"])
 subprocess.call(["ls", "-l", "/etc/resolv.conf"])
+
+try:
+    retcode = call("mycmd" + " myarg", shell=True)
+    if retcode < 0:
+        print >>sys.stderr, "Child was terminated by signal", -retcode
+    else:
+        print >>sys.stderr, "Child returned", retcode
+except OSError, e:
+    print >>sys.stderr, "Execution failed:", e
 
 p = subprocess.Popen("date", stdout=subprocess.PIPE, shell=True) # shell=True, open a new shell
 (output, err) = p.communicate()
@@ -4119,6 +4132,30 @@ def fibon(n):
         a, b = b, a + b
 for x in fibon(1000000):
     print x,
+
+def fib(n,memo=dict()): # with memoization
+  print (n)
+  if  n==0 or n==1: 
+    memo[n]= 1
+    return 1
+  if n in memo.keys(): return memo[n]
+  else:
+    memo[n]=fib(n-1,memo)+fib(n-2,memo)
+    return  memo[n]
+
+# in python 3.3, the functools come with lru_cache, no need to implement memo!!
+from functools import lru_cache 
+@lru_cache(maxsize=None)
+def fib1(n):
+  #print (n)
+  if  n==0 or n==1: 
+    return 1
+  return  fib1(n-1)+fib1(n-2)
+print(fib1(35))
+#for i in range(35):
+#  print(fib(i))
+
+
 #################################
 for _ in xrange(10): # _ is for something, I don't care. So no varible name for it.
     print "Hello, world."
@@ -4345,6 +4382,12 @@ The timeitfunction will run your code multiple times for increased precision,
 
 $ python -m timeit -s"import mymodule as m" "m.myfunction()"  
 
+or just do this:
+import time
+start_time=time.time()
+run something
+end_time=time.time()
+print('duration:' , end_time-start_time)
 ...........
 import cProfile 
 cProfile.run('main()')
