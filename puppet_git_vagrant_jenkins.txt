@@ -33,6 +33,8 @@ On the master,
 On the agent,
 # yum install puppet facter 
 
+puppetd --version
+
 If puppet is not avaialbe in yum, run the following to add the puppet repository for yum, then run yum install
 
 http://docs.puppetlabs.com/guides/puppetlabs_package_repositories.html
@@ -74,6 +76,62 @@ root@cookbook:/etc/puppet# git commit -m "initial commit"
 
 git commit -a # to commit everything
 env GIT_SSL_NO_VERIFY=true  git push -u origin master
+
+git clone ssh://root@192.168.115.41//home/SD/sources sd.git
+
+......................
+To create a bare repository: --
+git init --bare
+
+To set global variables: ---
+git config
+config file: ---
+.gitconfig
+or
+/etc/gitconfig
+example:  ----
+# configure the user which will be used by git
+# Of course you should use your name
+git config --global user.name "Example Surname"
+# Same for the email address
+git config --global user.email "your.email@gmail.com" 
+
+# set default so that only the current branch is pushed 
+git config --global push.default simple
+# alternatively configure Git to push all matching branches
+# git config --global push.default matching 
+
+# set default so that you avoid unnecessary commits
+git config --global branch.autosetuprebase always 
+
+git config --global color.ui true
+git config --global color.status auto
+git config --global color.branch auto 
+
+# setup vim as default editor for Git (Linux)
+git config --global core.editor vim 
+
+# setup kdiff3 as default merge tool (Linux)
+git config --global merge.tool kdiff3
+
+To check config ---
+git config --list 
+for global ----
+git config --global --list 
+
+Creating a .gitignore file for your repository ---
+# ignore all bin directories
+# matches "bin" in any subfolder
+bin/
+# ignore all target directories
+target/
+# ignore all files ending with ~
+*~ 
+
+triggering Jenkins builds from a git hook ---
+http://kohsuke.org/2011/12/01/polling-must-die-triggering-jenkins-builds-from-a-git-hook/
+
+curl http://yourserver/jenkins/git/notifyCommit?url=<URL of the Git repository>
 .................................
 Here’s a notify resource that depends on a file resource:
 
@@ -89,7 +147,7 @@ Here’s a notify resource that depends on a file resource:
 .................................
     file { '/etc/ssh/sshd_config':
       ensure => file,
-      mode   => 600,
+      mode   => '0600',
       source => 'puppet:///modules/ssh/sshd_config',
     }
     service { 'sshd':
@@ -101,6 +159,15 @@ Here’s a notify resource that depends on a file resource:
 In this example, the sshd service will be restarted if Puppet has to edit its
 config file.
 This "source" 'puppet:///modules/ssh/sshd_config' is a local file.
+
+
+Protocol 	3 slashes 	“modules”/ 	Name of module/ 	Name of file
+puppet: 	/// 		modules/ 	ntp/ 				ntp.conf.el
+
+Note that the final segment of the URL starts inside the files/ directory of the module. If there are any extra subdirectories, they work like you’d expect, so you could have something like
+
+puppet:///modules/ntp/config_files/linux/ntp.conf.el.
+
 .................................
 creat a file:
 
@@ -150,7 +217,7 @@ password  learningpuppet
 https://<IP ADDRESS>;  
 facter ipaddress 
 
-$::ipaddress
+"$::ipaddress"
 
 puppet resource user root
 
@@ -236,6 +303,26 @@ Is the same as:
     notify {'after':
       message => '/tmp/test1 has already been synced.',
     }
+info: Log a message on the server at level info.
+debug: Log a message on the server at level debug.
+
+node default {
+  notice("try to run this script with -v and -d to see difference between log levels")
+  notice("function documentation is available here: http://docs.puppetlabs.com/references/latest/function.html")
+  notice("--------------------------------------------------------------------------")
+
+  debug("this is debug. visible only with -d or --debug")
+  info("this is info. visible only with -v or --verbose or -d or --debug")
+  alert("this is alert. always visible")
+  crit("this is crit. always visible")
+  emerg("this is emerg. always visible")
+  err("this is err. always visible")
+  warning("and this is warning. always visible")
+  notice("this is notice. always visible")
+  #fail will break execution
+  fail("this is fail. always visible. fail will break execution process")
+
+}
 .................................
 .................................
 common service config:
@@ -414,6 +501,7 @@ resources.
 
     include ntp
 
+The "include" here trigger puppet to apply the class
 .....................Modules.
 
 The Modulepath is defined in: /etc/puppetlabs/puppet/puppet.conf
@@ -434,8 +522,8 @@ The Modulepath is defined in: /etc/puppetlabs/puppet/puppet.conf
     ... etc.
 
 
-You can also get the value of the modulepath by running puppet master
---configprint modulepath. The --configprint option lets you get the value of
+You can also get the value of the modulepath by running puppet master --configprint modulepath. 
+The --configprint option lets you get the value of
 any Puppet setting; by using the master subcommand, we’re making sure we get
 the value the puppet master will use.
 
@@ -457,6 +545,14 @@ include ntp    ----
 Then:
  puppet agent --test   ----
 
+example:
+  # /etc/puppetlabs/puppet/manifests/site.pp
+    include ntp
+    include apache
+    include mysql
+    include mongodb
+    include build_essential
+
 ........... Resource-Like Class Declarations --
 class {'ntp':}
 can be declared only once
@@ -473,6 +569,11 @@ are: could be a local directory under "modules"
       }
     }
 
+puppet:///modules/test_module/testfile.txt
+
+…will resolve to the following absolute path:
+
+/etc/puppet/modules/test_module/files/testfile.txt
 
 ...................... The Puppet Module Subcommand
 
@@ -783,6 +884,8 @@ $ vagrant up ----
 To add more box into the config file.
 vagrant box add centos65-x86_64-20131205 https://github.com/2creatives/vagrant-centos/releases/download/v6.5.1/centos65-x86_64-20131205.box ----
 
+vagrant box add play d:\download\centos65-x86_64-20131205.box
+
 vagrant box remove precise64 virtualbox  ----
 
 then login as:
@@ -845,6 +948,38 @@ Vagrant::Config.run do |config|
     test_config.vm.network "public_network"
   end
 end
+
+To use puppet provistion ---
+Vagrant::Config.run do |config|
+	config.vm.box = "lucid32"
+	config.vm.box_url = "http://files.vagrantup.com/lucid32.box"
+	config.vm.network :hostonly, "33.33.33.10"
+	config.vm.provision :puppet do |puppet|
+	puppet.manifests_path = "manifests"
+	puppet.manifest_file = "webserver.pp"
+end
+...................... Puppet Manifest used above ----
+# to fix missing puppet group in lucid32 box
+group { "puppet":
+	ensure => present,
+}
+# to update outdated package list
+exec { "refresh-packages":
+	command => "/usr/bin/apt-get update",
+	before => Package["apache2"],
+}
+package { "apache2":
+	ensure => installed,
+}
+service { "apache2":
+	ensure => running,
+	require => Package["apache2"],
+}
+file { "/var/www/index.html":
+	ensure => file,
+	content => "<html><body><h1>Vagrant and Puppet rocks!</h1></body></html>",
+	require => Service["apache2"],
+}
 
 ......................sample file: -
 In d:/vagrant
@@ -993,4 +1128,609 @@ or better:
 cat /dev/null > /etc/udev/rules.d/70-persistent-net.rules    --
 chmod 444 /etc/udev/rules.d/70-persistent-net.rules    --
 before packing 
-................................. ---
+................................. -
+.................................veewee -
+To build customized vagrant basbox
+................................. -
+.................................jenkins -
+check the ubuntu steps below. virutalbox installation on CentOS has problem +
+sudo wget -O /etc/yum.repos.d/jenkins.repo http://pkg.jenkins-ci.org/redhat/jenkins.repo
+sudo rpm --import http://pkg.jenkins-ci.org/redhat/jenkins-ci.org.key
+yum install jenkins
+
+java -version, this version won't work --
+java -version
+java version "1.5.0"
+gij (GNU libgcj) version 4.4.6 20110731 (Red Hat 4.4.6-3)
+
+for CentOS,  --
+yum remove java
+yum install java-1.6.0-openjdk
+
+should be this one:  --
+[root@vagrant-centos65 jenkins]# java -version
+java version "1.6.0_30"
+OpenJDK Runtime Environment (IcedTea6 1.13.1) (rhel-3.1.13.1.el6_5-x86_64)
+OpenJDK 64-Bit Server VM (build 23.25-b01, mixed mode)
+
+To start --
+Find the .war directory:
+
+java -jar jenkins.war
+or
+nohup java -jar jenkins.war > $LOGFILE 2>&1
+
+To access --
+http://192.168.114.234:8080/ 
+
+use rsa key in jenkins "manage credentials"
+update all related plugin
+then paste in the private key directly
+
+To install virtualbox --
+require the building kernel modules,DKMS (Dynamic Kernel Module Support)
+wget http://packages.sw.be/rpmforge-release/rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm
+rpm -Uvh rpmforge-release-0.5.2-2.el6.rf.x86_64.rpm
+
+yum --enablerepo rpmforge install dkms
+
+yum groupinstall "Development Tools"
+yum install kernel-devel
+
+cd /etc/yum.repos.d
+wget http://download.virtualbox.org/virtualbox/rpm/rhel/virtualbox.repo
+yum search virutalbox
+then install latest virtualbox
+
+To start vargent-vm from jenkins --
+vagrant init vagrant-vm ./centos65-x86_64-20131205.box
+
+......................
+...................... on Ubuntu --
+To install virutalbox 4.3
+sudo sh -c "echo 'deb http://download.virtualbox.org/virtualbox/debian '$(lsb_release -cs)' contrib non-free' > /etc/apt/sources.list.d/virtualbox.list" && wget -q http://download.virtualbox.org/virtualbox/debian/oracle_vbox.asc -O- | sudo apt-key add - && sudo apt-get update && sudo apt-get install virtualbox-4.3 dkms 
+
+dpkg -i vagrant_1.4.3_x86_64.deb
+vagrant init vagrant-vm ./centos65-x86_64-20131205.box
+
+vagrant up
+
+vagrant ssh
+
+install jenkins --
+wget -q -O - http://pkg.jenkins-ci.org/debian/jenkins-ci.org.key | sudo apt-key add -
+sudo sh -c 'echo deb http://pkg.jenkins-ci.org/debian binary/ > /etc/apt/sources.list.d/jenkins.list'
+sudo apt-get update
+sudo apt-get install jenkins
+
+......................puppet master -
+
+ apt-get install puppetmaster ----
+
+To enable autosigning, put a file "autosign.conf" into /etc/puppet, containing the following content:
+*.example.com
+
+This will automatically sign all certificate requests from clients with a matching hostname (e.g., web01.example.com)  and  remove  the  extra  step  of  doing  a certificate  exchange  before master and client can communicate with each other. 
+Now, restart the Puppet master to make our change visible:
+
+ service puppetmaster restart ----
+
+To test connection from an agent to the master
+puppet agent --test --server calpmcs02-linux.orsypgroup.com ----
+
+
+For this error from agent side: --
+err: Could not retrieve catalog from remote server: Server hostname '192.168.114.174' did not match server certificate; expected one of calpmcs02-linux.orsypgroup.com, DNS:calpmcs02-linux.orsypgroup.com, DNS:puppet, DNS:puppet.orsypgroup.com
+
+
+To see the puppet master’s certified hostnames, run: ---
+
+  $ sudo puppet master --configprint certname ----
+
+Re-generate the puppet master’s certificate: ---
+
+Stop puppet master.
+Delete the puppet master’s certificate, private key, and public key:
+
+ $ sudo find $(puppet master --configprint ssldir) -name "$(puppet master --configprint certname).pem" -delete ----
+
+Edit the certname setting in the puppet master’s /etc/puppet/puppet.conf file to match the puppet master’s actual hostname, and the dns_alt_names setting in that file to match any other DNS names you expect the master to need to respond to.
+
+Start a non-daemonized WEBrick puppet master instance, and wait for it to generate and sign a new certificate:
+
+  $ sudo puppet master --no-daemonize --verbose ----
+
+puppet cert list ----
+
+For this error for the command: --
+puppet agent --test --server calpmcs02-linux.orsypgroup.com ----
+
+err: Could not retrieve catalog from remote server: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed.  This is often because the time is out of sync on the server or client 
+warning: Not using cache on failed catalog 
+err: Could not retrieve catalog; skipping run err: Could not send report: SSL_connect returned=1 errno=0 state=SSLv3 read server certificate B: certificate verify failed.  This is often because the time is out of sync on the server or client 
+
+This command fixed that:
+rm -rf /var/lib/puppet/ssl ----
+
+puppet --genconfig ----
+
+To setup agent, server communication: set this in /etc/puppet/puppet.conf on the agent side --
+In here:
+[agent]
+    server = calpmcs02-linux.orsypgroup.com ----
+
+...................... prepare a new ubuntu server node as puppet agent-
+echo '192.168.114.174 calpmcs02-linux.orsypgroup.com' >> /etc/hosts
+vim /etc/puppet/puppet.conf
+
+#[master]
+# These are needed when the puppetmaster is run by passenger
+# and can safely be removed if webrick is used.
+#ssl_client_header = SSL_CLIENT_S_DN
+#ssl_client_verify_header = SSL_CLIENT_VERIFY
+
+[agent]
+    server = calpmcs02-linux.orsypgroup.com
+
+On the master:
+  puppet cert clean raring64.orsypgroup.com ----
+
+On the agent:
+  #rm -f /var/lib/puppet/ssl/certs/raring64.orsypgroup.com.pem
+ rm -rf /var/lib/puppet/ssl ----
+
+ puppet agent -t ----
+
+...................... fpm
+Quickly create custom software packages with FPM
+http://www.openlogic.com/wazi/bid/296143/Quickly-create-custom-software-packages-with-FPM
+rpm -e pkg_name # to remove a package
+#To install
+gem install fpm
+
+fpm -s dir -t rpm -n node -v 0.8.8 -C /tmp/node-install usr/bin usr/lib 
+
+fpm -s dir  -t rpm -n sd_files -C /home/SD/sources/  -v 0.0.1   SmokeDetector
+#that package will install everything under /SmokeDetector
+
+fpm -s gem -t deb rails
+dpkg -c rubygen-rails_4.0.2_all.deb
+dpkg -I #to get info from a package
+
+fpm -s gem -t rpm rails
+rpm -qp rubygem-rails-4.0.2-1.noarch.rpm --requires # to find the
+dependencies.
+
+fpm -s cpan -t deb Regexp::Common
+
+fpm --verbose -s python -t deb Django
+#fpm will download the latest version of the package first
+
+fpm -s pear -t deb Mail_Mime
+
+# source is a tar.gz file
+# -n is the new package name
+# -a is the target archtecture: can be all or noarch
+fpm -s tar -t deb -n apapche-maven -v 3.1.1 -C apache-maven-3.1.1 --prefix
+/opt/maven apache-maven-3.1.1-bin.tar.gz
+......................
+class boardie {
+
+  require ruby::dev
+  require build
+  require build::sqlite
+
+  sinatra::app { 'boardie':
+    giturl   => 'https://gitbox.local:boardie',
+    revision => 'e1f262dd5e05df8bb02bec461c54835db0da1e94',
+    rackup   => "puppet:///modules/boardie/config.ru",
+  }
+
+  $config = "/opt/boardie/config/config.yml"
+
+  file { $config:
+    ensure  => present,
+    content => template('boardie/config.yml.erb'),
+    owner   => 'www-data',
+    group   => 'www-data',
+    require => Sinatra::App['boardie'],
+  }
+
+  bundler::install { $root:
+    require => [
+      Sinatra::App['boardie'],
+      File[$config],
+    ],
+  }
+}
+
+package { 'vim-enhanced':
+  ensure => present,
+}
+
+node webserver {
+  include apache
+  include mysql
+  include sinatra
+}
+
+node downloadserver {
+  include apache
+  downloads::sync { '/srv/bigfiles': }
+}
+
+node default {
+  include apache
+
+  class {'ntp':
+	enable => false;
+  }
+
+  apache::vhost {'personal_site':
+	port    => 80,
+	docroot => '/var/www/personal',
+	options => 'Indexes MultiViews',
+  }
+}
+
+#Puppet can convert catalogs into dot files, which is a format for storing
+graphs. You can use tools like Omnigraffle or Graphiz to convert graph files (
+produced with 
+puppet agent --graph 
+#and stored in $vardir/state/graphs) to produce an image of the graph that¡¯s
+pretty easy to read. You can also use gephi to manipulate and explore graphs,
+view how things interrelate, and do some pretty neat transforms on the data.
+
+
+#For only creating a file if it doesn't exist, try setting replace to false,
+like so:
+
+file { "/etc/myconfig.conf":
+  ensure => present,
+  source => "puppet:///modules/${module_name}/myconfig.conf",
+  replace => false,
+}
+
+
+#In Puppet 2.7 you can issue the command:
+puppet catalog select $hostname $type
+
+#all the file resources puppet manage:
+puppet catalog select somenode file
+
+#To list all the services managed by puppet on that system:
+puppet catalog select somenode service
+
+/#.......................Deploy code from Git using Puppet
+http://livecipher.blogspot.ca/2013/01/deploy-code-from-git-using-puppet.html
+
+#In puppet master you may install the module using this command:
+    sudo puppet module install puppetlabs/vcsrepo
+/#Alternatively, you may download the module and store it in
+/etc/puppet/modules/ directory.
+
+#The puppet module template can be generated using this command. In this case,
+the module name is git:
+
+    puppet module generate zwa/git
+#Once the module template is generated, you may add/edit new manifests. 
+
+...........#Node definition
+#manifests/nodes/dog-park.net.pp
+
+    node 'dog-park.net' {
+        class { git::clone: repo => 'dogfood' }
+    }
+
+#  Manifests to pull code from Git
+# modules/git/manifests/init.pp
+
+    class git {
+            class { git::clone: }
+    }
+
+#modules/git/manifests/clone.pp
+#The following manifests are used to perform following tasks:
+
+1.  Create the user, default devchick
+2.  Create the group, default devchick
+3.  Create the directory /opt/code
+4.  clone latest code from specified repository in gitrul.com using default branch master.
+
+     class git::clone ($repo, $username='devchick') {
+        $group = $username
+
+        group { $username:
+            ensure  => present,
+            gid     => 2000,
+        }
+
+        user { $username:
+            ensure  => present,
+            gid     => $group,
+            require => Group[$group],
+            uid     => 2000,
+            home    => "/home/${username}",
+            shell   => "/bin/bash",
+            managehome  => true,
+        }
+
+        file { '/opt/code' :
+            ensure  => directory,
+            group   => $group,
+            owner   => $username,
+            mode    => 0755,
+        }
+
+        file { '/home/${username}':
+            ensure  => directory,
+            group   => $group,
+            owner   => $username,
+            mode    => 0700,
+        }
+
+        package { 'git':
+            ensure => installed,
+        }
+       
+        vcsrepo { "/opt/code/${repo}":
+            ensure   => latest,
+            owner    => $owner,
+            group    => $owner,
+            provider => git,
+            require  => [ Package["git"] ],
+            source   => "http://giturl.com/proj/${repo}.git",
+            revision => 'master',
+        }
+    }
+
+#For a specific revision or branch (can be a commit SHA, tag or branch name):
+    vcsrepo { "/path/to/repo":
+        ensure => present,
+        provider => git,
+        source => 'git://example.com/repo.git',
+        revision => 'development'   # tab or branch name
+    }
+#another implementation
+vcsrepo { "/home/fiesta/fiesta":
+  owner => fiesta,
+  group => fiesta,
+  ensure => latest,  # latest!!
+  revision => "prod",  # prod branch
+  provider => git,
+  require => [ Package["git"],
+               Sshkey["git.fiesta.cc"] ],
+  source => "ssh://git@git.fiesta.cc/home/git/fiesta.git"
+}
+
+# restarting after source code update, 
+service { "www":      # define the service in puppet
+  ensure => running,
+  subscribe => Vcsrepo["/home/fiesta/fiesta"],   # ensure that every time repo updated, the service will restart
+  start => "/home/fiesta/fiesta/www.py start",
+  stop => "/home/fiesta/fiesta/www.py stop",
+  status => "/home/fiesta/fiesta/www.py status",
+  require => Service["mongod"]
+}
+
+# NOTE: the vcsrepo is different from git post receive hook. This one is pull
+# from git everytime the agent run
+# the git post receive hook is a push from git
+
+#dryrun -- test run
+     $ sudo puppet agent --test --noop
+
+#Deploy code from Git
+     $ sudo puppet agent --test
+
+
+puppet parser validate manifests/init.pp
+
+/#use git pre-commit hook to check puppet script commited
+#copy paste the precommit hood from the web
+#Add a pre-receive git hook to the remote git server side
+#1. add the remote repository
+git remote
+git remote add origin git@githost.puppetlet.com:username/motd.git         /
+git branch
+git push origin master
+git commit manifests/init.pp         /
+git push origin master
+#The pre-receive hook will trigger an error message, the push will fail
+
+puppet-lint manifests/init.pp           /
+
+#Every time the developer checkin new change in Git, it is deployed
+automatically using puppet! To deploy same code in multiple servers, you may
+define that many node definition, or you may use regular expression based node
+definition to match multiple nodes.
+
+puppet-lint
+http://puppet-lint.com/
+rspec-puppet
+http://rspec-puppet.com/tutorial/
+
+/#...................... using puppet dynamic envioronment in config
+
+[main]
+  server = puppet.example.com
+  environment = production
+  confdir = /etc/puppet
+[master]
+  environment = production
+  manifest    = $confdir/environments/$environment/manifests/site.pp
+  modulepath  = $confdir/environments/$environment/modules
+[agent]
+  report = true
+  show_diff = true
+  environment = production
+
+.........../###################### hiera
+Separate date from manifest
+#hiear yaml file
+---
+allowUsers: ['zach','cody']
+banner: '/etc/issue.net'
+logLevel: 'verbose'
+port: 22
+companyName: 'Puppet Labs'
+
+$allowUsers=hiera('allowUsers',[])  
+# hiera  is the lookup function; allowUsers is the key to check; [] is the
+# default value
+
+The result:
+$allowUsers=['zach','cody']
+
+......................Hiera Installation
+OS packages
+Ruby gems
+
+...................... Hiera Configuration
+#/etc/puppet/hiera.yaml
+---
+:backends:  # can use multiple backend
+ - yaml
+:yaml:
+ :datadir: /var/lib/hiera   
+/#
+:hierarchy: # the following define the searching sequence. first fqdn, then
+environemt, last global
+ - "%{fqdn}"
+ - "%{environment}" #this one and the %{fqdn} will be replaced by factor at
+   run time
+ - global
+
+$facter fqdn --yaml
+---
+fqdn: debian.puppetconf.lab
+
+...........using hiera in class
+class openssh::server::hiera(
+  $companyName  = hiera('companyName'),
+  $allowUsers   =hiera('allowUsers',[]) ,
+  $banner       = hiera('banner','/etc/issue.net'),
+){
+
+#The acctual hiera file for the node
+# There can be a yaml for each node, and each environment and a default one.
+# In the above example, global.yaml
+#/var/lib/hiera/debian.puppetconf.lab.yaml
+---
+allowUsers:
+ -"admin"
+ -"ben"
+ -"cody"
+ -"kelsy"
+ -"zach"
+passwordAuthentication:"yes"
+permitRootLogin:"no"
+port:2222
+
+#the debian.puppetconf.lab
+node 'debian.puppetconf.lab' {
+  include users
+  include openssh:server:hiera
+}
+
+
+#To find the port that will be used. It will use the search order defined in
+the hiera.yaml config
+#hiera command:
+hiera port -d  # to find the value for key port
+
+hiera port -d -y facts.yaml
+
+#to show the local info
+#cat facts.yaml
+fqdn: debian.puppet.conf.lab
+environment: production
+
+......................ENC
+# to get variable value at run time
+
+$ /bin/classifier debian.puppetconf.lab
+
+[master]
+  node_terminus = exec
+  external_nodes = /bin/classifier 
+
+#sample ENC:
+# cat /usr/local/bin/puppet_node_classifier
+#!/bin/bash
+DATADIR='/var/lib/enc'
+NODE=$1
+cat "#{DATADIR}/${NODE}.yaml"
+
+......................#http://www.tokiwinter.com/implementing-git-dynamic-workflows-puppet/
+
+To allow select the manifests to use according a variable
+
+$ git clone me@git.server:/opt/git/puppet.git
+/
+$ cd puppet
+$ git branch testing
+$ git checkout testing
+... make some edits
+$ git add *
+$ git commit -m "made some edits"
+$ git push origin testing
+
+Then test the testing code, the code is on the puppet master
+# puppet agent --test --environment=testing
+Info: Retrieving plugin
+Info: Caching catalog for sun.local
+Info: Applying configuration version '1371740640'
+
+git branch  # to list all branches
+git branch -r # to list all remote branches
+git status
+git log
+################################# git flow
+$ apt-get install git-flow 
+
+git flow init
+
+git flow feature start MYFEATURE 
+
+git flow feature finish MYFEATURE 
+
+git flow feature publish MYFEATURE 
+
+git flow feature pull origin MYFEATURE 
+
+git flow feature track MYFEATURE
+
+git flow release start RELEASE [BASE] 
+
+git flow release publish RELEASE 
+
+git flow release track RELEASE
+
+git flow release finish RELEASE 
+
+git push --tags
+
+git flow hotfix start VERSION [BASENAME] 
+
+git flow hotfix finish VERSION 
+
+
+          |  init     |  start
+git flow -   feature -   finish -  name
+          |  release  |  publish
+          |  hotfix   |  pull
+
+................................. git ssh access
+create a ssh key on local node
+ssh-keygen -t rsa -C "zwa@orsyp.com"
+
+Copy the pub key to gitlap
+cat ~/.ssh/id_rsa.pub
+
+git remote rm origin # remove the old origin defined
+
+# push as git user, seems not need to have a user created on the git server
+git remote add origin git@192.168.114.174:zwa/packagetofile.git
+git push -u origin master
+

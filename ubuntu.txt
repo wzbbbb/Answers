@@ -1,0 +1,17 @@
+service --status-all
+service <servicename> stop
+
+service <servicename> start
+
+service <servicename> restart
+
+/etc/init.d/mongodb stop
+
+dpkg -i vagrant_1.4.3_x86_64.deb
+sudo apt-get update
+sudo apt-get install jenkins
+
+apt-get remove nginx
+
+#To search for package
+apt-cache search keyword

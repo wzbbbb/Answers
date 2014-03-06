@@ -5485,3 +5485,6 @@ To determin a system is big endian or little endian
 >>> import sys
 >>> sys.byteorder
 'little'
+>>> sys.maxint
+2147483647
+
