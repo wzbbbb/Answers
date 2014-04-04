@@ -1,0 +1,1246 @@
+http://www.hpcloud.com/blog/installing-devstack-vagrant
+
+sudo apt-get update && sudo apt-get -y install git vim-gtk libxml2-dev libxslt1-dev libpq-dev python-pip libsqlite3-dev && sudo apt-get -y build-dep python-mysqldb && sudo pip install git-review tox && git clone git://git.openstack.org/openstack-dev/devstack && cd devstack              ----
+
+
+git config --user.name "<user name>"
+git config --user.email "<gerrit email>"
+git config --user.editor "<editor>"
+
+I am in the devstack root directory so I can run:
+
+mv samples/localrc . ----
+
+to get a copy of localrc in the root directory.
+
+Then I run:
+
+./stack.sh         ----
+
+After devstack has finished installing, source the openrc file to enable credentials:
+
+source ~devstack/openrc ----
+
+If you need to be the admin user, source the file with the admin argument:
+
+source ~devstack/openrc admin ----
+
+To stop devstack, run 
+
+./unstack.sh  ----
+
+inside the devstack root directory.
+
+......................
+keystone token-get
+
+stack@raring64:~$ keystone user-list
++----------------------------------+----------+---------+----------------------+
+|                id                |   name   | enabled |        email
+|
++----------------------------------+----------+---------+----------------------+
+| df7743b803ea48a8859dcb8a446902e3 |  admin   |   True  |  admin@example.com
+|
+| 12501045e9a64fdbb7006c41b8d1121f | alt_demo |   True  | alt_demo@example.com
+|
+| 5e1e8c1581c448618280aba7ea8788a4 |  cinder  |   True  |  cinder@example.com
+|
+| fd98d2526e9a4cceabfae5a8990b3a2f |   demo   |   True  |   demo@example.com
+|
+| 8a066cc24edb4aeab7805e58ba2e0e1b |  glance  |   True  |  glance@example.com
+|
+| 56f8505c23aa4cf99ba4c50994b1d502 |   nova   |   True  |   nova@example.com
+|
++----------------------------------+----------+---------+----------------------+
+
+$ export OS_SERVICE_TOKEN=ADMIN_TOKEN
+$ export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0
+
+keystone user-role-list --tenant=admin --user=admin
+
+stack@raring64:~$ keystone user-role-list
++----------------------------------+-------+----------------------------------+----------------------------------+
+|                id                |  name |             user_id
+|            tenant_id             |
++----------------------------------+-------+----------------------------------+----------------------------------+
+| 47f99116a839438a8e0dc8783cd52305 | admin | df7743b803ea48a8859dcb8a446902e3
+| f46feb4a88e347cf88b5e1c1ad42f224 |
++----------------------------------+-------+----------------------------------+----------------------------------+
+
+
+stack@raring64:~$ keystone user-role-list --tenant=admin --user=admin
++----------------------------------+----------+----------------------------------+----------------------------------+
+|                id                |   name   |             user_id
+|            tenant_id             |
++----------------------------------+----------+----------------------------------+----------------------------------+
+| 9fe2ff9ee4384b1894a90878d3e92bab | _member_ | df7743b803ea48a8859dcb8a446902e3 | 69466ee676344aee8f393115ad9c42fe |
+| 47f99116a839438a8e0dc8783cd52305 |  admin   | df7743b803ea48a8859dcb8a446902e3 | 69466ee676344aee8f393115ad9c42fe |
++----------------------------------+----------+----------------------------------+----------------------------------+
+stack@raring64:~$
+
+#################################
+Ubuntu 12.04 LTS installation
+
+The controller node --
+Example 2.1. /etc/network/interfaces
+# Internal Network
+auto eth0
+iface eth0 inet static
+address 192.168.0.10
+netmask 255.255.255.0
+
+# External Network
+auto eth1
+iface eth1 inet static
+address 10.0.0.10
+netmask 255.255.255.0
+
+All nodes need to be able to communicate with each other.
+
+/etc/hosts --
+127.0.0.1 localhost
+192.168.0.10 controller
+192.168.0.11 compute1
+
+Install NTP on all node: --
+apt-get install ntp              ----
+
+configure the other nodes to synchronize their time from the controller node rather than from outside of your LAN. To do so, install the ntp daemon as above, then edit /etc/ntp.conf and change the server directive to use the controller node as internet time source.
+
+Passwords --
+openssl rand -hex 10         ----
+
+Password name Description
+Database password (no variable used) 	Root password for the database
+RABBIT_PASS 							Password of user guest of RabbitMQ
+KEYSTONE_DBPASS 						Database password of Identity service
+ADMIN_PASS 								Password of user admin
+GLANCE_DBPASS 							Database password for Image Service
+GLANCE_PASS 							Password of Image Service user glance
+NOVA_DBPASS 							Database password for Compute service
+NOVA_PASS 								Password of Compute service user nova
+DASH_DBPASS 							Database password for the dashboard
+CINDER_DBPASS 							Database password for the Block Storage Service
+CINDER_PASS 							Password of Block Storage Service user cinder
+NEUTRON_DBPASS 							Database password for the Networking service
+NEUTRON_PASS 							Password of Networking service user neutron
+HEAT_DBPASS 							Database password for the Orchestration service
+HEAT_PASS 								Password of Orchestration service user heat
+CEILOMETER_DBPASS 						Database password for the Telemetry service
+CEILOMETER_PASS 						Password of Telemetry service user ceilometer
+
+used: ----
+417bdba57847b2ede361
+S3 pass:
+zwa: FWpxEwx$YczP
+MySQL database --
+DB on controller ---
+clients on all other nodes ---
+
+On controller node:
+apt-get install python-mysqldb mysql-server    ----
+
+Edit "/etc/mysql/my.cnf" and set the bind-addressto the internal IP address of the controller, to enable access from outside the controller node.
+
+[mysqld]
+...
+bind-address = 192.168.0.10
+
+
+Then:
+service mysql restart    ----
+
+
+To get ride of the anonymous DB user;
+
+mysql_install_db   			----
+mysql_secure_installation  	----
+
+
+On all other node --
+apt-get install python-mysqldb  	----
+apt-get install mysql-client-core-5.5  ----
+
+OpenStack packages --
+apt-get install python-software-properties 		----
+add-apt-repository cloud-archive:havana 		----
+
+apt-get update && apt-get dist-upgrade 			----
+reboot 											----
+
+
+Messaging server --
+apt-get install rabbitmq-server 					----
+
+To change the default guest password of RabbitMQ:
+rabbitmqctl change_password guest RABBIT_PASS  		----
+used: ----
+417bdba57847b2ede361
+rabbitmqctl change_password guest 417bdba57847b2ede361 		----
+
+Install the Identity service --
+1. 
+apt-get install keystone 		----
+
+2. 
+Use the MySQL on controller, with username keystone. Replace the KEYSTONE_DBPASS below with the real passwd.
+
+Edit /etc/keystone/keystone.conf and change the [sql]section.
+...
+[sql]
+# The SQLAlchemy connection string used to connect to the database
+connection = mysql://keystone:KEYSTONE_DBPASS@controller/keystone
+...
+
+3.  By default, the Ubuntu packages create an SQLite database. Delete the keystone.db file created in the 
+"/var/lib/keystone/" directory        so that it does not get used by mistake.
+
+4. Use the password that you set previously to log in as root. Create a keystone database user:
+mysql -u root -p  					----
+mysql> CREATE DATABASE keystone;        ----
+mysql> GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'localhost' IDENTIFIED BY 'KEYSTONE_DBPASS'; ----
+mysql> GRANT ALL PRIVILEGES ON keystone.* TO 'keystone'@'%' IDENTIFIED BY 'KEYSTONE_DBPASS';  ----
+
+5.  Create the database tables for the Identity Service:
+keystone-manage db_sync        ----
+
+6. Define an authorization token to use as a shared secret between the Identity Service and other OpenStack services. Use opensslto generate a random token and store it in the configuration file:
+# openssl rand -hex 10            ----
+Edit /etc/keystone/keystone.conf and change the [DEFAULT]section,
+replacing ADMIN_TOKEN with the results of the command.
+
+[DEFAULT]
+# A "shared secret" between keystone and other openstack services
+admin_token = ADMIN_TOKEN
+...
+used ----
+c049f196be72e90e4df6
+
+7. Restart the Identity Service:
+service keystone restart      ----
+
+Define users, tenants, and roles --
+export OS_SERVICE_TOKEN=ADMIN_TOKEN             ----
+export OS_SERVICE_ENDPOINT=http://controller:35357/v2.0  ----
+keystone tenant-create --name=admin --description="Admin Tenant" ----
+keystone tenant-create --name=service --description="Service Tenant"     ----
+
+keystone user-create --name=admin --pass=ADMIN_PASS --email=admin@example.com       ----
+keystone role-create --name=admin        ----
+keystone user-role-add --user=admin --tenant=admin --role=admin        ----
+
+ADMIN_PASS used: ----
+417bdba57847b2ede361
+
+Define services and API endpoints --
+To register a service, run these commands:
+• keystone service-create. Describes the service.
+• keystone endpoint-create. Associates API endpoints with the service.
+You must also register the Identity Service itself. Use the OS_SERVICE_TOKEN environment variable, as set previously, for authentication.
+
+1. Create a service entry for the Identity Service:
+# keystone service-create --name=keystone --type=identity \
+--description="Keystone Identity Service"                      ----
++-------------+----------------------------------+
+| Property 		| Value 						|
++-------------+----------------------------------+
+| description 	| Keystone Identity Service |
+| id 			| 15c11a23667e427e91bc31335b45f4bd |
+| name 			| keystone 						|
+| type 			| identity 						|
++-------------+----------------------------------+
+
+2.Specify an API endpoint for the Identity Service by using the returned service ID. When you specify an endpoint, you provide URLs for the public API, internal API, and admin API. In this guide, the controllerhost name is used. Note that the Identity Service uses a different port for the admin API. 
+
+keystone endpoint-create \                  
+--service-id=the_service_id_above \
+--publicurl=http://controller:5000/v2.0 \
+--internalurl=http://controller:5000/v2.0 \
+--adminurl=http://controller:35357/v2.0                 ----
++-------------+-----------------------------------+
+| Property 		| Value |
++-------------+-----------------------------------+
+| adminurl 		| http://controller:35357/v2.0 |
+| id 			| 11f9c625a3b94a3f8e66bf4e5de2679f |
+| internalurl 	| http://controller:5000/v2.0 |
+| publicurl 	| http://controller:5000/v2.0 |
+| region 		| regionOne |
+| service_id 	| 15c11a23667e427e91bc31335b45f4bd |
++-------------+-----------------------------------+
+
+Verify the Identity Service installation --
+unset OS_SERVICE_TOKEN OS_SERVICE_ENDPOINT  ----
+
+keystone --os-username=admin --os-password=ADMIN_PASS --os-auth-url=http://controller:35357/v2.0 token-get ----
+
+keystone --os-username=admin --os-password=ADMIN_PASS\
+--os-tenant-name=admin --os-auth-url=http://controller:35357/v2.0 token-get 		----
+
+ADMIN_PASS used: ----
+417bdba57847b2ede361
+
+You can also set your --os-*variables in your environment to simplify command-line usage. Set up a "openrc.sh" file with the admin credentials and admin endpoint.
+
+export OS_USERNAME=admin 		----
+export OS_PASSWORD=ADMIN_PASS 	----
+export OS_TENANT_NAME=admin 	----
+export OS_AUTH_URL=http://controller:35357/v2.0 		----
+
+You can source this file to read in the environment variables.
+
+$ source openrc.sh             ----
+
+Verify that your openrc.shfile is configured correctly by performing the same command as above, but without the --os-*arguments.
+
+$ keystone token-get         ----
+
+keystone user-list  	----
++----------------------------------+---------+--------------------+--------+
+| id | enabled | email | name |
++----------------------------------+---------+--------------------+--------+
+| a4c2d43f80a549a19864c89d759bb3fe | True | admin@example.com | admin |
+
+Install the Image Service --
+
+1. Install the Image Service on the controller node
+apt-get install glance python-glanceclient  	----
+
+2. Configure the location of the database
+ The Image Service provides the glance api and glance-registryservices, each with its own configuration file.  You must update both configuration files throughout this section. Replace GLANCE_DBPASS with your Image Service database password.
+Edit "/etc/glance/glance-api.conf" and 
+"/etc/glance/glance-registry.conf" and change the [DEFAULT]section.
+
+...
+[DEFAULT]
+...
+# SQLAlchemy connection string for the reference implementation
+# registry server. Any valid SQLAlchemy connection string is fine.
+# See: http://www.sqlalchemy.org/docs/05/reference/sqlalchemy/connections.html#sqlalchemy.create_engine
+sql_connection = mysql://glance:GLANCE_DBPASS@controller/glance
+...
+used: ----
+417bdba57847b2ede361
+
+3.  By default, the Ubuntu packages create an SQLite database. Delete the "glance.sqlite" file created in the 
+"/var/lib/glance/" directory so that it does not get used by mistake.
+
+4. Use the password you created to log in as root and create a glancedatabase user:
+
+# mysql -u root -p   	----
+mysql> CREATE DATABASE glance;   	----
+mysql> GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'localhost' \
+IDENTIFIED BY 'GLANCE_DBPASS';   	----
+mysql> GRANT ALL PRIVILEGES ON glance.* TO 'glance'@'%' \
+IDENTIFIED BY 'GLANCE_DBPASS'; 		----
+
+5.ceate the database tables for the Image Service:
+# glance-manage db_sync   			----
+
+6. Create a "glance" user that the Image Service can use to authenticate with the Identity Service. 
+Choose a password and specify an email address for the "glance" user.  
+Use the "service" tenant and give the user the "admin" role.
+
+# keystone user-create --name=glance --pass=GLANCE_PASS --email=glance@example.com  ----
+# keystone user-role-add --user=glance --tenant=service --role=admin     ----
+
+7. Configure the Image Service to use the Identity Service for authentication.
+Edit the "/etc/glance/glance-api.conf" and 
+"/etc/glance/glance-registry.conf" files.
+Replace "GLANCE_PASS" with the password you chose for the
+"glance" user in the Identity Service.
+
+a. Add the following keys under the [keystone_authtoken]section:
+[keystone_authtoken]
+...
+auth_uri = http://controller:5000
+auth_host = controller
+auth_port = 35357
+auth_protocol = http
+admin_tenant_name = service
+admin_user = glance
+admin_password = GLANCE_PASS
+
+b. Add the following key under the [paste_deploy]section:
+[paste_deploy]
+...
+flavor = keystone
+
+8. Add the credentials to the "/etc/glance/glance-api-paste.ini" and 
+"/etc/glance/glance-registry-paste.ini" files
+
+[filter:authtoken]
+paste.filter_factory=keystoneclient.middleware.auth_token:filter_factory
+auth_host = controller
+admin_user = glance
+admin_tenant_name = service
+admin_password = GLANCE_PASS
+
+9. 
+
+#################################
+To find service ID
+keystone service-list        ----
+keystone endpoint-list     	----
+
+glance image-list  ----
+To check images nova can see
+nova image-list   ----
+
+
+wget http://cdn.download.cirros-cloud.net/0.3.1/cirros-0.3.1-x86_64-disk.img	 ----
+
+glance image-create --name=imageLabel--disk-format=fileFormat --container-format=containerFormat --is-public=accessValue< imageFile    ----
+imageLabel 		Arbitrary label. The name by which users refer to the image.
+fileFormat 		Specifies the format of the image file. Valid formats include
+				qcow2, raw, vhd, vmdk, vdi, iso, aki, ari, and ami.
+				You can verify the format using the filecommand:
+				$ file cirros-0.3.1-x86_64-disk.img            ----
+					cirros-0.3.1-x86_64-disk.img: QEMU QCOW Image (v2),
+					41126400 bytes
+containerFormat Specifies the container format. Valid formats include: bare,
+				ovf, aki, ariand ami.
+				Specify "bare" to indicate that the image file is not in a file
+				format that contains metadata about the virtual machine.
+				Although this field is currently required, it is not actually used
+				by any of the OpenStack services and has no effect on system
+				behavior. Because the value is not used anywhere, it safe to
+				always specify bareas the container format.
+accessValue 	Specifies image access
+				• true - All users can view and use the image.
+				• false - Only administrators can view and use the image.
+imageFile 		Specifies the name of your downloaded image file.
+
+For example:
+# glance image-create --name="CirrOS 0.3.1" --disk-format=qcow2  --container-format=bare --is-public=true < cirros-0.3.1-x86_64-disk.img
+
+To launch an instance --
+nova keypair-add --pub_key id_rsa.pub mykey ----
+nova keypair-list  ----
+
+root@precise64:~/.ssh# nova secgroup-add-rule default tcp 22 22 0.0.0.0/0 ----
++-------------+-----------+---------+-----------+--------------+
+| IP Protocol | From Port | To Port | IP Range  | Source Group |
++-------------+-----------+---------+-----------+--------------+
+| tcp         | 22        | 22      | 0.0.0.0/0 |              |
++-------------+-----------+---------+-----------+--------------+
+
+root@precise64:~/.ssh# nova secgroup-add-rule default icmp -1 -1 0.0.0.0/0 ----
++-------------+-----------+---------+-----------+--------------+
+| IP Protocol | From Port | To Port | IP Range  | Source Group |
++-------------+-----------+---------+-----------+--------------+
+| icmp        | -1        | -1      | 0.0.0.0/0 |              |
++-------------+-----------+---------+-----------+--------------+
+
+
+$ nova boot --flavor flavorType--key_name keypairName--image ID newInstanceName  ----
+Create an instance by using flavor 1 or 2. For example:
+
+$ nova boot --flavor 1 --key_name mykey --image 9e5c2bee-0373-414c-b4afb91b0246ad3b --security_group default cirrOS
+
+root@controller:~/images# nova boot --flavor 7 --key_name mykey --image d470632b-0cb0-4f70-8d61-996fb4921661 --security_group default cirrOS
+
+When no enough memory, Compute creates, but does not start, with status ERROR
+root@controller:~/images# nova list
++--------------------------------------+--------+--------+------------+-------------+----------------+
+| ID                                   | Name   | Status | Task State | Power
+State | Networks       |
++--------------------------------------+--------+--------+------------+-------------+----------------+
+| c2b25fdd-0977-4511-b28f-a2ddcf6d2533 | cirrOS | ERROR  | None       |
+NOSTATE     | vmnet=10.0.0.2 |
++--------------------------------------+--------+--------+------------+-------------+----------------+
+
+root@precise64:~/.ssh# nova help flavor-create
+
+root@precise64:~/.ssh# nova flavor-create m1.mini 6 50 1 1
++----+---------+-----------+------+-----------+------+-------+-------------+-----------+
+| ID | Name    | Memory_MB | Disk | Ephemeral | Swap | VCPUs | RXTX_Factor |
+Is_Public |
++----+---------+-----------+------+-----------+------+-------+-------------+-----------+
+| 6  | m1.mini | 50        | 1    | 0         |      | 1     | 1.0         |
+True      |
++----+---------+-----------+------+-----------+------+-------+-------------+-----------+
+
+mysql --host=controller -u neutron -p
+
+find user in mysql DB
+SELECT User FROM mysql.user;  ----
+
+remove an instance 
+nova delete f1b654d1-aaac-414e-9830-448643d357e0  ----
+
+ip route add default via 192.168.114.1   ----
+ip route delete default via 192.168.114.1 	----
+
+nova-manage service list ----
+
+nova network-list  ----
+nova network-show 67fba1af-7733-49b1-8b32-131df6f1c9f0  ----
+
+Restart horizon:
+service apache2 restart   ----
+service memcached restart     ----
+
+
+...........Neutron --
+To check all physical and virutal interfaces
+ip a   ----
+
+To check interface and bridge in a vSwitch 
+ovs-vsctl ----
+ovs-vsctl show  ----
+Shows ethernet connection on bridge ports.
+
+To show data path on a vSwitch 
+ovs-dpctl ----
+
+neutron router show router1 ----
+Are the private and public subnets connected to the router?
+
+to list firewall rules
+iptables -L   ----
+
+To check packet path
+tcpdump -n -i eth0 -w filename  ----
+
+tcpdump -i eth1 -n |grep ICMP 
+tcpdump -i eth1 -n |grep -i dhcp 
+
+tcpdump -p -s 1600 -i eth3 -w /tmp/taralaunch.txp ip host 203.135.109.19
+
+tcpdump -q -X -i eth1 src 192.168.114.103
+-q to print less protocol info
+-X to print packet content
+
+http://www.danielmiessler.com/study/tcpdump/
+
+Network namespaces allow VLANs to have overlaping ip address space.
+
+ip netns list ----
+
+ip netns exec <namespace  id> route -n 		----
+- Show routing table inside a specific namespace.
+- Execute commands including ssh or ping
+
+ip netns exec <public namespace id> ping floating_IP 	----
+Does the pulich ip match the local LAN?
+
+route -n   ----
+
+with instance ID, or with horizen
+nova console-log  0d7d892c-822c-40ad-9b0d-b89924f5268f  ----
+
+ovs-vsctl add-br mybridge        ----
+ovs-vsctl show                     ----
+
+ovs-vsctl add-port mybridge eth0   ----
+ifconfig mybridge up      ----
+
+To get IP address for the new interfact mybridge from DHCP
+dhcpclient mybridge    ----
+route -n
+
+To remove eth0 IP address:
+ifconfig eth0 0  ----
+
+To set to promiscuous mode 	----
+ifconfig eth0 promisc
+
+ovs-vsctl del-br mybridge   ----
+
+ip tuntap add mode tap vport1       ----
+ip tuntap add mode tap vport2     ----
+
+ifconfig vport1 up  ----
+ifconfig vport2 up      ----
+
+Then add the 2 ports to my bridge:
+
+ovs-vsctl add-port mybridge vport1 -- add-port mybridge vport2    ----
+
+ovs-appctl fdb/show mybridge    ----
+
+open flow command:
+ovs-ofctl show mybridge   ----
+
+ovs-ofctl dump-flows mybridge  ----
+
+ovs-ofctl dump-ports br-tun		----
+
+ovs-vsctl list Bridge       ----
+ovs-vsctl list Port        ----
+
+ovs-vsctl list Interfact     -----
+
+To add cpu, memory and disk load:
+stress --cpu 2 --timeout 60   ----
+adding memory load
+stress -m 3 --vm-hang 120   ----
+
+------------------------------------------------------
+|      ----------
+|      | IP stack|
+|      ----------
+eth0 --   |
+|  	   |  |
+|      |  |Internal
+|	   |  |port
+|   ----------   vport1       eth0
+|   |my bridge| ------------------  VM1
+|   | (ovs)   | vport2 		  eth0
+|   ----------  ------------------  VM2
+|
+|
+------------------------------------------------------
+#################################
+To install kvm:  --
+
+apt-get update && apt-get dist-upgrade 		----
+apt-get install kvm libvirt-bin virtinst		----
+
+
+To install OVS --
+if install the above package, remove the default bridge br0
+virsh net-destroy default				----
+virsh net-autostart --disable default   ----
+
+aptitude purge ebtables			----
+The "ebtables" program is a filtering tool for a Linux-based bridging firewall, br0.
+not using it if use ovs, seems
+
+apt-get install openvswitch-controller openvswitch-brcompat openvswitch-switch openvswitch-datapath-source		----
+
+enable bridge compatibility: 
+/etc/default/openvswitch-switch   	---
+BRCOMPAT=yes  				----
+
+service openvswitch-switch start 			----
+
+To list running KVM or QEMU VMs
+root@nova:~# virsh -c qemu:///system list  ----
+ Id    Name                           State
+----------------------------------------------------
+ 2     instance-0000000b              running
+ 3     instance-0000000c              running
+
+Install KVM --
+To check if the processor support hardware virutlation.
+egrep -c '(vmx|svm)' /proc/cpuinfo
+
+0 means, no support. use qemu then
+1 means, it does, but need to enable in BIOS
+
+Or run:
+kvm-ok			----
+
+which may provide an output like this:
+INFO: /dev/kvm exists
+KVM acceleration can be used
+
+If you see :
+INFO: Your CPU does not support KVM extensions
+KVM acceleration can NOT be used
+
+apt-get install qemu-kvm libvirt-bin ubuntu-vm-builder bridge-utils 	----
+
+Add users to groups ---
+sudo adduser `id -un` libvirtd 		----
+That group libvirtd can run VM>
+
+1. libvirt-bin provides libvirtd which you need to administer qemu and kvm instances using libvirt
+2. qemu-kvm (kvm in Karmic and earlier) is the backend
+3. ubuntu-vm-builder powerful command line tool for building virtual machines
+4. bridge-utils provides a bridge from your network to the virtual machines
+
+verify installation --
+virsh -c qemu:///system list 		----
+
+ls -la /var/run/libvirt/libvirt-sock		----
+srwxrwx--- 1 root libvirtd 0 Mar 18 10:41 /var/run/libvirt/libvirt-sock
+
+ls -l /dev/kvm 				----
+crw-rw----+ 1 root kvm 10, 232 Mar 18 10:41 /dev/kvm
+
+rmmod kvm			----
+modprobe -a kvm 	----
+
+Manage VM --
+virsh -c qemu:///system list		----
+
+root@compute1:/home/orsyp# virsh list				----
+ Id    Name                           State
+----------------------------------------------------
+ 2     instance-00000022              running
+root@compute1:/home/orsyp# virsh destroy instance-00000022
+Domain instance-00000022 destroyed				----
+
+virsh dominfo instance-00000044			----
+
+root@precise64:~# virsh domifstat instance-00000044  tapaabbfde7-b4		----
+tapaabbfde7-b4 rx_bytes 468
+tapaabbfde7-b4 rx_packets 6
+tapaabbfde7-b4 rx_errs 0
+tapaabbfde7-b4 rx_drop 0
+tapaabbfde7-b4 tx_bytes 2694
+tapaabbfde7-b4 tx_packets 39
+tapaabbfde7-b4 tx_errs 0
+tapaabbfde7-b4 tx_drop 0
+
+
+For this error:
+It is in both on controller, /var/log/nova/nova-scheduler.log and compute node /var/log/nova/nova-compute.log
+libvirtError: internal error: no supported architecture for os type 'hvm'\n
+
+compute_driver=libvirt.LibvirtDriver
+libvirt_type=qemu
+
+use this to check if kvm is enabled:
+kvm-ok 			----
+#################################
+DOES NOT WORK
+To define auto assign floating IP --
+To list all floating IP addresses:
+nova floating-ip-bulk-list 		----
+
+nova floating-ip-pool-list 		----
+
+create a dedicated pool:
+nova-manage floating create --pool pool_auto_assign --ip_range 192.168.114.80/28 ----
+
+in /etc/nova/nova.conf ---
+default_floating_pool = pool_auto_assign
+floating_range = 172.17.1.32/27
+auto_assign_floating_ip = True
+quota_floating_ips = 50
+
+service nova-network restart ----
+
+
+nova add-floating-ip d8c76f95-70fb-451f-895f-647345a2360d 192.168.114.91 	----
+
+virsh list		----
+
+
+vm console log:
+/var/lib/nova/instances/7ebb4591-36c2-4ccd-b339-d523cb1bcc9e/console.log  ---
+/var/lib/nova/instances/7ebb4591-36c2-4ccd-b339-d523cb1bcc9e/libvirt.xml  ---
+
+
+Get a console to access an instance --
+
+To get a VNC console to access an instance, run the following command:
+
+$ nova get-vnc-console myCirrosServer xvpvnc ----
+The command returns a URL from which you can access your instance:
+
++--------+------------------------------------------------------------------------------+
+| Type   | Url
+|
++--------+------------------------------------------------------------------------------+
+| xvpvnc |
+http://166.78.190.96:6081/console?token=c83ae3a3-15c4-4890-8d45-aefb494a8d6c |
++--------+------------------------------------------------------------------------------+
+
+To get password for win 2012 server:
+nova get-password win2012 ~root/.ssh/id_rsa
+each time will be difference
+
+for CentOS 6.5:
+cloud-user: with implemented key
+
+To generate new key pair, "ssh-keygen" or user daskboard. 
+
+for Ubuntu 12.04 LTS:
+Use ubuntu, with key
+
+To allow ssh login with password: in /etc/ssh/sshd_config:	--
+PasswordAuthentication yes
+service sshd restart
+
+run this before taking a snapshot		--
+sync 		----
+
+Open vSwitch install --
+
+KVM uses tunctl to handle various bridging modes, which you can 
+install with the Debian/Ubuntu package uml-utilities.
+
+% apt-get install uml-utilities 		----
+
+To check OVS kernel module, newer than OVS 1.10
+modinfo openvswitch 			----
+ovs-vsctl show				----
+
+open vswitch connect to physical machine  --
+ovs-vsctl add-br br0 				----
+ovs-vsctl add-port br0 eth0			----
+ovs-vsctl add-port br0 eth1			----
+
+connect VM to VM: 	--
+ovs-vsctl add-br br0
+
+cat /etc/ovs-ifup
+#!/bin/sh
+switch='br0'
+/sbin/ifconfig $1 0.0.0.0 up
+ovs-vsctl add-port ${switch} $1
+
+cat /etc/ovs-ifdown
+#!/bin/sh
+switch='br0'
+/sbin/ifconfig $1 0.0.0.0 down
+ovs-vsctl del-port ${swith} $1
+
+kvm -m 512 -net nic,macaddr=00:11:22:33:44:55-net \
+tap,script=/etc/ovs-ifup,downscript=/etc/ovs-ifdown-dirve \
+file=/path/to/disk-image,boot=on
+
+kvm -m 512 -net nic,macaddr=11:22:33:44:55:66-net \
+tap,script=/etc/ovs-ifup,downscript=/etc/ovs-ifdown-dirve \
+file=/path/to/disk-image,boot=on
+
+connecting 2 VM with OVS -
+
+sudo ifconfig eth1 0
+sudo ovs-vsctl add-br br1
+sudo ovs-vsctl add-br br2
+sudo ovs-vsctl add-port br1 eth0
+sudo ifconfig br1 192.168.1.155 netmask 255.255.255.0
+sudo ifconfig br2 10.1.1.1 netmask 255.255.255.0
+sudo ovs-vsctl add-port br2 gre0 --set interface gre0 typ=gre options:remote_ip=192.168.1.152
+
+sudo ifconfig eth1 0
+sudo ovs-vsctl add-br br1   # connect to the eth0
+sudo ovs-vsctl add-br br2   # connect to all VMs, with script to add VM interfaces
+sudo ovs-vsctl add-port br1 eth0
+sudo ifconfig br1 192.168.1.152 netmask 255.255.255.0
+sudo ifconfig br2 10.1.1.2 netmask 255.255.255.0
+sudo ovs-vsctl add-port br2 gre0 --set interface gre0 type gre options:remote_ip=192.168.1.155
+
+sudo vim /etc/ovs-ifup
+#!/bin/sh
+switch='br2'
+/sbin/ifconfig $1 0.0.0.0 up
+ovs-vsctl add-port ${switch} $1
+
+sudo vim /etc/ovs-ifdown
+#!/bin/sh
+switch='br2'
+/sbin/ifconfig $1 0.0.0.0 down
+ovs-vsctl del-port ${switch} $1
+
+sudo chmod +x /etc/ovs-ifup   /etc/ovs-ifdown
+sudo kvm -m 512 -net nic,macaddr=11:22:33:44:55:66 -net tap,script=/etc/ovs-ifup,downscript=/etc/ovs-ifdown \
+-cdrom /home/ubuntu-12.04-desktop-i386.iso &
+
+To connect to another bridge need "patch port", directly connected --
+ovs-vsctl add-br br0
+ovs-vsctl add-br br1
+ovs-vsctl add-port br0 patch-to-br1
+ovs-vsctl set interface patch-to-br1 type=patch
+ovs-vsctl set interface patch-to-br1 options:peer=patch-to-br0
+
+ovs-vsctl add-port br1 patch-to-br0
+ovs-vsctl set interface patch-to-br0 type=patch
+ovs-vsctl set interface patch-to-br0 options:peer=patch-to-br1
+
+may need to restart openvswitch to consider the patch
+service  openvswitch-switch restart		----
+
+GRE tunnel to remote OVS --
+ovs-vsctl add-br br0
+ovs-vsctl add-br br1
+ovs-vsctl add-port br0 eth0
+ifconfig eth0 0
+ifconfig br0 192.168.1.10 netmask 255.255.255.0
+route add default gw 192.168.1.1 br0    #to reach remote bridge through GRE
+ifconfig br1 10.1.2.10 netmask 255.255.255.0
+ovs-vsctl add-port br1 gre1 -- set interfact gre1 type=gre options:remote_ip=192.168.1.11
+
+ovs-vsctl add-br br0
+ovs-vsctl add-br br1
+ovs-vsctl add-port br0 eth0
+ifconfig eth0 0
+ifconfig br0 192.168.1.11 netmask 255.255.255.0
+route add default gw 192.168.1.1 br0
+ifconfig br1 10.1.2.11 netmask 255.255.255.0
+ovs-vsctl add-port br1 gre1 -- set interface gre1 type=gre options:remote_ip=192.168.1.10
+
+ovs1 and ovs2 bare metal communicate with GRE tunnel 	--
+In this config, GRE tunnel sent out with default GW to the remote_ip. The eth0 is not connected to the br-int
+
+ovs-vsctl add-br br-int
+ifconfig eth0 192.168.1.10 netmask 255.255.255.0
+route add default gw 192.168.1.1 eth0
+ovs-vsctl add-port br-int mgmt0 -- set interface mgmt0 type=internal
+ifconfig mgmt0 10.1.2.10 netmask 255.255.255.0
+ovs-vsctl add-port br-int gre1 -- set interface gre1 type=gre options:remote_ip=192.168.1.11
+
+ovs-vsctl add-br br-int
+ifconfig eth0 192.168.1.11 netmask 255.255.255.0
+route add default gw 192.168.1.1 eth0
+ovs-vsctl add-port br-int mgmt0 -- set interface mgmt0 type=internal
+ifconfig mgmt0 10.1.2.11 netmask 255.255.255.0
+ovs-vsctl add-port br-int gre1 -- set interface gre1 type=gre options:remote_ip=192.168.1.10
+
+......................
+for the Unable to retrive security group error: --
+comment out this line in /etc/nova/nova.conf every where
+#security_group_api=neutron 			----
+
+......................
+To find out VNC console rul
+nova get-vnc-console a3c728be-7add-4144-bc9f-e548b7e0ea92 novnc
++-------+---------------------------------------------------------------------------------+
+| Type  | Url
+|
++-------+---------------------------------------------------------------------------------+
+| novnc | http://controller:6080/vnc_auto.html?token=336a9122-cbb3-4346-9aaa-f047b92cefe5
+|
++-------+---------------------------------------------------------------------------------+
+
+
+checking metadata 	--
+curl http://169.254.169.254:8775/ 		----
+1.0
+2007-01-19
+2007-03-01
+2007-08-29
+2007-10-10
+2007-12-15
+2008-02-01
+2008-09-01
+2009-04-04
+
+once neutron installed nova-network need to be stopped. 	--
+service nova-network stop					----
+echo "manual" >> /etc/init/nova-network.override				----
+
+On compute node in /etc/nova/nova.conf to enable metadata profix
+service_neutron_metadata_proxy=True 			----
+
+When terminating multiple instance the same time, on instance can be removed  --
+from dashborad/mysql, but not from the local compute node. To remove it 
+
+root@compute1:/home/orsyp# virsh list				----
+ Id    Name                           State
+----------------------------------------------------
+ 2     instance-00000022              running
+root@compute1:/home/orsyp# virsh destroy instance-00000022		----
+Domain instance-00000022 destroyed				
+or
+virsh destroy 2			----
+Then, check 
+virsh list  --all			----
+
+Then:
+rm /etc/libvirt/qemu/instance-00000022.xml			----
+virsh undefine instance-00000022					----
+
+
+Otherwise this error will show in in /var/log/nova/nova-compute.log
+2014-03-27 11:27:37.196 14838 ERROR nova.virt.libvirt.driver [-] Getting disk size of instance-00000022: [Errno 2] No such file or directory: '/var/lib/nova/instances/83b3ebcd-82c0-4b58-8702-871aa52cd287/disk' 		---
+
+To remove linux bridge created by nova-network --
+ip link set dev br100 down		----
+brctl delbr br100			----
+
+check quotas:
+nova quota-defaults						----
+nova quota-class-update --instances 15 default				----
+
+nova quota-update --quotaName quotaValue tenantID		----
+nova quota-update --floating-ips 20 $tenant				----
+nova quota-show --tenant $tenant						----
+
+nova quota-show --user $tenantUser --tenant $tenant		----
+
+nova quota-update --user $tenantUser --floating-ips 12 $tenant		----
+nova quota-show --user $tenantUser --tenant $tenant					----
+
+To restart --
+service networking restart			----
+service libvirtd restart 			----
+service nova-compute restart 		----
+
+Any server that does not have nova-apirunning on it requires an iptables entry so that images can get metadata information. --
+On compute nodes, configure iptables with this command: 
+
+iptables -t nat -A PREROUTING -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DNAT --to-destination $NOVA_API_IP:8773 ----
+
+all open iptables --
+iptables -P INPUT ACCEPT  	----
+iptables -P FORWARD ACCEPT 	----
+iptables -P OUTPUT ACCEPT	----
+
+TO block all incoming ping --
+iptables -A INPUT -p icmp -j DROP 	----
+To delete that rule: 		--
+iptables -D INPUT -p icmp -j DROP	----
+
+
+To save changes
+iptables-save		----
+
+To clean the nat table --
+iptables -t nat --flush 			----
+#!/bin/sh
+echo "Stopping firewall and allowing everyone..."
+iptables -F
+iptables -X
+iptables -t nat -F
+iptables -t nat -X
+iptables -t mangle -F
+iptables -t mangle -X
+iptables -P INPUT ACCEPT
+iptables -P FORWARD ACCEPT
+iptables -P OUTPUT ACCEPT
+
+To check ip tables --
+ufw status 		----
+ufw enable 		----
+ufw disable 		----
+
+To enable iptables trace --
+# for IPv4
+modprobe ipt_LOG 		----
+# for IPv6
+modprobe ip6t_LOG		----
+
+To list current connections --
+conntrack -L  ----
+
+To disable a compute node --
+nova-manage service disable  compute1 nova-compute			----
+nova-manage service enable compute1 nova-compute			----
+
+you cannot use CLI tools like nova-manageand novato manage networks or IP addressing, including both fixed and floating IPs, with OpenStack Networking.
+If you use OpenStack Networking, do not run the OpenStack Compute nova-network service
+
+for this error: ----
+neutron   security-group-list
+404 Not Found			---
+
+The resource could not be found. ---
+
+or This in nova-scheduler.log on contoller:
+'NeutronClientException: 404 Not Found				---
+
+Define this on the controller node in /etc/neutron/plugins/openvswitch/ovs_neutron_plugin.ini:
+firewall_driver = neutron.agent.linux.iptables_firewall.OVSHybridIptablesFirewallDriver			----
+
+This seems not enough
+firewall_driver = neutron.agent.firewall.NoopFirewallDriver
+
+...........Network namespace -
+ip netns add blud			----
+ip netns list				----
+ip link list				----
+
+Can onlyl assig virutal ethernet interace (veth) to a network namespace. They
+always come in pair. This command create and link to veth:
+As a result, you can use veth interfaces to connect a network namespace to the
+outside world via the “default” or “global” namespace where physical interfaces exist.
+
+ip link add veth0 type veth peer name veth1			----
+
+Right now, they belong to the default or global namespace, along with physical interfaces.
+To  connect ns blue to global ns			--
+ip link set veth1 netns blue ----
+
+To see the links and interfaces within blud:		--
+ip netns exec blue ip link list			----
+
+Config interface in a ns:		--
+ip netns exec blue ifconfig veth1 10.1.1.1/24 up			----
+
+ip netns exec blue ip a 		----
+
+ip netns exec blue bash			----
+
+ifconfig                                            --> ip addr or just ip a
+ifconfig <interface> up/down                        --> ip link set dev <interface> up/down
+ifconfig <interface> <ip> netmask <netmask>         --> ip addr add <ip>/<masklen> dev <interface>
+netstat -rn                                         --> ip route or just ip r
+route add -net <net> netmask <netmask> gw <gateway> --> ip r add <net>/<netmasklen> via <gateway>
+
+.................................
+error on neutron node: :/var/log/neutron/openvswitch-agent.log 	--
+Command: ['sudo', '/usr/bin/neutron-rootwrap', '/etc/neutron/rootwrap.conf', 'ovs-vsctl', '--timeout=2', '--format=json', '--', '--columns=name,external_ids', 'list', 'Interface'] Exit code: 1 Stdout: '' Stderr:
+'2014-03-30T20:42:04Z|00001|reconnect|WARN|unix:/var/run/openvswitch/db.sock: connection attempt failed (No such file or directory)\novs-vsctl: unix:/var/run/openvswitch/db.sock: database connection failed (No such file or directory)\n'
+
+Neutron needs this: /etc/sudoers.d/neutron_sudoers 		----
+Need  the line:
+#includedir /etc/sudoers.d
+in /etc/sudoers
+
+To show the flow table:				--
+ovs-vsctl is for the switch hardware config;		
+ovs-ofctl is the flow software config ;
+ovs-ofctl dump-flows br-tun 		----
+NXST_FLOW reply (xid=0x4):
+ cookie=0x0, duration=7859.217s, table=0, n_packets=4133, n_bytes=173898, idle_age=2, priority=0 actions=NORMAL
+
+To show the ports used in the  flow table 				--
+
+ovs-ofctl show br-tun				----
+OFPT_FEATURES_REPLY (xid=0x2): dpid:00008e420c572344
+n_tables:254, n_buffers:256
+capabilities: FLOW_STATS TABLE_STATS PORT_STATS QUEUE_STATS ARP_MATCH_IP
+actions: OUTPUT SET_VLAN_VID SET_VLAN_PCP STRIP_VLAN SET_DL_SRC SET_DL_DST SET_NW_SRC SET_NW_DST SET_NW_TOS SET_TP_SRC SET_TP_DST ENQUEUE
+ 2(patch-int): addr:2e:07:20:da:af:83
+     config:     0
+     state:      0
+     speed: 0 Mbps now, 0 Mbps max
+ 3(gre-1): addr:12:f4:a9:ef:46:6c
+     config:     0
+     state:      0
+     speed: 0 Mbps now, 0 Mbps max
+ LOCAL(br-tun): addr:8e:42:0c:57:23:44
+     config:     0
+     state:      0
+     speed: 0 Mbps now, 0 Mbps max
+OFPT_GET_CONFIG_REPLY (xid=0x4): frags=normal miss_send_len=0
+
+ovs-ofctl dump-ports br-tun 		----
+OFPST_PORT reply (xid=0x2): 3 ports
+  port  3: rx pkts=0, bytes=0, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=3528, bytes=148176, drop=0, errs=0, coll=0
+  port  2: rx pkts=6363, bytes=267246, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=1, bytes=42, drop=0, errs=0, coll=0
+  port LOCAL: rx pkts=9, bytes=690, drop=0, errs=0, frame=0, over=0, crc=0
+           tx pkts=6361, bytes=267162, drop=0, errs=0, coll=0
+
+
+To add flow into flow table 			--
+ovs-ofctl add-flow dp0 idle_timeout=180,priority=33000,in_port=1,actions=output:2 			----
+ovs-ofctl add-flow dp0 idle_timeout=180,priority=33000,in_port=2,actions=output:1			----
+
+ovs-ofctl add-flow dp0 idle_timeout=180,priority=33001,dl_type=0x800,nw_src=10.0.0.2,actions=output:2		----
+ovs-ofctl add-flow dp0 idle_timeout=180,priority=33001,dl_type=0x800,nw_src=10.0.0.3,actions=output:1		----
+
+To delete flow --
+ovs-ofctl del-flows dp0
+
+HEAT -
+heat stack-list					----
+heat event-list wordpress		----
+heat stack-show wordpress		----
+
+Specifying parameters --
+heat stack-create -P 'param1=value1;param2=value2' ...		----
+Or put parameters in an environment file: 	---
+parameters:				----
+  image: fedora-19-x86_64
+  flavor: m1.small
+  private_net_id: 99ab8ebf-ad2f-4a4b-9890-fee37cea4254
+  private_subnet_id: ed8ad5f5-4c47-4204-9ca3-1b3bc4de286d
+  public_net_id: 7e687cc3-8155-4ec2-bd11-ba741ecbf4f0
+
+
+heat stack-create -f template.yml  -e environment.yml mystack		----
+
+heat_template_version: 2013-05-23
+description: >
+  A simple HOT template for demonstrating Heat.
+parameters:
+  key_name:
+    type: string
+    default: lars
+    description: Name of an existing key pair to use for the instance
+  flavor:
+    type: string
+    description: Instance type for the instance to be created
+    default: m1.small
+    constraints:
+      - allowed_values: [m1.nano, m1.tiny, m1.small, m1.large]
+        description: Value must be one of 'm1.tiny', 'm1.small' or 'm1.large'
+  image:
+    type: string
+    default: cirros
+    description: ID or name of the image to use for the instance
+  private_net_id:
+    type: string
+    description: Private network id
+  private_subnet_id:
+    type: string
+    description: Private subnet id
+  public_net_id:
+    type: string
+    description: Public network id
+
+resources:
+  instance0:
+    type: OS::Nova::Server
+    properties:
+      name: instance0
+      image: { get_param: image }
+      flavor: { get_param: flavor }
+      key_name: { get_param: key_name }
+      networks:
+        - port: { get_resource: instance0_port0 }
+  instance0_port0:
+    type: OS::Neutron::Port
+    properties:
+      network_id: { get_param: private_net_id }
+      security_groups:
+        - default
+      fixed_ips:
+        - subnet_id: { get_param: private_subnet_id }
+  instance0_public:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_net_id }
+      port_id: { get_resource: instance0_port0 }
+
+outputs:
+  instance0_private_ip:
+    description: IP address of instance0 in private network
+    value: { get_attr: [ instance0, first_address ] }
+  instance0_public_ip:
+    description: Floating IP address of instance0 in public network
+    value: { get_attr: [ instance0_public, floating_ip_address ] }
+
+.................................
+restarting controller node		--
+service nova-api restart
+service nova-scheduler restart
+service nova-conductor restart
+service neutron-server restart
+
+restarting compute node		--
+service openvswitch-switch restart
+service nova-compute restart
+service neutron-plugin-openvswitch-agent restart
+
+
+restarting network node --
+service networking restart
+
+service neutron-server restart
+service neutron-dhcp-agent restart
+service neutron-l3-agent restart
+service neutron-metadata-agent restart
+
+service neutron-plugin-openvswitch-agent restart
+
+To restart heat service 	--
+service heat-api restart
+service heat-api-cfn restart
+service heat-engine restart
+......................
+For this error in neutron-plugin-openvswitch-agent.log 	--
+2014-04-02 11:15:55.785 1275 ERROR neutron.agent.linux.ovs_lib [-] Unable to
+execute ['ovs-ofctl', 'del-flows', 'br-tun', 'table=2,tun_id=1']. Exception:
+Command: ['sudo', '/usr/bin/neutron-rootwrap', '/etc/neutron/rootwrap.conf',
+'ovs-ofctl', 'del-flows', 'br-tun', 'table=2,tun_id=1']
+Exit code: 1
+Stdout: ''
+Stderr: 'ovs-ofctl: br-tun is not a bridge or a socket\n'
+
+
+apt-get remove openvswitch-common openvswitch-datapath-dkms openvswitch-datapath-source   openvswitch-switch neutron-plugin-openvswitch neutron-plugin-openvswitch-agent
+
+apt-get install openvswitch-common openvswitch-datapath-dkms openvswitch-datapath-source   openvswitch-switch neutron-plugin-openvswitch neutron-plugin-openvswitch-agent
+
+.................................
+external network can not enable dhcp. It could cause instances can not reach metadata.

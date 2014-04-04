@@ -172,6 +172,7 @@ for ((i=0;i<$foonum;i++)); do
    echo ${FOO[${i}]}
 
 done
+for ((i=1;i<11;i++)) ; do  openssl rand -hex 10; done
 ...........date)}
 
 To count the number of characters contained in a variable string, use ${#varname}. 

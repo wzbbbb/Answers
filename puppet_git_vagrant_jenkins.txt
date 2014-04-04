@@ -502,6 +502,27 @@ resources.
     include ntp
 
 The "include" here trigger puppet to apply the class
+
+class postfix {
+  package {'postfix':
+    ensure => 'installed' ,
+    require=> Exec['apt-update'],
+    before => File['/etc/postfix/main.cf'],
+  }
+  file { '/etc/postfix/main.cf':
+    ensure => file,
+    mode   => '0644',
+    content=> "$::postfix_config_content", # global variable specified in enc
+  }
+  service { 'postfix':
+    ensure     => running,
+    require    => Package['postfix'],
+    enable     => true,
+    subscribe  => File['/etc/postfix/main.cf'],
+  }
+
+}
+
 .....................Modules.
 
 The Modulepath is defined in: /etc/puppetlabs/puppet/puppet.conf
@@ -1280,6 +1301,16 @@ On the agent:
  rm -rf /var/lib/puppet/ssl ----
 
  puppet agent -t ----
+
+In script --
+puppet master side: ---
+puppet cert clean raring64.orsypgroup.com 
+puppet agent side: ---
+echo '192.168.114.174 calpmcs02-linux.orsypgroup.com' >> /etc/hosts
+echo '[agent]' >>/etc/puppet/puppet.conf 
+echo '    server = calpmcs02-linux.orsypgroup.com' >>/etc/puppet/puppet.conf 
+ rm -rf /var/lib/puppet/ssl 
+puppet agent -t --debug
 
 ...................... fpm
 Quickly create custom software packages with FPM

@@ -5,6 +5,10 @@ service <servicename> start
 
 service <servicename> restart
 
+service networking restart
+
+hostname controller
+
 /etc/init.d/mongodb stop
 
 dpkg -i vagrant_1.4.3_x86_64.deb
@@ -14,4 +18,73 @@ sudo apt-get install jenkins
 apt-get remove nginx
 
 #To search for package
-apt-cache search keyword
+apt-cache search keyword                ----
+
+This command must run with root privileges. Try:
+
+sudo /etc/init.d/vboxdrv setup   ----
+Also try purging everything:
+
+apt-get purge virtualbox-4.1 virtualbox-4.2          ----
+then reboot, reinstall VirtualBox 4.2, and run:
+
+sudo apt-get -f install                  ----
+to install any missing dependencies.
+
+Run sudo /etc/init.d/vboxdrv setup again to make sure the VirtualBox kernel
+module is installed.
+
+to change hostname
+/etc/hostname
+/etc/hosts
+
+To prevent ubuntu laptop falling in sleep --
+In /etc/default/grub:
+Have you tried adding the kernel options "acpi=off apm=off" to the
+GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub?
+
+Then run sudo update-grub and reboot your computer.
+
+GRUB_CMDLINE_LINUX_DEFAULT="quiet splash acpi=off apm=off"  ----
+
+To change grub boot order:
+find the line:
+GRUB_DEFAULT=0 
+and set it to GRUB_DEFAULT=x # x is zero indexed
+
+To disable dhcp --
+setup /etc/network/interfaces
+
+auto lo
+iface lo inet loopback
+
+auto eth0
+iface eth0 inet static
+address 192.168.1.10
+netmask 255.255.255.0
+gateway 192.168.1.254
+
+sudo chattr +i /etc/network/interfaces
+
+To set timezone
+tzselect 			----
+
+ntp sync --
+service ntp stop			----
+ntpdate controller			----
+service ntp start 			----
+
+To install virtualbox --
+sudo add-apt-repository ppa:debfx/virtualbox 
+sudo apt-get update
+sudo apt-get install virtualbox
+
+To get usb to ethernet support --
+for Trendnet usb to ethernet adapter 
+ lsmod |grep asix					----
+root@calpmzwa:/var/log/neutron# modprobe asix				----
+root@calpmzwa:/var/log/neutron# lsmod |grep asix
+asix                   39131  0
+usbnet                 39575  1 asix
+mii                    13981  2 asix,usbnet
+

@@ -1087,8 +1087,7 @@ location /images/ {
 Example: Rewrite And Display Image --
 valid_referers blocked www.example.com example.com;
  if ($invalid_referer) {
-  rewrite ^/images/uploads.*\.(gif|jpg|jpeg|png)$
-http://www.examples.com/banned.jpg last
+  rewrite ^/images/uploads.*\.(gif|jpg|jpeg|png)$ http://www.examples.com/banned.jpg last
  }
 
 Directory Restrictions -
