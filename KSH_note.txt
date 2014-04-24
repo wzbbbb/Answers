@@ -507,6 +507,7 @@ sed 's/Unix/UNIX/g' filename
 who |cut -c1-8 |sed 's/  *//g' #remove the spaces
 who |sed 's/ .*$//g' #remove from the first space to the end of the line
 
+sed -i s/localhost/$db_host/ etc/wordpress/wp-config.php
 sed -n '20,25p' filename  # print from line 20 to line 50 of a file
 sed -n '/a_string/p' filename  # print only the lines contain the "a_string" 
 sed  '1,2d' filename # delete the first 2 lines fo the file

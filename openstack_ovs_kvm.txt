@@ -133,6 +133,7 @@ used: ----
 417bdba57847b2ede361
 S3 pass:
 zwa: FWpxEwx$YczP
+cs1: a5f3dd2139796c6d4529
 MySQL database --
 DB on controller ---
 clients on all other nodes ---
@@ -747,7 +748,7 @@ each time will be difference
 for CentOS 6.5:
 cloud-user: with implemented key
 
-To generate new key pair, "ssh-keygen" or user daskboard. 
+To generate new key pair, "ssh-keygen" or user dashboard. 
 
 for Ubuntu 12.04 LTS:
 Use ubuntu, with key
@@ -962,7 +963,7 @@ service networking restart			----
 service libvirtd restart 			----
 service nova-compute restart 		----
 
-Any server that does not have nova-apirunning on it requires an iptables entry so that images can get metadata information. --
+Any server that does not have nova-api running on it requires an iptables entry so that images can get metadata information. --
 On compute nodes, configure iptables with this command: 
 
 iptables -t nat -A PREROUTING -d 169.254.169.254/32 -p tcp -m tcp --dport 80 -j DNAT --to-destination $NOVA_API_IP:8773 ----
@@ -1012,6 +1013,10 @@ conntrack -L  ----
 To disable a compute node --
 nova-manage service disable  compute1 nova-compute			----
 nova-manage service enable compute1 nova-compute			----
+
+To disable neutron agents --
+neutron agent-list							----
+neutron agent-delete 47c31b37-f5be-4d38-b928-56f0bdfd9ba6			----
 
 you cannot use CLI tools like nova-manageand novato manage networks or IP addressing, including both fixed and floating IPs, with OpenStack Networking.
 If you use OpenStack Networking, do not run the OpenStack Compute nova-network service
@@ -1203,30 +1208,75 @@ outputs:
 .................................
 restarting controller node		--
 service nova-api restart
+service nova-cert restart
 service nova-scheduler restart
 service nova-conductor restart
 service neutron-server restart
+service nova-consoleauth restart
+service nova-novncproxy restart
 
 restarting compute node		--
 service openvswitch-switch restart
+chmod o+r /var/run/openvswitch/db.sock
 service nova-compute restart
 service neutron-plugin-openvswitch-agent restart
 
 
 restarting network node --
+If you reboot a node that runs the L3 agent, you must run the "neutron-ovs-cleanup" command before the neutron-l3-agent service starts and neutron-dhcp-agent.
+
 service networking restart
 
 service neutron-server restart
+neutron-ovs-cleanup
 service neutron-dhcp-agent restart
 service neutron-l3-agent restart
+service neutron-lbaas-agent restart
 service neutron-metadata-agent restart
-
+chmod o+r /var/run/openvswitch/db.sock
 service neutron-plugin-openvswitch-agent restart
+
+root@compute2:~# cat localboot/local.sh
+/usr/bin/dbus-send --system --type=method_call --dest=org.freedesktop.NetworkManager /org/freedesktop/NetworkManager
+org.freedesktop.DBus.Properties.Set string:org.freedesktop.NetworkManager
+string:WirelessEnabled variant:boolean:true
+/usr/sbin/service lightdm stop
+/sbin/ifconfig br-ex 192.168.114.163
+/sbin/ifconfig eth0 0
+/sbin/ifconfig eth0 promisc
+/sbin/ip route add default via 192.168.114.1
+/bin/echo "nameserver 192.168.115.3" >> /etc/resolv.conf
+chmod o+r /var/run/openvswitch/db.sock
+ip route add default via 192.168.114.1 dev br-ex
+
+
+For calpmzwa 	---
+/sbin/ifconfig br-ex 192.168.114.40
+/sbin/ifconfig eth0 0
+/sbin/ifconfig eth0 promisc
+/sbin/ip route add default via 192.168.114.1
+/bin/echo "nameserver 192.168.115.3" >> /etc/resolv.conf
+chmod o+r /var/run/openvswitch/db.sock
 
 To restart heat service 	--
 service heat-api restart
 service heat-api-cfn restart
 service heat-engine restart
+
+keystone role-create --name heat_stack_user			----
+
+To restart ceilometer on controller --
+service ceilometer-agent-central restart
+service ceilometer-api restart
+service ceilometer-collector restart
+service ceilometer-alarm-evaluator restart
+service ceilometer-alarm-notifier restart
+To restart ceilometer on compute node --
+service ceilometer-agent-compute restart
+
+To restart image service --
+service glance-registry restart
+service glance-api restart
 ......................
 For this error in neutron-plugin-openvswitch-agent.log 	--
 2014-04-02 11:15:55.785 1275 ERROR neutron.agent.linux.ovs_lib [-] Unable to
@@ -1244,3 +1294,379 @@ apt-get install openvswitch-common openvswitch-datapath-dkms openvswitch-datapat
 
 .................................
 external network can not enable dhcp. It could cause instances can not reach metadata.
+route interface for internal network should be the network gateway, 10.0.22.1
+.................................disk-image builder	--
+disk-image-create ubuntu \					
+-a i386 -o $TRIPLEO_ROOT/overcloud-compute \
+nova-compute nova-kvm neutron-openvswitch-agent os-collect-config \
+dhcp-all-interfaces
+
+git clone https://github.com/openstack/diskimage-builder.git				----
+git clone https://github.com/openstack/tripleo-image-elements.git 			----
+
+export ELEMENTS_PATH=tripleo-image-elements/elements						----
+diskimage-builder/bin/disk-image-create vm fedora heat-cfntools -a amd64 -o fedora-heat-cfntools 		----
+
+
+export ELEMENTS_PATH=tripleo-image-elements/elements						----
+diskimage-builder/bin/disk-image-create vm ubuntu heat-cfntools -a i386 -o ubuntu-heat-cfntools			----
+
+disk-image-create -a amd64 -o ubuntu-amd64 vm ubuntu
+export ELEMENTS_PATH=~/source/tripleo-image-elements/elements
+disk-image-create -a amd64 -o fedora-amd64-heat-cfntools vm fedora heat-cfntools
+
+
+element-deps
+
+
+ELEMENTS_PATH -- It's a colon (:) separated path list		---
+DIB_ZWA
+............................................
+http://docs.openstack.org/developer/heat/getting_started/jeos_building.html
+To use "make deb" on ubuntu for oz:
+apt-get install devscripts			----
+apt-get install debhelper			----
+apt-get install  python-all		----
+
+apt-get install oz			----
+
+To oz-install additional packages:				--
+oz-install -u /path/to/fedora14.tdl			----
+
+./heat-templates/tools/heat-jeos.sh ./CentOS-6.5-x86_64_zwa_UVMS.tdl CentOS-6.5-x86_64-bin-DVD1.iso 	----
+
+Use this instead:
+oz-install -u -p -d 3 -x ./CentOS.xml  ./CentOS-UVMS.tdl		----
+oz-customize [OPTIONS] <tdl-file> <libvirt-xml-file>			----
+qemu-img convert -c  -O  qcow2 /var/lib/libvirt/images/CentOS-6.5-X86_64.dsk ./CentOS-UVMS-X86_64.qcow2			----
+
+glance image-create --name="UVMS" --disk-format=qcow2 --container-format=bare --is-public=true < ./CentOS-UVMS-X86_64.qcow2 
+
+
+Turn off the default route?
+echo "NOZEROCONF=yes" >> /etc/sysconfig/network  ----
+
+
+CentOS 6.5 with cfstools --
+oz-install -u -p -d 3 -x ./CentOS65-cfntools.xml ./CentOS-6.5-x86_64-cfntools.tdl			----
+
+.................................
+heat stack-create mystack --template-file=./hello_world.yaml --parameters="db_password=R12sdss3;KeyName=mykey;ImageId=f3c55047-c329-4ab1-b180-9499c4c17d11"
+
+To specify a network to run, use "SubnetId" parameter
+
+heat stack-list							----
+heat stack-show mystack							----
+heat resource-list mystack							----
+heat resource-show mystack WikiDatabase 					----
+heat resource-metadata mystack WikiDatabase					----
+heat event-list mystack							----
+heat event-show WikiDatabase 1							----
+
+heat stack-update mystack --template ...			----
+
+ceilometer statistics -m cpu_util -q resource=df30837a-c504-490b-8093-86474b8067a5		----
+
+Basic hot template -
+.................................
+heat_template_version: 2013-05-23
+
+description: Simple template to deploy a single compute instance
+
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      key_name: my_key
+      image: F18-x86_64-cfntools
+      flavor: m1.small
+.................................
+
+multi-line description: --
+description: >
+  This is how you can provide a longer description
+  of your template that goes over several lines.
+
+with parameters, with default : --
+.................................
+heat_template_version: 2013-05-23
+description: Simple template to deploy a single compute instance
+parameters:
+  key_name:
+    type: string
+    label: Key Name
+    description: Name of key-pair to be used for compute instance
+  image_id:
+    type: string
+    label: Image ID
+    description: Image to be used for compute instance
+  instance_type:
+    type: string
+    label: Instance Type
+    description: Type of instance (flavor) to be used
+    default: m1.small 				----
+	constraints:					----
+      - allow_values: [ m1.medium, m1.large, m1.xlarge ]
+        description: Value must be one of m1.medium, m1.large or m1.xlarge.
+  database_password:
+    type: string
+    label: Database Password
+    description: Password to be used for database
+    hidden: true					----
+    constraints:						----
+      - length: { min: 6, max: 8 }
+        description: Password length must be between 6 and 8 characters.
+      - allowed_pattern: "[a-zA-Z0-9]+"
+        description: Password must consist of characters and numbers only.
+      - allowed_pattern: "[A-Z]+[a-zA-Z0-9]*"
+        description: Password must start with an uppercase character.
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      key_name: { get_param: key_name }			----
+      image: { get_param: image_id }
+      flavor: { get_param: instance_type }
+outputs:
+  instance_ip:
+    description: The IP address of the deployed instance
+    value: { get_attr: [my_instance, first_address] }					----
+.................................
+parameter_groups:		--
+- label: <human-readable label of parameter group>
+  description: <description of the parameter group>
+  parameters:
+  - <param name>
+  - <param name>
+
+parameters:			--
+  <param name>:
+    type: <string | number | json | comma_delimited_list>
+    label: <human-readable name of the parameter>
+    description: <description of the parameter>
+    default: <default value for parameter>
+    hidden: <true | false>
+    constraints:
+      <parameter constraints>
+
+In constraints:		---
+length: { min: <lower limit>, max: <upper limit> }
+range: { min: 0, max: 10 }   		# for number
+allowed_values: [ <value>, <value>, ... ]
+allowed_values:
+  - <value>
+  - <value>
+  - ...
+allowed_pattern: <regular expression>
+custom_constraint: <name>
+
+Resources --
+resources:
+  <resource ID>:
+    type: <resource type>
+    properties:
+      <property name>: <property value>
+    metadata:
+      <resource specific metadata>
+    depends_on: <resource ID or list of ID>
+    update_policy: <update policy>
+    deletion_policy: <deletion policy>
+
+
+resources:
+  server1:
+    type: OS::Nova::Server
+    depends_on: [ server2, server3 ]
+  server2:
+    type: OS::Nova::Server
+  server3:
+    type: OS::Nova::Server
+
+Outputs --
+outputs:
+  <parameter name>:
+    description: <description>
+    value: <parameter value>
+
+outputs:
+  instance_ip:
+    description: IP address of the deployed compute instance
+    value: { get_attr: [my_instance, first_address] }
+
+
+get_param: To get parameter values		--
+
+parameters:
+  instance_type:
+    type: string
+    label: Instance Type
+    description: Instance type to be used.
+  server_data:
+    type: json
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      flavor: { get_param: instance_type}
+      metadata: { get_param: [ server_data, metadata ] }
+      key_name: { get_param: [ server_data, keys, 0 ] }
+
+For this:
+{"instance_type": "m1.tiny",
+{"server_data": {"metadata": {"foo": "bar"},
+                 "keys": ["a_key","other_key"]}}}
+
+The result will be:
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      flavor: m1.tiny
+      metadata: {"foo": "bar"} 
+      key_name: a_key 
+
+get_attr : get attribute from a resource at run time		--
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    # ...
+
+outputs:
+  instance_ip:
+    description: IP address of the deployed compute instance
+    value: { get_attr: [my_instance, first_address] }
+  instance_private_ip:
+    description: Private IP address of the deployed compute instance
+    value: { get_attr: [my_instance, networks, private, 0] }
+
+For networks attribut like this :
+{"public": ["2001:0db8:0000:0000:0000:ff00:0042:8329", "1.2.3.4"],
+ "private": ["10.0.0.1"]}
+
+The result would be: 10.0.0.1
+
+get_resource: referencing another resource within the same template. --
+get_resource: <resource ID>
+
+pool_id: {get_resource : pool}
+
+str_replace 		--
+generate data will replace the location of "str_replace"
+str_replace:
+  template: <template string>
+  params: <parameter mappings>
+
+eg ---
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    # general metadata and properties ...
+
+outputs:
+  Login_URL:
+    description: The URL to log into the deployed application
+    value:
+      str_replace:
+        template: http://host/MyApplication
+# should be this?
+        template: http://$host/MyApplication
+        params:
+          host: { get_attr: [ my_instance, first_address ] }
+
+
+get_file			--
+resources:
+  my_instance:
+    type: OS::Nova::Server
+    properties:
+      # general properties ...
+      user_data:
+        get_file: my_instance_user_data.sh
+  my_other_instance:
+    type: OS::Nova::Server
+    properties:
+      # general properties ...
+      user_data:
+        get_file: http://example.com/my_other_instance_user_data.sh
+
+resource_facade --
+resource_facade: <data type>
+
+To create vip
+neutron  lb-vip-create --name myvip --protocol-port 22 --protocol TCP --subnet-id 9a16b52e-ead2-4700-a35b-bab029593390  t1				----
+
+Find all tables that is not utf8: --
+mysql -u root -p					----
+SELECT TABLE_SCHEMA, TABLE_NAME, TABLE_COLLATION FROM information_schema.TABLES WHERE TABLE_COLLATION not like 'utf8%';  ----
+show tables; 			----
+drop table table_name;				----
+alter table migrate_version charset=utf8;			----
+
+Depending on your network interface driver, you may need to disable
+"Generic Receive Offload (GRO)" to achieve suitable throughput between your instances and the external network.
+To temporarily disable GRO on the external network interface while testing your environment:
+ethtool -K eth2 gro off				----
+
+To delete a stuck instance:
+nova  reset-state 8234e134-b623-41a3-80e7-9aa7d70fc86e				----
+nova  delete 8234e134-b623-41a3-80e7-9aa7d70fc86e					----
+
+To test floating IP  --
+neutron floatingip-show $floatingip_id ssh cirros@$floatingip_ip ----
+
+To enable lbaas on neutron node 	--
+Need this in neutron node /etc/neutron/neutron.conf, not on controller!
+lbaas need netns to work
+service_plugins = router,lbaas,metering
+
+In ssh, if ssh hang every time run vim or top, it is a MTU issue. Since GRE
+tunnel add more encaptulations to the packet, so, the original packet need to
+be smaller. 
+
+On neutron node /etc/neutron/dhcp_agent.ini:
+dnsmasq_config_file=/etc/neutron/dnsmasq-neutron.conf
+
+Then create /etc/neutron/dnsmasq-neutron.conf :
+dhcp-option-force=26,1400				----
+
+service neutron-dhcp-agent restart			----
+
+
+To prevent dashboard always timeout put this in:	--
+DOES NOT WORK!! 			--
+/etc/openstack-dashboard/local_settings.py
+SESSION_TIMEOUT = 600
+
+
+ceilometer statistics --meter cpu_util			----
+ceilometer sample-list --meter cpu				----
+
+creating an alarm --
+ceilometer alarm-threshold-create --name cpu_high --description 'instance running hot'  \
+   --meter-name cpu_util  --threshold 40.0 --comparison-operator gt --statistic avg \
+   --period 60 --evaluation-periods 1 \
+   --alarm-action 'log://' \
+   --query resource_id=INSTANCE_ID								 ----
+
+ceilometer alarm-threshold-create --name cpu_high --description 'instance running hot'  \
+   --meter-name cpu_util  --threshold 70.0 --comparison-operator gt --statistic avg \
+   --period 600 --evaluation-periods 3 \
+   --alarm-action 'log://' \
+   --query resource_id=INSTANCE_ID								 ----
+
+ceilometer alarm-update --threshold 75 -a ALARM_ID				----
+ceilometer alarm-history -a ALARM_ID							----
+
+To disable or delete alarm			--
+ceilometer alarm-update --enabled False -a ALARM_ID					----
+ceilometer alarm-delete -a ALARM_ID								----
+
+In the ceilometer-alarm-notifier.log, this message means the action defined in the alarm can not be find. 		--
+2014-04-23 11:33:21.681 27342 ERROR ceilometer.alarm.service [req-1e06a9bf-693f-44e1-9a0b-848c34d13f7e - - - - -] Action  for alarm b64aed8e-26fb-4db3-a720-ea7781487130 is unknown, cannot notify
+
+To fix that, define in the /etc/heat/heat.conf:
+heat_waitcondition_server_url=http://controller:8000/v1/waitcondition				 ----
+
+This is necessary also to generate proper url (webhook) for alarm action
+heat_metadata_server_url=http://controller:8000			----
+

@@ -88,3 +88,42 @@ asix                   39131  0
 usbnet                 39575  1 asix
 mii                    13981  2 asix,usbnet
 
+To stop X server on ubuntu desktop --
+service lightdm stop 			----
+
+To disable wireless:		--
+dbus-send --system --type=method_call --dest=org.freedesktop.NetworkManager
+/org/freedesktop/NetworkManager org.freedesktop.DBus.Properties.Set
+string:org.freedesktop.NetworkManager string:WirelessEnabled
+variant:boolean:false
+
+To enable wireless:		--
+
+dbus-send --system --type=method_call --dest=org.freedesktop.NetworkManager
+/org/freedesktop/NetworkManager org.freedesktop.DBus.Properties.Set
+string:org.freedesktop.NetworkManager string:WirelessEnabled
+variant:boolean:true
+
+To start script during boot:		--
+crontab -e 
+@reboot /path/to/script
+@reboot /root/localboot/local.sh
+
+To set password in batch:
+echo thePassword | passwd theUsername --stdin					----
+Or for ubuntu:
+echo -e "password\npassword\n" | passwd theUsername --stdin 		----
+
+when using "make deb":
+make: debuild: Command not found
+
+apt-get install  devscripts 	----
+
+To upgrade to 14.04
+do-release-upgrade -d
+software-properties
+
+if the file stay in read only even for root, and there is no lock and no other process using it:
+chattr -i /etc/network/interfaces					----
+
+Then it should be writable.

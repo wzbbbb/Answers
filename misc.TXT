@@ -2400,6 +2400,7 @@ They may have the following error:
 
 one compatibility package to install
 yum install compat-glibc.x86_64
+yum -y install glibc.i686
 #######################################################
 #######################################################
 For Windows GCO, if the registry for each profile are removed. They will be recreated automatically when restarting the GCO.
