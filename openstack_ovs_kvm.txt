@@ -141,7 +141,7 @@ clients on all other nodes ---
 On controller node:
 apt-get install python-mysqldb mysql-server    ----
 
-Edit "/etc/mysql/my.cnf" and set the bind-addressto the internal IP address of the controller, to enable access from outside the controller node.
+Edit "/etc/mysql/my.cnf" and set the bind-address to the internal IP address of the controller, to enable access from outside the controller node.
 
 [mysqld]
 ...
@@ -291,7 +291,7 @@ You can source this file to read in the environment variables.
 
 $ source openrc.sh             ----
 
-Verify that your openrc.shfile is configured correctly by performing the same command as above, but without the --os-*arguments.
+Verify that your openrc.sh file is configured correctly by performing the same command as above, but without the --os-*arguments.
 
 $ keystone token-get         ----
 
@@ -307,7 +307,7 @@ Install the Image Service --
 apt-get install glance python-glanceclient  	----
 
 2. Configure the location of the database
- The Image Service provides the glance api and glance-registryservices, each with its own configuration file.  You must update both configuration files throughout this section. Replace GLANCE_DBPASS with your Image Service database password.
+ The Image Service provides the glance api and glance-registry services, each with its own configuration file.  You must update both configuration files throughout this section. Replace GLANCE_DBPASS with your Image Service database password.
 Edit "/etc/glance/glance-api.conf" and 
 "/etc/glance/glance-registry.conf" and change the [DEFAULT]section.
 
@@ -494,7 +494,7 @@ Shows ethernet connection on bridge ports.
 To show data path on a vSwitch 
 ovs-dpctl ----
 
-neutron router show router1 ----
+neutron router-show router1 ----
 Are the private and public subnets connected to the router?
 
 to list firewall rules
@@ -697,7 +697,7 @@ libvirt_type=qemu
 use this to check if kvm is enabled:
 kvm-ok 			----
 #################################
-DOES NOT WORK
+DOES NOT WORK, it is only for nova-network, not for neutron
 To define auto assign floating IP --
 To list all floating IP addresses:
 nova floating-ip-bulk-list 		----
@@ -749,6 +749,8 @@ for CentOS 6.5:
 cloud-user: with implemented key
 
 To generate new key pair, "ssh-keygen" or user dashboard. 
+To use a specific key				--
+ssh -i .ssh/id_rsa_vm  univa@192.168.114.173				----
 
 for Ubuntu 12.04 LTS:
 Use ubuntu, with key
@@ -1669,4 +1671,35 @@ heat_waitcondition_server_url=http://controller:8000/v1/waitcondition				 ----
 
 This is necessary also to generate proper url (webhook) for alarm action
 heat_metadata_server_url=http://controller:8000			----
+
+
+With the middle line 169.254.0.0 in the routing table. The instance may not be able to find the dhcp server, and can't get the metadata --
+ci-info: ++++++++++++++++++++++++++++++Route info+++++++++++++++++++++++++++++++
+ci-info: +-------+-------------+-----------+---------------+-----------+-------+
+ci-info: | Route | Destination |  Gateway  |    Genmask    | Interface | Flags |
+ci-info: +-------+-------------+-----------+---------------+-----------+-------+
+ci-info: |   0   |  10.0.22.0  |  0.0.0.0  | 255.255.255.0 |    eth0   |   U   |
+ci-info: |   1   | 169.254.0.0 |  0.0.0.0  |  255.255.0.0  |    eth0   |   U   |
+ci-info: |   2   |   0.0.0.0   | 10.0.22.1 |    0.0.0.0    |    eth0   |   UG  |
+ci-info: +-------+-------------+-----------+---------------+-----------+-------+
+
+To disable it:
+
+In /etc/sysconfig/network
+ 
+NOZEROCONF=yes					----
+
+Disk size too small can cause this error -
+In oz-install output:
+oz.OzException.OzException: Timed out waiting for guest to boot
+and in /var/log/libvirt/libvirtd.log
+2014-04-25 04:44:34.355+0000: 14482: error : qemuMonitorIO:615 : internal error: End of file from monitor
+
+Update kickstart script:
+#part / --size 100 --fstype ext4 --grow
+part / --size 8000 --fstype ext4 --grow
+
+To enable sudo su for , update /etc/sudoers --
+echo "cloud-user ALL = (root) NOPASSWD: /bin/su" >> /etc/sudoers 				----
+echo "cloud-user ALL = (root) NOPASSWD: /bin/bash" >> /etc/sudoers        		 ----
 

@@ -46,6 +46,8 @@ GRUB_CMDLINE_LINUX_DEFAULT in /etc/default/grub?
 Then run sudo update-grub and reboot your computer.
 
 GRUB_CMDLINE_LINUX_DEFAULT="quiet splash acpi=off apm=off"  ----
+Use this one to disable the purpal screen:
+GRUB_CMDLINE_LINUX_DEFAULT="acpi=off apm=off"  ----
 
 To change grub boot order:
 find the line:

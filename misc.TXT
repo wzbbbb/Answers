@@ -6910,4 +6910,11 @@ bin/unistop
 
 4. Restart $U 6
 
+#################################
+For ephemeral port on Linux:
+#  /sbin/sysctl -a |grep  range
+net.ipv4.ip_local_port_range = 32768    61000				----
+
+To reduce connections in TIME_WAIT, cut down the time out:
+net.ipv4.tcp_fin_timeout = 60				----
 
