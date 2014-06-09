@@ -125,7 +125,7 @@ To upgrade to 14.04
 do-release-upgrade -d
 software-properties
 
-if the file stay in read only even for root, and there is no lock and no other process using it:
+if the file stay in read only even for root, and there is no lock and no other process using it: --
 chattr -i /etc/network/interfaces					----
 
 Then it should be writable.

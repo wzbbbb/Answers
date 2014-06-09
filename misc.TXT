@@ -6918,3 +6918,24 @@ net.ipv4.ip_local_port_range = 32768    61000				----
 To reduce connections in TIME_WAIT, cut down the time out:
 net.ipv4.tcp_fin_timeout = 60				----
 
+#################################
+To access oracle on vmsdlora02
+root:ors12a90
+. /d01/oracle/VIS/apps/apps_st/appl/APPSVIS_vmsdlora02.env
+
+ /d01/oracle/VIS/db/tech_st/11.1.0/bin/sqlplus
+apps:apps
+
+......................
+ORA-12154: TNS:could not resolve the connect identifier specified
+
+http://www.dba-oracle.com/t_ora_12154_tns_resolve_service_name.htm
+
+load env:
+. /d01/oracle/VIS/apps/apps_st/appl/APPSVIS_vmsdlora02.env
+Then:
+$ORACLE_HOME/network/admin/tnsnames.ora 
+
+To list running oracle instances:
+ lsnrctl status
+

@@ -158,7 +158,7 @@ Here’s a notify resource that depends on a file resource:
 
 In this example, the sshd service will be restarted if Puppet has to edit its
 config file.
-This "source" 'puppet:///modules/ssh/sshd_config' is a local file.
+This "source" 'puppet:///modules/ssh/sshd_config' is a local file on puppet master.
 
 
 Protocol 	3 slashes 	“modules”/ 	Name of module/ 	Name of file
@@ -532,8 +532,7 @@ The Modulepath is defined in: /etc/puppetlabs/puppet/puppet.conf
     vardir = /var/opt/lib/pe-puppet
     logdir = /var/log/pe-puppet
     rundir = /var/run/pe-puppet
-    modulepath =
-/etc/puppetlabs/puppet/modules:/opt/puppet/share/puppet/modules
+    modulepath = /etc/puppetlabs/puppet/modules:/opt/puppet/share/puppet/modules
     user = pe-puppet
     group = pe-puppet
     archive_files = true
@@ -774,7 +773,7 @@ puppet module install jfryman/nginx
 ############################################
 To build GW with puppet:
 puppet module install jfryman/nginx
-
+/
 save this as nginx.pp
 .................................
 class { 'nginx': }
@@ -1205,7 +1204,7 @@ then install latest virtualbox
 
 To start vargent-vm from jenkins --
 vagrant init vagrant-vm ./centos65-x86_64-20131205.box
-
+/
 ......................
 ...................... on Ubuntu --
 To install virutalbox 4.3
@@ -1255,7 +1254,7 @@ Delete the puppet master’s certificate, private key, and public key:
 
  $ sudo find $(puppet master --configprint ssldir) -name "$(puppet master --configprint certname).pem" -delete ----
 
-Edit the certname setting in the puppet master’s /etc/puppet/puppet.conf file to match the puppet master’s actual hostname, and the dns_alt_names setting in that file to match any other DNS names you expect the master to need to respond to.
+Edit the certname setting in the puppet master's /etc/puppet/puppet.conf file to match the puppet master's actual hostname, and the dns_alt_names setting in that file to match any other DNS names you expect the master to need to respond to.
 
 Start a non-daemonized WEBrick puppet master instance, and wait for it to generate and sign a new certificate:
 

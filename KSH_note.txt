@@ -132,7 +132,7 @@ if who | grep "^$user" > /dev/null
 then echo "$user" is logged on
 fi
 #
-if test "$name" = julie # the space around the equal sign is required!
+if test "$name" = julie # the space around the equal sign is required! Without space, become assignment
 then echo "let's play"  # "$name" is a must; otherwise, if $name is null, test will complain "one
 fi			# parameter is missing"
 
@@ -507,7 +507,7 @@ sed 's/Unix/UNIX/g' filename
 who |cut -c1-8 |sed 's/  *//g' #remove the spaces
 who |sed 's/ .*$//g' #remove from the first space to the end of the line
 
-sed -i s/localhost/$db_host/ etc/wordpress/wp-config.php
+sed -i s/localhost/$db_host/ etc/wordpress/wp-config.php  # in-place replacing.
 sed -n '20,25p' filename  # print from line 20 to line 50 of a file
 sed -n '/a_string/p' filename  # print only the lines contain the "a_string" 
 sed  '1,2d' filename # delete the first 2 lines fo the file
@@ -727,7 +727,8 @@ today_=`date '+%m/%d/%Y'`
 07/09/12
 $UXEXE/uxadd fla ses=UX_STORT_J upr=UXSTORTJ00 mu=CASDLSUP06 user=univa pdate=$today_
 
-
+# date +%s    #  seconds since 1970-01-01 00:00:00 UTC
+1401727771
 .................................
 .................................
 ...........$U Variable: Batch mode detection

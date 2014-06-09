@@ -1054,7 +1054,7 @@ Right now, they belong to the default or global namespace, along with physical i
 To  connect ns blue to global ns			--
 ip link set veth1 netns blue ----
 
-To see the links and interfaces within blud:		--
+To see the links and interfaces within blue:		--
 ip netns exec blue ip link list			----
 
 Config interface in a ns:		--
@@ -1345,7 +1345,7 @@ qemu-img convert -c  -O  qcow2 /var/lib/libvirt/images/CentOS-6.5-X86_64.dsk ./C
 glance image-create --name="UVMS" --disk-format=qcow2 --container-format=bare --is-public=true < ./CentOS-UVMS-X86_64.qcow2 
 
 
-Turn off the default route?
+Remove the entry for 169.254.169.254 from routing table:
 echo "NOZEROCONF=yes" >> /etc/sysconfig/network  ----
 
 
