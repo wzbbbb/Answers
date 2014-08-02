@@ -914,6 +914,8 @@ curl http://169.254.169.254:8775/ 		----
 2008-09-01
 2009-04-04
 
+curl  http://169.254.169.254/2009-04-04/meta-data
+
 once neutron installed nova-network need to be stopped. 	--
 service nova-network stop					----
 echo "manual" >> /etc/init/nova-network.override				----
@@ -1342,6 +1344,8 @@ oz-install -u -p -d 3 -x ./CentOS.xml  ./CentOS-UVMS.tdl		----
 oz-customize [OPTIONS] <tdl-file> <libvirt-xml-file>			----
 qemu-img convert -c  -O  qcow2 /var/lib/libvirt/images/CentOS-6.5-X86_64.dsk ./CentOS-UVMS-X86_64.qcow2			----
 
+qemu-img info /home/stack/images/ubuntu1204.img 
+
 glance image-create --name="UVMS" --disk-format=qcow2 --container-format=bare --is-public=true < ./CentOS-UVMS-X86_64.qcow2 
 
 
@@ -1702,4 +1706,12 @@ part / --size 8000 --fstype ext4 --grow
 To enable sudo su for , update /etc/sudoers --
 echo "cloud-user ALL = (root) NOPASSWD: /bin/su" >> /etc/sudoers 				----
 echo "cloud-user ALL = (root) NOPASSWD: /bin/bash" >> /etc/sudoers        		 ----
+
+
+.................................
+fuel install requires:
+apt-get install expect-dev ----
+
+To simulate a web server on CirrOS:
+nohup sh -c "while true; do echo -e 'HTTP/1.0 200 OK\r\n\r\nserver1!' |sudo nc -l -p 80; done" &
 

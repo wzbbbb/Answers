@@ -129,3 +129,24 @@ if the file stay in read only even for root, and there is no lock and no other p
 chattr -i /etc/network/interfaces					----
 
 Then it should be writable.
+
+To enable nested KVM -
+
+http://www.server-world.info/en/note?os=Ubuntu_14.04&p=kvm&f=8
+
+cat /sys/module/kvm_intel/parameters/nested
+N
+It should be Y
+
+In the above link, it shows enable ensted KVM for a particular VM.
+
+For this error:  --
+Package libffi was not found in the pkg-config search path.
+
+ apt-get install libffi-dev
+
+############################################
+to enable java for firefox:
+
+sudo apt-get install icedtea-plugin
+                                                    
