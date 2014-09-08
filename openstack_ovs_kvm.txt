@@ -1715,3 +1715,127 @@ apt-get install expect-dev ----
 To simulate a web server on CirrOS:
 nohup sh -c "while true; do echo -e 'HTTP/1.0 200 OK\r\n\r\nserver1!' |sudo nc -l -p 80; done" &
 
+To simulate a web server on Ubuntu:
+nohup sh -c "while true; do echo  'HTTP/1.0 200 OK\r\n\r\nserver1' |sudo nc -l -p 80; done" &
+.................................
+To check quota
+ neutron quota-show ----
+ nova quota-show ----
+
+.................................
+To create image from installer ISO 
+glance image-create --name UCSInstall_UCOS_10.5.1.98000-187.iso \
+   --is-public=False --container-format=bare \
+   --disk-format=iso <  UCSInstall_UCOS_10.5.1.98000-187.iso
+
+.................................
+To clear route before deleting a router
+neutron router-update f8b6f5ba-140e-446b-b760-a11f3ed46683 --routes action=clear
+neutron port-update <port-id> --device_owner clear
+neutron router-interface-delete f8b6f5ba-140e-446b-b760-a11f3ed46683 5d8be029-19f5-4996-8fec-66cfd7fef7d0
+neutron router-delete f8b6f5ba-140e-446b-b760-a11f3ed46683
+
+
+................................. -
+To boot an old Linux ISO, earlier than kernel 2.6.25, for example CentOS 5X in openstack
+Updating a RHEL 5.x, CentOS 5.x or other older OS image to boot on CCS OpenStack 
+Skip to end of metadata 
+•	
+•	Added by Anthony D Atri, last edited by Anthony D Atri on Jun 11, 2014  (view change) 
+Go to start of metadata 
+The problem
+Our system by default presents virtio disk and network devices to the guest. Modern versions of popular operating systems, including at least RHEL / CentOS 6.5+ and Ubuntu 12.04+, come with these drivers functional by default. Older operating systems, including RHEL / CentOS 5.x, don't.
+A workaround
+If the tenant has a complex appliance-type image, limited technical ability, and/or available time to update to a newer operating system, it may be possible to get their image to boot as-is with a carefully crafted nova boot commandline specifying IDE disk emulation instead of virtio:
+nova boot --block-device source=image,dest=volume,id=<image-id>,bus=ide,size=<size>,shutdown=remove,bootindex=0 --flavor <flavor-name> --nic net-id=<net-id> <instance-name>
+Note though that disk performance will be cut by as much as half: http://kparal.wordpress.com/2012/09/12/kvm-disk-performance-ide-vs-virtio/ , and we can't promise that this workaround will work in the future.
+Fixing the problem instead
+The better solution is to update the image to use virtio drivers, ideally by updating to a newer operating system (eg. CentOS 6.x or 7.x}, or at least by updating the image's ramdisk image. Note that the latter would need to be re-done for any updated kernel version.
+1.	Create /etc/sysconfig/mkinitrd/virtio with these contents to ensure that kernel modules required are loaded into initramfs 
+MODULES="virtio_pci
+ virtio_blk virtio_net ata_piix"
+ 
+PREMODS="virtio_pci
+ virtio_blk virtio_net ata_piix"
+ 
+PROBE=yes
+2.	Set the execute bit chmod +x /etc/sysconfig/mkinitrd/virtio
+3.	Change GRUB's device to point to vda – this may not be necessary if your grub.conf / menu.lst entries don't hardcode sda 
+perl -pi -e 's#sda#vda#g' /boot/grub/device.map
+# Create /etc/modprobe.d/virtio.conf so we always use eth0 (this also may not be necessary)
+{code:language=none}
+alias
+ eth0 netdev-eth
+4.	Generate a new initramfs image with the virtio drivers. Note that the --builtin=xenblk may not be necessary, perhaps depending on the age of your operating system. Be careful of your build environment – uname -r in a chroot context may return the host's kernel revision, not that installed in your image. 
+mkinitrd
+ --builtin=xenblk --force-lvm-probe --with=virtio_blk --with=virtio_net --preload=virtio_net --with=virtio_pci --preload=virtio_blk --preload=virtio_pci --preload=ata_piix -v -f /boot/initrd-$(uname -r).img
+
+
+
+ 
+       Bryan Brewer
+       Cloud Admin  
+       Cisco Cloud Services | +1-408-525-5206  | brybrewe@cisco.com
+
+       Cisco Cloud Services | 24x7x365 1-855-252-0658 (+1-919-574-4445)| cloud-services-support@cisco.com
+
+
+...................... -
+Access keystone from  API
+curl -i \
+  -H "Content-Type: application/json" \
+  -d '
+{
+    "auth": {
+        "tenantName": "test1211",
+        "passwordCredentials": {
+            "username": "zhibwang",
+            "password": ""
+        }
+    }
+}
+' \
+https://us-rdu-1.cisco.com:5000/v2.0/tokens ; echo
+
+.................................
+vm --> metadata proxy in qrouter namespace in neutron --through unix socket--> metadata agent on neutron --> nova metadata server
+
+
+vm --> metadata proxy in qrouter namespace in neutron --through unix socket -|
+                   							     V
+vm --> metadata proxy in qrouter namespace in neutron --through unix socket--> metadata agent on neutron --> nova metadata server
+									     A
+vm --> metadata proxy in qrouter namespace in neutron --through unix socket -|
+
+metadata agent: set to multiple processes, larger buffer memory
+metadata_works = 10
+metadata_backlog=2048
+
+................................. -
+
+As the number of network interfaces on a system increase, sudo slow down. With large numbers of network interfaces, the slow down was considerable.
+
+sudo 1.0.10 adds the ability to disable network interface probing. 
+In sudo.conf: set probe_interfaces false
+
+............................................ to mirror a volume/disk to a raw image file, then boot from it. 
+
+root@u5:/data# dd if=/dev/vdb conv=sync,noerror bs=64k  > ./cirros.raw
+16384+0 records in
+16384+0 records out
+1073741824 bytes (1.1 GB) copied, 11.4489 s, 93.8 MB/s
+root@u5:/data# ls -lrt
+total 1048580
+-rw-r--r-- 1 root root 1073741824 Aug 21 00:12 cirros.raw
+
+glance image-create ...
+
+................................. Cisco CSR1000v
+With Ubuntu 14.04, it is not possible to login CSR with SSH. However, it works with other OSes. According to the link below, it is a bug from IOS. However, CSR will probably not get an update. 
+
+Here is a work around.
+ssh -v admin@173.39.212.19 -o KexAlgorithms=diffie-hellman-group14-sha1
+
+http://stackoverflow.com/questions/25341773/cisco-ssh-key-exchange-fails-from-ubuntu-14-04-client-dh-key-range-mismatch
+
+................................. CoreOS

@@ -150,3 +150,7 @@ to enable java for firefox:
 
 sudo apt-get install icedtea-plugin
                                                     
+To use virutalbox with ubuntu guest:
+1. install virtualbox
+2. install virtualbox extension pack, to add support for PXE
+3. Install virutalbox guest addition to support shared folder from windows host.

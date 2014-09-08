@@ -1,0 +1,65 @@
+Security guide -
+Domains --
+
+Public, Guest, Management, Data		----
+
+best practices --
+1. Documentation: hardware, software, port, services ...
+With CMDB		----
+
+2. All software packages up to date through configuration management, like puppet
+
+3. Subscribe to openstack announce ment mailing list
+
+4. Triage: prioritize threat
+Scoring matrix : 
+Privilege Escalation, Denial of Service and Information Disclosure. ----
+This table illustrates a generic approach to measuring the impact of a vulnerability based on where it occurs in your deployment and the effect.
+				Attacker position / Privilege level
+				External 	Cloud user 	Cloud admin 	Control plane
+Privilege elevation (3 levels) 	Critical 	n/a 		n/a 		n/a
+Privilege elevation (2 levels)  Critical 	Critical 	n/a 		n/a
+Privilege elevation (1 level) 	Critical 	Critical 	Critical 	n/a
+Denial of service 		High 		Medium 		Low 		Low
+Information disclosure 		Critical/high 	Critical/high 	Medium/low 	Low
+
+Security auditing tools --
+SCAP
+
+These typically require hardware support such as the
+"trusted platform module (TPM)", 
+"Intel Trusted Execution Technology (TXT)", 
+"dynamic root of trust measurement (DRTM)", and 
+"Unified Extensible Firmware Interface (UEFI)" secure boot. In this book, we will refer to all of these collectively as secure boot technologies.
+
+Node provisioning	--
+Nodes should use "Preboot eXecution Environment (PXE)" for provisioning.
+
+PXE process:
+Node 				Server
+	----- DHCP Request --->
+	<-- Net info, PXE file name ---
+	----- TFTP Request --->
+	<----- PXE boot firmware ---
+	----- HTTPS Request --->
+		...
+		...
+	<---- Node image ---
+
+We recommend using a separate, isolated network within the management security domain for provisioning.
+
+Node hardening --
+
+. Use a read-only file system where possible. Ensure that writeable file systems do not permit execution. This can be handled through the mount options provided in /etc/fstab.
+
+• Use a mandatory access control policy to contain the instances, the node services, and any other critical processes and data on the node. See the discussions on sVirt / SELinux and AppArmor below.
+
+• Remove any unnecessary software packages. This should result in a very stripped down installation because a compute node has a relatively small number of dependencies.
+
+Instruction dection ---
+We recommend starting by exploring the following open source projects which implement a variety of host-based
+intrusion detection and file monitoring features.
+• OSSEC
+• Samhain
+• Tripwire
+• AIDE
