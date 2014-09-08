@@ -1,0 +1,42 @@
+To list all docker containers
+docker ps -a
+
+To ssh in Boot2Docker tinycore linux:
+localhost:2022
+
+To access an running container:
+docker attach
+
+
+To build an openstack_cli container: -
+
+create a Dockerfile: 		--
+FROM ubuntu
+MAINTAINER  ZHI BING WANG
+
+RUN apt-get update && \
+ apt-get install -y python-keystoneclient && \
+ apt-get install -y python-swiftclient && \
+ apt-get install -y python-novaclient && \
+ apt-get install -y python-troveclient && \
+ apt-get install -y python-glanceclient && \
+ apt-get install -y python-cinderclient && \
+ apt-get install -y python-heatclient && \
+ apt-get install -y python-ceilometerclient && \
+ apt-get install -y python-neutronclient
+
+docker build -t openstack_cli .					----
+
+To create a databox container:  -
+FROM busybox
+RUM mkdir /data
+VOLUME /data
+
+To launch the databox with a directory from host:
+ docker run -it --rm -v /home:/mnt databox sh								----
+
+To access the databox from another container:
+ docker run -it --rm --volumes-from 7a69a35b0493 --name userbox busybox sh				----
+
+
+Container are store in : /var/lib/docker/containers:
