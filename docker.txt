@@ -40,3 +40,94 @@ To access the databox from another container:
 
 
 Container are store in : /var/lib/docker/containers:
+
+To bind a particular interface:
+docker run -d -p 127.0.0.1:80:80 --name static_web jamtur01/static_web  nginx -g "daemon off;"		----		----		----		----
+
+To a random port
+docker run -d -p 127.0.0.1::80 --name static_web jamtur01/static_web  nginx -g "daemon off;" 	----
+
+Bypassing the Dockerfile build cache with --no-cache
+docker builds images in layers, if the previous layers are the say, docker will use cache
+docker build --no-cache -t="jamtur01/static_web" . 			----
+
+In Dockerfile, RUN use by default:
+/bin/sh -c
+To avoid using shell
+RUN [ "apt-get", "install", "-y", "nginx"  ]		----
+
+
+Bind UDP ports by adding the suffix /udp to the port binding. ---
+
+-P, that allows us to expose all ports we've specified via EXPOSE instructions in our Dockerfile.	---
+docker run -d -P --name static_web jamtur01/static_web  nginx -g "daemon off;" 		----
+
+CMD to specify command to run after the container launched.	---
+CMD ["/bin/bash", "-l"]		----
+"docker run" will override the CMD in Dockerfile
+
+
+You can only specify one CMD instruction in a Dockerfile. If more than one is specified, then the last CMD instruction will be used. If you need to run multiple processes or commands as part of starting a container you should use a service management tool like Supervisor.
+
+Entrypoint:
+With ENTRYPOINT, all arguments specified in docker run will be passed as argument for ENTRYPOINT
+ENTRYPOINT ["/usr/sbin/nginx"]			----
+
+
+This allows us to build in a default command to execute when our container is run combined with overridable options and flags on the docker run command line.
+ENTRYPOINT ["/usr/sbin/nginx"]
+CMD ["-h"]
+If not argument specified in docker run, it will display help.
+
+If required at runtime, you can override the ENTRYPOINT instruction using the docker run command with "--entrypoint" flag.
+
+WORKDIR: specify directy to run a command 			---
+
+override with docker run -w
+docker run -ti -w /var/log ubuntu pwd		----
+
+
+ENV: to set environment variable:
+ENV RVM_PATH /home/rvm/
+or -e ---
+ docker run -ti -e "WEB_PORT=8080" ubuntu env	----
+
+
+USER nginx in Dockerfile
+or -u in docker run---
+Defaule user is root
+
+VOLUME
+• Volumes can be shared and reused between containers.
+• A container doesn't have to be running to share its volumes.
+• Changes to a volume are made directly.
+• Changes to a volume will not be included when you update an image.
+• Volumes persist until no containers use them.
+
+Specify 2 volumes in a container
+VOLUME ["/opt/project", "/data" ]			----
+
+ADD
+The ADD instruction adds files and directories from our build environment into our image. The files have to be in the build directory
+ADD will automatically unpack tar files.
+if the destination doesn't exist, Docker will create the full path for us, including any directories. New files and directories will be created with a mode of 0755 and a UID and GID of 0.
+
+ADD software.lic /opt/application/software.lic			----
+
+COPY
+Same as ADD, just without extraction and decompression 
+
+ONBUILD
+The ONBUILD instruction adds triggers to images. A trigger is executed when the image is used as the basis of another image
+
+Running a registry from a container -
+docker run -p 5000:5000 registry			----
+find the container ID
+docker images jamtur01/static_web			----
+tag to the new registry
+docker tag 22d47c8cb6e5 docker.example.com:5000/jamtur01/static_web		----
+push to the new registry
+docker push docker.example.com:5000/jamtur01/static_web				----
+
+building container from local registry
+docker run -t -i docker.example.com:5000/jamtur01/static_web /bin/bash		----
