@@ -1888,6 +1888,9 @@ printf "GET /getuser/Default.aspx?username=b772643 HTTP/1.0\r\n\r\n" >&5
 Add to _vimrc or .vimrc
 au BufRead,BufNewFile *.md set filetype=text
 
+to define vim syntax, add to:
+~/.vim/syntax/mytxt.vim
+
 
 markdown language:
 
