@@ -135,6 +135,21 @@ docker push docker.example.com:5000/jamtur01/static_web				----
 building container from local registry
 docker run -t -i docker.example.com:5000/jamtur01/static_web /bin/bash		----
 
+................................. -
+To create samba share with docker
+build databox with busybox:
+...................... the Dockerfile
+FROM busybox
+RUM mkdir /data
+VOLUME /data
+......................
+
+docker build -t databox . 		----
+Then launch databox
+docker run -it -v /home/data:/data databox sh ----
+
+docker run --rm -v $(which docker):/docker -v /var/run/docker.sock:/docker.sock svendowideit/samba da87db80f7eb 	----
+Then the command will output how to mount the volume from Windows!
 ............................................ 	-
 docker HAProxy 
 
