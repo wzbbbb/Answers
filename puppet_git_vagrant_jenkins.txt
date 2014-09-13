@@ -79,6 +79,8 @@ env GIT_SSL_NO_VERIFY=true  git push -u origin master
 
 git clone ssh://root@192.168.115.41//home/SD/sources sd.git
 
+To stop tracking files 
+git rm --cached *~				----
 ......................
 To create a bare repository: --
 git init --bare
