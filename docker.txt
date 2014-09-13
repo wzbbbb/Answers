@@ -131,3 +131,75 @@ docker push docker.example.com:5000/jamtur01/static_web				----
 
 building container from local registry
 docker run -t -i docker.example.com:5000/jamtur01/static_web /bin/bash		----
+
+............................................ 	-
+docker HAProxy 
+
+git clone https://github.com/dockerfile/haproxy.git 		----
+update haproxy.cfg						----
+docker run -d -p 80:80 -v /home/ubuntu/dockerfile/haproxy:/haproxy-override dockerfile/haproxy 			----
+
+
+ cat haproxy.cfg
+global
+  log 127.0.0.1 local0
+  log 127.0.0.1 local1 notice
+  maxconn 4000
+  chroot /var/lib/haproxy
+  user haproxy
+  group haproxy
+  # daemon
+
+defaults
+  log global
+  mode http
+  option httplog
+  option dontlognull
+  contimeout 5000
+  clitimeout 50000
+  srvtimeout 50000
+  errorfile 400 /etc/haproxy/errors/400.http
+  errorfile 403 /etc/haproxy/errors/403.http
+  errorfile 408 /etc/haproxy/errors/408.http
+  errorfile 500 /etc/haproxy/errors/500.http
+  errorfile 502 /etc/haproxy/errors/502.http
+  errorfile 503 /etc/haproxy/errors/503.http
+  errorfile 504 /etc/haproxy/errors/504.http
+  stats enable
+  stats refresh 10s
+  stats uri /stats
+
+frontend http-in
+    bind *:80
+    option httpclose
+    option forwardfor
+    mode http
+    default_backend http_server
+
+backend http_server
+  mode http
+  balance roundrobin
+  cookie SERVERID insert indirect nocache
+  #server s1 10.100.0.10:80  check cookie s1
+  #server s2 10.100.0.9:80  check cookie s2
+  server s1 10.100.0.10:80  check
+  server s2 10.100.0.9:80  check
+
+
+#listen stats :80
+#  stats enable
+#  stats uri /stats
+
+For SSL termination --
+docker run -d -p 443:443 -v /home/ubuntu/dockerfile/haproxy:/haproxy-override dockerfile/haproxy 	----
+
+only change the frontend:
+
+frontend http-in
+    bind *:443 ssl crt /haproxy-override/sever.pem
+    mode http
+    option httpclose
+    option forwardfor
+    reqadd X-Forwarded-Proto:\ https
+    default_backend http_server
+
