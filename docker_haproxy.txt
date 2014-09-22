@@ -1,3 +1,6 @@
+To install:
+apt-get install docker.io
+
 To list all docker containers
 docker ps -a
 
@@ -203,3 +206,173 @@ frontend http-in
     reqadd X-Forwarded-Proto:\ https
     default_backend http_server
 
+Redundant HAProxy , Pacemaker + CoroSync-
+
+http://www.sebastien-han.fr/blog/2012/04/15/active-passive-failover-cluster-on-a-mysql-galera-cluster-with-haproxy-lsb-agent/
+
+after starting corosync and pacemaker:
+# crm_mon -1
+Last updated: Mon Sep 15 20:27:59 2014
+Last change: Mon Sep 15 20:27:55 2014 via crmd on ub3
+Stack: corosync
+Current DC: ub3 (174325771) - partition with quorum
+Version: 1.1.10-42f2063
+1 Nodes configured
+0 Resources configured
+
+
+Online: [ ub3 ]
+
+root@ub3:/var/log#
+
+
+.................................
+https://gist.github.com/ianunruh/2162add34d1c55e387b9
+#!/bin/bash
+BIND_NETWORK="192.168.5.0"
+SHARED_VIP="192.168.5.30"
+ 
+apt-get update			----
+apt-get install -y pacemaker ntp		----
+ 
+# Configure Corosync
+echo "START=yes" > /etc/default/corosync
+sed -i "s/bindnetaddr: 127.0.0.1/bindnetaddr: $BIND_NETWORK/g" /etc/corosync/corosync.conf
+ 
+# Start clustering software
+service corosync start
+service pacemaker start
+ 
+crm configure <<EOF
+  primitive virtual-ip ocf:heartbeat:IPaddr \
+    params ip="$SHARED_VIP"
+ 
+  property stonith-enabled=false
+  commit
+EOF
+.................................
+Redundant HAProxy , keepalived-
+http://thejimmahknows.com/high-availability-using-haproxy-and-keepalived/
+
+configure and start HAPorxy on both nodes --
+
+...................... sample HAProxy ---
+global
+        maxconn 4096
+        user haproxy
+        group haproxy
+        daemon
+
+defaults
+        log     global
+        contimeout 5000
+        clitimeout 50000
+        srvtimeout 50000
+        errorfile 400 /etc/haproxy/errors/400.http
+        errorfile 403 /etc/haproxy/errors/403.http
+        errorfile 408 /etc/haproxy/errors/408.http
+        errorfile 500 /etc/haproxy/errors/500.http
+        errorfile 502 /etc/haproxy/errors/502.http
+        errorfile 503 /etc/haproxy/errors/503.http
+        errorfile 504 /etc/haproxy/errors/504.http
+
+
+frontend vs_http_80
+        bind *:80
+        default_backend pool_http_80
+
+backend pool_http_80
+        #balance options
+        balance roundrobin
+
+        #http options
+        mode http
+        option httpchk OPTIONS /
+        option forwardfor
+        option http-server-close
+
+        #monitoring service endpoints with healthchecks
+        server pool_member1 172.16.0.101:80 check inter 5000
+        server pool_member2 172.16.0.102:80 check inter 5000
+
+...................... to enable stats page
+frontend vs_stats :8081
+        mode http
+        default_backend stats_backend
+
+backend stats_backend
+        mode http
+        stats enable
+        stats uri /stats
+        stats realm Stats\ Page
+        stats auth serveruser:password
+        stats admin if TRUE
+............................................
+keepalived.conf	---
+............................................
+MASTER
+............................................
+global_defs {
+        lvs_id LoadBalancer01 #Unique name of this Load Balancer
+}
+
+vrrp_sync_group SyncGroup01 {
+        group {
+                FloatIP01
+        }
+}
+
+
+vrrp_script check_haproxy {
+        script "killall -0 haproxy" #make sure haproxy is running
+        interval 2                  #check every 2 seconds
+        weight 2                    #add weight if OK
+}
+
+vrrp_instance FloatIP01 {
+        state MASTER		<-- MASTER, the other node will be SLAVE
+        interface eth0
+        virtual_router_id 10
+        priority 101 		<-- priority also lower at SLAVE
+        advert_int 1
+        virtual_ipaddress {
+                10.100.0.200 #floating IP
+        }
+        track_script {
+                check_haproxy
+        }
+}
+............................................
+SLAVE
+............................................
+global_defs {
+        lvs_id LoadBalancer02 #Unique name of this Load Balancer
+}
+
+vrrp_sync_group SyncGroup01 {
+        group {
+                FloatIP01
+        }
+}
+
+
+vrrp_script check_haproxy {
+        script "killall -0 haproxy" #make sure haproxy is running
+        interval 2                  #check every 2 seconds
+        weight 2                    #add weight if OK
+}
+
+vrrp_instance FloatIP01 {
+        state SLAVE
+        interface eth0
+        virtual_router_id 10
+        priority 100
+        advert_int 1
+        virtual_ipaddress {
+                10.100.0.200 #floating IP
+        }
+        track_script {
+                check_haproxy
+        }
+}
+............................................

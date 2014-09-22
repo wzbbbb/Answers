@@ -1838,4 +1838,37 @@ ssh -v admin@173.39.212.19 -o KexAlgorithms=diffie-hellman-group14-sha1
 
 http://stackoverflow.com/questions/25341773/cisco-ssh-key-exchange-fails-from-ubuntu-14-04-client-dh-key-range-mismatch
 
-................................. CoreOS
+.................................to migrate with snapshot
+nova stop 566a30c6-232e-4180-a7d1-c598cea21bcb
+nova image-create 566a30c6-232e-4180-a7d1-c598cea21bcb cirros-snap
+glance image-download --file cirros.raw --progress 11f7ea06-7123-4cfb-b307-3652f2d876c3
+glance image-create --name cirros_vol --file ./cirros.raw --progress --is-public False --container-format bare --disk-format raw
+
+................................. to add routing entry to all VMs in a subnet, for VPN
+neutron subnet-update <SUBNET_ID> --host-route destination=10.0.0.0/24,nexthop=172.168.0.2
+or
+neutron subnet-update 45c35411-1ee2-411f-a06e-f7bea5693b59 --host_routes type=dict list=true destination=10.200.0.0/24,nexthop=173.39.212.19
+
+root@de8d356de153:/home# neutron subnet-update 9fa7490b-c969-43cd-9e3a-2f2126dceed1 --host_routes type=dict list=true destination=10.2.0.0/24,nexthop=173.39.209.7
+Updated subnet: 9fa7490b-c969-43cd-9e3a-2f2126dceed1
+root@de8d356de153:/home# neutron subnet-show 9fa7490b-c969-43cd-9e3a-2f2126dceed1
++------------------+-----------------------------------------------------------+
+| Field            | Value                                                     |
++------------------+-----------------------------------------------------------+
+| allocation_pools | {"start": "10.200.0.2", "end": "10.200.0.254"}            |
+| cidr             | 10.200.0.0/24                                             |
+| dns_nameservers  |                                                           |
+| enable_dhcp      | True                                                      |
+| gateway_ip       | 10.200.0.1                                                |
+| host_routes      | {"destination": "10.2.0.0/24", "nexthop": "173.39.209.7"} |
+| id               | 9fa7490b-c969-43cd-9e3a-2f2126dceed1                      |
+| ip_version       | 4                                                         |
+| name             | csr2-net                                                  |
+| network_id       | 1206cd5f-9076-405d-82b0-c513cbea47f1                      |
+| tenant_id        | 7254ede8c22e4cfaafcbccbadeeef9c8                          |
++------------------+-----------------------------------------------------------+
+
+
+To change it back
+neutron subnet-update 9fa7490b-c969-43cd-9e3a-2f2126dceed1 --host_routes type=dict list=true destination=0.0.0.0/0,nexthop=10.200.0.1
+
