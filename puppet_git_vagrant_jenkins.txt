@@ -129,6 +129,9 @@ bin/
 target/
 # ignore all files ending with ~
 *~ 
+~*
+.swp
+
 
 triggering Jenkins builds from a git hook ---
 http://kohsuke.org/2011/12/01/polling-must-die-triggering-jenkins-builds-from-a-git-hook/
