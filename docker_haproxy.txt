@@ -147,6 +147,8 @@ VOLUME /data
 docker build -t databox . 		----
 Then launch databox
 docker run -it -v /home/data:/data databox sh ----
+or without a directory from the host OS:
+docker run databox  ----
 
 docker run --rm -v $(which docker):/docker -v /var/run/docker.sock:/docker.sock svendowideit/samba da87db80f7eb 	----
 Then the command will output how to mount the volume from Windows!
@@ -221,7 +223,10 @@ frontend http-in
     reqadd X-Forwarded-Proto:\ https
     default_backend http_server
 
-Redundant HAProxy , Pacemaker + CoroSync-
+Pacemaker + CoroSync -
+
+Pacemaker + CoroSync: for resource cluster, if a serice is down, start it on another node--
+keeyalived plays with VIP, if one node is down, assign the IP to anther node --
 
 http://www.sebastien-han.fr/blog/2012/04/15/active-passive-failover-cluster-on-a-mysql-galera-cluster-with-haproxy-lsb-agent/
 
@@ -267,62 +272,13 @@ crm configure <<EOF
 EOF
 .................................
 Redundant HAProxy , keepalived-
-http://thejimmahknows.com/high-availability-using-haproxy-and-keepalived/
+http://thejimmahknows.com/high-availability-using-haproxy-and-keepalived/		---
+
+This one also include HA setting for other openstack components
+http://behindtheracks.com/2014/04/redundant-load-balancers-haproxy-and-keepalived/ 	---
 
 configure and start HAPorxy on both nodes --
 
-...................... sample HAProxy ---
-global
-        maxconn 4096
-        user haproxy
-        group haproxy
-        daemon
-
-defaults
-        log     global
-        contimeout 5000
-        clitimeout 50000
-        srvtimeout 50000
-        errorfile 400 /etc/haproxy/errors/400.http
-        errorfile 403 /etc/haproxy/errors/403.http
-        errorfile 408 /etc/haproxy/errors/408.http
-        errorfile 500 /etc/haproxy/errors/500.http
-        errorfile 502 /etc/haproxy/errors/502.http
-        errorfile 503 /etc/haproxy/errors/503.http
-        errorfile 504 /etc/haproxy/errors/504.http
-
-
-frontend vs_http_80
-        bind *:80
-        default_backend pool_http_80
-
-backend pool_http_80
-        #balance options
-        balance roundrobin
-
-        #http options
-        mode http
-        option httpchk OPTIONS /
-        option forwardfor
-        option http-server-close
-
-        #monitoring service endpoints with healthchecks
-        server pool_member1 172.16.0.101:80 check inter 5000
-        server pool_member2 172.16.0.102:80 check inter 5000
-
-...................... to enable stats page
-frontend vs_stats :8081
-        mode http
-        default_backend stats_backend
-
-backend stats_backend
-        mode http
-        stats enable
-        stats uri /stats
-        stats realm Stats\ Page
-        stats auth serveruser:password
-        stats admin if TRUE
-............................................
 keepalived.conf	---
 ............................................
 MASTER
