@@ -284,68 +284,52 @@ keepalived.conf	---
 MASTER
 ............................................
 global_defs {
-        lvs_id LoadBalancer01 #Unique name of this Load Balancer
+  router_id haproxy1 		#hostname
+}
+vrrp_script haproxy {
+  script "killall -0 haproxy" 	#make sure haproxy is running
+  interval 2 			#check every 2 seconds
+  weight 2			#add weight if OK
+}
+vrrp_instance 50 {
+  virtual_router_id 50
+  advert_int 1
+  priority 101			#priority higher than SLAVE
+  state MASTER
+  interface eth0
+  virtual_ipaddress {
+    10.100.0.200 dev eth0  # virutal IP
+  }
+  track_script {
+    haproxy
+  }
 }
 
-vrrp_sync_group SyncGroup01 {
-        group {
-                FloatIP01
-        }
-}
-
-
-vrrp_script check_haproxy {
-        script "killall -0 haproxy" #make sure haproxy is running
-        interval 2                  #check every 2 seconds
-        weight 2                    #add weight if OK
-}
-
-vrrp_instance FloatIP01 {
-        state MASTER		<-- MASTER, the other node will be SLAVE
-        interface eth0
-        virtual_router_id 10
-        priority 101 		<-- priority also lower at SLAVE
-        advert_int 1
-        virtual_ipaddress {
-                10.100.0.200 #virutal IP
-        }
-        track_script {
-                check_haproxy
-        }
-}
 ............................................
 SLAVE
 ............................................
 global_defs {
-        lvs_id LoadBalancer02 #Unique name of this Load Balancer
+  router_id haproxy2            #hostname
+}
+vrrp_script haproxy {
+  script "killall -0 haproxy"   #make sure haproxy is running
+  interval 2                    #check every 2 seconds
+  weight 2                      #add weight if OK
+}
+vrrp_instance 50 {
+  virtual_router_id 50
+  advert_int 1
+  priority 100                  #priority lower than MASTER
+  state SLAVE
+  interface eth0
+  virtual_ipaddress {
+    10.100.0.200 dev eth0  # virutal IP
+  }
+  track_script {
+    haproxy
+  }
 }
 
-vrrp_sync_group SyncGroup01 {
-        group {
-                FloatIP01
-        }
-}
-
-
-vrrp_script check_haproxy {
-        script "killall -0 haproxy" #make sure haproxy is running
-        interval 2                  #check every 2 seconds
-        weight 2                    #add weight if OK
-}
-
-vrrp_instance FloatIP01 {
-        state SLAVE
-        interface eth0
-        virtual_router_id 10
-        priority 100
-        advert_int 1
-        virtual_ipaddress {
-                10.100.0.200 #virtual IP
-        }
-        track_script {
-                check_haproxy
-        }
-}
 ............................................
 Config HA for HAProxy		-
 
@@ -362,7 +346,7 @@ neutron port-create --fixed-ip ip_address=${vip_ip} --security-group $secgroup-v
 assign a floating IP --
 neutron floatingip-create --port-id=$(echo $vip_port) public-floating-601
 
-update neutron port to allow VIP and vrrp mulitcast IP in 	--
+update neutron ports on both haproxy nodes to allow VIP and vrrp mulitcast IP in 	--
 neutron port-update $server1_port --allowed-address-pairs type=dict list=true ip_address=${vip_ip} ip_address=224.0.0.18 		
 neutron port-update $server2_port --allowed-address-pairs type=dict list=true ip_address=${vip_ip} ip_address=224.0.0.18
 

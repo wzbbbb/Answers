@@ -1,2 +1,0 @@
- uxpre res res=* pdate="*" (with pdate format : yyyymmdd)
-uxpre clean obsoleted resource events. For example, if a resource is already freed (all quotas are available),  uxpre will remove all the resource events regarding that resource.

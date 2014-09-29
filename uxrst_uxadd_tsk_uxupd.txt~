@@ -1,9 +1,0 @@
-#relaunch job
-uxrst ctl app upr=333 mu=DA_US_U_02 nupr=0000004 launchvar=(11 10)
-Note: upr 333 with 2 parameters:
-pp=11
-qq=22
-
-#add and update task
-uxadd tsk sim upr=333 vupr=000 ses=333s vses=001 mu=DA_US_U_02 techinf user=univa type=s
-uxupd tsk sim upr=333 vupr=000 ses=333s vses=001 mu=DA_US_U_02 launchvar add varname=pp vvalue=ddd
