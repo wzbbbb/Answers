@@ -294,7 +294,7 @@ vrrp_script haproxy {
 vrrp_instance 50 {
   virtual_router_id 50
   advert_int 1
-  priority 101			#priority higher than SLAVE
+  priority 101			#priority higher than BACKUP 
   state MASTER
   interface eth0
   virtual_ipaddress {
@@ -306,7 +306,7 @@ vrrp_instance 50 {
 }
 
 ............................................
-SLAVE
+BACKUP
 ............................................
 global_defs {
   router_id haproxy2            #hostname
@@ -320,7 +320,7 @@ vrrp_instance 50 {
   virtual_router_id 50
   advert_int 1
   priority 100                  #priority lower than MASTER
-  state SLAVE
+  state BACKUP 
   interface eth0
   virtual_ipaddress {
     10.100.0.200 dev eth0  # virutal IP
