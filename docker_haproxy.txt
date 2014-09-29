@@ -351,7 +351,7 @@ vrrp_instance FloatIP01 {
         priority 101 		<-- priority also lower at SLAVE
         advert_int 1
         virtual_ipaddress {
-                10.100.0.200 #floating IP
+                10.100.0.200 #virutal IP
         }
         track_script {
                 check_haproxy
@@ -384,10 +384,34 @@ vrrp_instance FloatIP01 {
         priority 100
         advert_int 1
         virtual_ipaddress {
-                10.100.0.200 #floating IP
+                10.100.0.200 #virtual IP
         }
         track_script {
                 check_haproxy
         }
 }
 ............................................
+Config HA for HAProxy		-
+
+install HAProxy on 2 servers 	--
+install keepalived on 2 servers	--
+In /etc/sysctl.conf of both server		--
+net.ipv4.ip_nonlocal_bind=1
+
+sysctl -p
+
+create neutron port for VIP --
+neutron port-create --fixed-ip ip_address=${vip_ip} --security-group $secgroup-vrrp $net_id 
+
+assign a floating IP --
+neutron floatingip-create --port-id=$(echo $vip_port) public-floating-601
+
+update neutron port to allow VIP and vrrp mulitcast IP in 	--
+neutron port-update $server1_port --allowed-address-pairs type=dict list=true ip_address=${vip_ip} ip_address=224.0.0.18 		
+neutron port-update $server2_port --allowed-address-pairs type=dict list=true ip_address=${vip_ip} ip_address=224.0.0.18
+
+To verify --
+check vip is on which server, should NOT be on both server	---
+ip a		----
+check for vrrp multicast ---
+tcpdump -v -i eth0 host 224.0.0.18		---
