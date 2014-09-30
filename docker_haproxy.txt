@@ -355,3 +355,12 @@ check vip is on which server, should NOT be on both server	---
 ip a		----
 check for vrrp multicast ---
 tcpdump -v -i eth0 host 224.0.0.18		---
+.................................
+To install HAProxy with SSL compiled in:
+add-apt-repository ppa:vbernat/haproxy-1.5
+apt-get update
+apt-get install haproxy
+
+The defail haproxy in ubuntu does not include SSL. If starting haproxy with SSL configured in the /etc/haproxy/haproxy.cfg, it will complain:
+[ALERT] 280/190040 (21687) : parsing [/etc/haproxy/haproxy.cfg:30] : 'bind' only supports the 'transparent', 'defer-accept', 'name', 'id', 'mss' and 'interface' options.
+
