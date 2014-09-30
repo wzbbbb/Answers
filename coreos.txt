@@ -1,0 +1,120 @@
+Get cluster ID : 	-
+curl  https://discovery.etcd.io/new
+https://discovery.etcd.io/64b57dae51e17df857c44808db2517ab
+
+The ID is used in the cloud-config.yaml file.
+
+cloud-config.yaml to use in nova boot as user-data	-
+
+ cat cloud-config.yaml 		----
+#cloud-config
+
+coreos:
+  etcd:
+    # generate a new token for each unique cluster from https://discovery.etcd.io/new
+    discovery: https://discovery.etcd.io/64b57dae51e17df857c44808db2517ab 		---
+    # multi-region and multi-cloud deployments need to use $public_ipv4
+    addr: $private_ipv4:4001
+    peer-addr: $private_ipv4:7001
+  units:
+    - name: etcd.service
+      command: start
+    - name: fleet.service
+      command: start
+ssh_authorized_keys:
+  # include one or more SSH public keys
+  #- ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQC0g+ZTxC7weoIJLUafOgrm+h...
+
+
+To boot 3 instances 	-
+
+nova boot \
+--user-data ./cloud-config.yaml \
+--image de1d07ff-982a-468d-add6-918508166719 \
+--key-name key_alln \
+--flavor GP-Small \
+--num-instances 3 \
+--security-groups default coreos \
+--nic net-id=849d1168-b3cc-49bb-96fb-a42763bc82c2
+
+To add more instance in the cluster, just run the same command. 	--
+
+4 hosts in cluster , 10.3.0.6, 10.3.0.7, 10.3.0.8, 10.3.0.9,
+
+Build a hello.service		-
+............................................
+[Unit]
+Description=My Service
+After=docker.service
+
+[Service]
+TimeoutStartSec=0
+ExecStartPre=-/usr/bin/docker kill hello
+ExecStartPre=-/usr/bin/docker rm hello
+ExecStartPre=/usr/bin/docker pull busybox
+ExecStart=/usr/bin/docker run --name hello busybox /bin/sh -c "while true; do echo Hello World; sleep 1; done"
+ExecStop=/usr/bin/docker stop hello
+............................................
+
+Load it to a host	--
+# fleetctl load hello.service
+Unit hello.service loaded on 43ca68f9.../10.3.0.7
+
+Start the servcie --
+# fleetctl start hello.service
+Unit hello.service launched on 43ca68f9.../10.3.0.7
+
+
+To query status with "fleetctl status hello.service", need to have ssh-agent running: --
+# ssh-agent 			----
+SSH_AUTH_SOCK=/tmp/ssh-mDHaAUrhYTYE/agent.833; export SSH_AUTH_SOCK;
+SSH_AGENT_PID=834; export SSH_AGENT_PID;
+echo Agent pid 834;
+
+Then run the above command to define environment variables 	---
+
+Then add the key:		---
+ssh-add .ssh/key_alln.pem			----
+Identity added: .ssh/key_alln.pem (.ssh/key_alln.pem)
+
+$ fleetctl status hello.service			----
+. hello.service - My Service
+   Loaded: loaded (/run/fleet/units/hello.service; linked-runtime)
+   Active: active (running) since Thu 2014-10-09 21:22:55 UTC; 18min ago
+  Process: 722 ExecStartPre=/usr/bin/docker pull busybox (code=exited, status=0/SUCCESS)
+  Process: 710 ExecStartPre=/usr/bin/docker rm hello (code=exited, status=1/FAILURE)
+  Process: 701 ExecStartPre=/usr/bin/docker kill hello (code=exited, status=1/FAILURE)
+ Main PID: 738 (docker)
+   CGroup: /system.slice/hello.service
+           └─738 /usr/bin/docker run --name hello busybox /bin/sh -c while true; do echo Hello World; sleep 1; done
+
+Oct 09 21:41:42 coreos-43ca68f9-8477-433f-8897-5daf3fd7240f.novalocal docker[738]: Hello World
+Oct 09 21:41:42 coreos-43ca68f9-8477-433f-8897-5daf3fd7240f.novalocal docker[738]: Hello World
+Oct 09 21:41:42 coreos-43ca68f9-8477-433f-8897-5daf3fd7240f.novalocal docker[738]: Hello World
+Oct 09 21:41:42 coreos-43ca68f9-8477-433f-8897-5daf3fd7240f.novalocal docker[738]: Hello World
+
+$ fleetctl destroy hello.service		----
+Destroyed hello.service
+$ fleetctl status hello.service			----
+Unit hello.service does not exist.
+
+$ systemctl status etcd		 ----
+
+etcdctl ls --recursive /		----
+/coreos.com
+/coreos.com/updateengine
+/coreos.com/updateengine/rebootlock
+/coreos.com/updateengine/rebootlock/semaphore
+/message
+
+$ curl -L http://127.0.0.1:4001/v1/keys/coreos.com/updateengine 	----
+[{"action":"get","key":"/coreos.com/updateengine/rebootlock","dir":true,"index":3580}]
+
+etcdctl set /sssss ttt		----
+setting a key:value pair
+or
+curl -L http://127.0.0.1:4001/v1/keys/coreos.com/tst -d value="some_string"		----
+
+etcdctl  ls /coreos.com		----
+etcdctl  get /coreos.com/tst		----
+
