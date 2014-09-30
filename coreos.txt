@@ -54,6 +54,11 @@ ExecStartPre=-/usr/bin/docker rm hello
 ExecStartPre=/usr/bin/docker pull busybox
 ExecStart=/usr/bin/docker run --name hello busybox /bin/sh -c "while true; do echo Hello World; sleep 1; done"
 ExecStop=/usr/bin/docker stop hello
+
+[X-Fleet]
+# to avoid running the service on the same host
+X-Conflicts=hello*.service
+
 ............................................
 
 Load it to a host	--
@@ -117,4 +122,26 @@ curl -L http://127.0.0.1:4001/v1/keys/coreos.com/tst -d value="some_string"		---
 
 etcdctl  ls /coreos.com		----
 etcdctl  get /coreos.com/tst		----
+
+To monitor a key value change ---
+etcdctl watch /sssss		----
+
+To setup fleetctl tunnel for vagrant---
+export FLEETCTL_TUNNEL=127.0.0.1:2222 	----
+
+$ fleetctl list-units			----
+UNIT            MACHINE                 ACTIVE  SUB
+hello1.service  bdf7abb1.../10.3.0.9    active  running
+hello2.service  cf469e17.../10.3.0.8    active  running
+hello3.service  eb971e76.../10.3.0.6    active  running
+hello4.service  43ca68f9.../10.3.0.7    active  running
+
+Shutdown one of the host, the service should move to a new available host.
+To check logs of a service and follow ( -f )---
+$ fleetctl journal -f hello2.service			----
+-- Logs begin at Thu 2014-10-09 21:02:46 UTC. --
+Oct 09 23:11:19 coreos-cf469e17-2062-4300-adfd-35f8b8e4208a.novalocal docker[724]: Hello 2 World
+Oct 09 23:11:20 coreos-cf469e17-2062-4300-adfd-35f8b8e4208a.novalocal docker[724]: Hello 2 World
+Oct 09 23:11:21 coreos-cf469e17-2062-4300-adfd-35f8b8e4208a.novalocal docker[724]: Hello 2 World
+
 
