@@ -137,6 +137,8 @@ hello3.service  eb971e76.../10.3.0.6    active  running
 hello4.service  43ca68f9.../10.3.0.7    active  running
 
 Shutdown one of the host, the service should move to a new available host.
+Stop and destroied hello2.service, and shutdown bdf7abb1.../10.3.0.9, hello1.service moved to cf469e17.../10.3.0.8. 
+
 To check logs of a service and follow ( -f )---
 $ fleetctl journal -f hello2.service			----
 -- Logs begin at Thu 2014-10-09 21:02:46 UTC. --
