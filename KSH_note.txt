@@ -305,6 +305,8 @@ stdout has been redirected to the pipe, but stderr is still being displayed to y
 
 tar cvf - dirname 2>/tmp/tarfile.list | compress > file.tar.Z 
 
+tar and compress the files in . and copy it to a remote directory (accessible only to root) and unpack the taz.
+tar -czf - . | ssh core@192.168.2.3 "sudo mkdir -p /opt/bin; cd /opt/bin; sudo tar xzvf -"
 
 ........... tput
 
