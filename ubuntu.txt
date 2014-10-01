@@ -154,3 +154,12 @@ To use virutalbox with ubuntu guest:
 1. install virtualbox
 2. install virtualbox extension pack, to add support for PXE
 3. Install virutalbox guest addition to support shared folder from windows host.
+
+############################################
+lscpu : list cpu
+lsblk : list block device
+lshw : show hardware
+
+apt-cache policy : list repositories available for package installation and their priorities.
+
+apt-cache madison mysql-server : madison tabular format

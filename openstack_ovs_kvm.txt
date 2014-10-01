@@ -76,7 +76,11 @@ stack@raring64:~$ keystone user-role-list --tenant=admin --user=admin
 | 9fe2ff9ee4384b1894a90878d3e92bab | _member_ | df7743b803ea48a8859dcb8a446902e3 | 69466ee676344aee8f393115ad9c42fe |
 | 47f99116a839438a8e0dc8783cd52305 |  admin   | df7743b803ea48a8859dcb8a446902e3 | 69466ee676344aee8f393115ad9c42fe |
 +----------------------------------+----------+----------------------------------+----------------------------------+
-stack@raring64:~$
+
+
+To get token
+keystone --os-username admin --os-password admin --os-auth-url http://172.30.1.11:5000/v2.0 token-get		----
+
 
 #################################
 Ubuntu 12.04 LTS installation
@@ -104,6 +108,10 @@ All nodes need to be able to communicate with each other.
 
 Install NTP on all node: --
 apt-get install ntp              ----
+ntpq --numeric --peers		to verify NTP works----
+
+dpkg-reconfigure tzdata		----
+to reconfigure it to use UTC timezone
 
 configure the other nodes to synchronize their time from the controller node rather than from outside of your LAN. To do so, install the ntp daemon as above, then edit /etc/ntp.conf and change the server directive to use the controller node as internet time source.
 
@@ -1871,4 +1879,22 @@ root@de8d356de153:/home# neutron subnet-show 9fa7490b-c969-43cd-9e3a-2f2126dceed
 
 To change it back
 neutron subnet-update 9fa7490b-c969-43cd-9e3a-2f2126dceed1 --host_routes type=dict list=true destination=0.0.0.0/0,nexthop=10.200.0.1
+
+.................................
+To remove the access directly from OS_SERVICE_TOKEN=ADMIN:
+remove "admin_token_auth" from /etc/keystone/keystone-paste.ini
+in :
+
+pipeline:public_api
+pipeline:admin_api
+pipeline:api_v3
+
+then 
+
+service keystone restart
+......................
+Then add hourly token purge
+
+echo '@hourly /usr/bin/keystone-manage  token_flush > /var/log/keystone/keystone-tokenflush.log 2>&1' >> /var/spool/cron/crontabs/root
+
 
