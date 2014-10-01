@@ -299,15 +299,15 @@ cat file.txt; unencode xxx.jpeg xxx.jpeg |mail xxx@xx.com
 
 it is possible to get an interactive view of the process, by using 
 
-tar cvf - dirname | compress > file.tar.Z
+tar cvf - dirname | compress > file.tar.Z			----
 
 stdout has been redirected to the pipe, but stderr is still being displayed to your terminal, so you will get a file-by-file progress report. Or of course, you could redirect it somewhere else, with 
 
-tar cvf - dirname 2>/tmp/tarfile.list | compress > file.tar.Z 
+tar cvf - dirname 2>/tmp/tarfile.list | compress > file.tar.Z 				----
 
 tar and compress the files in . and copy it to a remote directory (accessible only to root) and unpack the taz.
-tar -czf - . | ssh core@192.168.2.3 "sudo mkdir -p /opt/bin; cd /opt/bin; sudo tar xzvf -"
-
+tar -czf - . | ssh core@192.168.2.3 "sudo mkdir -p /opt/bin; cd /opt/bin; sudo tar xzvf -" 			----
+The  "-" in above command is to provide the interactive view of the progress, showing the file being processed.
 ........... tput
 
 tput init
