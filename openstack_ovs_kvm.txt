@@ -1897,4 +1897,35 @@ Then add hourly token purge
 
 echo '@hourly /usr/bin/keystone-manage  token_flush > /var/log/keystone/keystone-tokenflush.log 2>&1' >> /var/spool/cron/crontabs/root
 
+.................................
+ethtool --driver br-eth2
 
+
+neutron agent-list
+
+to check OVS VLAN ID in a port 		---
+To find the name space of the dhcp agent:
+ip netns 			----
+To find the tap device 			
+ip netns exec qdhcp-321b5402-d552-4092-bb03-a12343a72234 ifconfig 		----
+To show the VLAN ID
+vs-vsctl get port tap8ac69510-e2 tag				----
+
+To check the iptables in a qrouter l3 agent			---
+ ip netns exec qrouter-522ca516-74ec-4d60-8f55-3d50cd68059c iptables -t nat -L neutron-l3-agent-OUTPUT
+
+.................................
+To create LVM on ubuntu
+
+dpkg -l lvm2
+cat /proc/partitions 
+pvcreate /dev/vdb
+pvs
+update /etc/lvm/lvm.conf
+
+devices {
+...
+    filter = [ "a/vda5/", "a/vdb/" ,"r/.*/" ]
+
+vgcreate cinder-volumes /dev/vdb
+vgs
