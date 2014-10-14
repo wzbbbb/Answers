@@ -5482,3 +5482,7 @@ To determin a system is big endian or little endian
 >>> sys.maxint
 2147483647
 
+############################################
+json pretty print
+curl -u 'zhibwang@cisco.com:mar999%!&' https://us1.rallydev.com/slm/webservice/v2.0/defect/|python -m json.tool
+
