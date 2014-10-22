@@ -420,7 +420,7 @@ accessValue 	Specifies image access
 imageFile 		Specifies the name of your downloaded image file.
 
 For example:
-# glance image-create --name="CirrOS 0.3.1" --disk-format=qcow2  --container-format=bare --is-public=true < cirros-0.3.1-x86_64-disk.img
+# glance image-create --name="CirrOS 0.3.1" --disk-format=qcow2  --container-format=bare --is-public=true --progress < cirros-0.3.1-x86_64-disk.img
 
 To launch an instance --
 nova keypair-add --pub_key id_rsa.pub mykey ----
