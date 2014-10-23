@@ -16,6 +16,9 @@ coreos:
     # multi-region and multi-cloud deployments need to use $public_ipv4
     addr: $private_ipv4:4001
     peer-addr: $private_ipv4:7001
+  update:
+    group: beta
+    server: https://customer.update.core-os.net/v1/update/
   units:
     - name: etcd.service
       command: start

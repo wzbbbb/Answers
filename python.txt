@@ -5,6 +5,9 @@ python -c command [arg] ...
 
 python -m module [arg] ...
 
+To load an external module 
+export PYTHONPATH=$PYTHONPATH:/home/xlrd-0.9.3
+
 
 to run the script and enter interactive mode afterwards. This can be done by passing "-i" before the script.
 

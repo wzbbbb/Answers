@@ -10,6 +10,8 @@ localhost:2022
 To access an running container:
 docker attach
 
+To save a container into an image, -p is to pause the container during commit
+docker commit -p de232737c619 docker_dev
 
 To build an openstack_cli container: -
 
