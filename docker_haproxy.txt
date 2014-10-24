@@ -4,6 +4,11 @@ apt-get install docker.io
 To list all docker containers
 docker ps -a
 
+docker ps -h
+
+To launch a redis server with 1G memeory
+docker run -d -m 1g redis	----
+
 To ssh in Boot2Docker tinycore linux:
 localhost:2022
 
@@ -390,3 +395,15 @@ uwsgi:
 
 To launch it:
 fig up -d			----
+fig logs uwsgi 		----
+fig ps 			----
+
+........... more fig.yml syntax
+environment:
+  DJANGO_SETTINGS_MODULE 'webapp_settings'
+volumes_from:
+  - another_node
+links:
+  - database
+  - redis
+  - search
