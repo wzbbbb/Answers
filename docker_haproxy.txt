@@ -8,7 +8,13 @@ To ssh in Boot2Docker tinycore linux:
 localhost:2022
 
 To access an running container:
-docker attach
+docker attach 	----
+
+To access logs:
+docker logs -f			----
+
+To list process in docker:
+docker top  container_name 		----
 
 To save a container into an image, -p is to pause the container during commit
 docker commit -p de232737c619 docker_dev
@@ -365,4 +371,22 @@ apt-get install haproxy
 
 The defail haproxy in ubuntu does not include SSL. If starting haproxy with SSL configured in the /etc/haproxy/haproxy.cfg, it will complain:
 [ALERT] 280/190040 (21687) : parsing [/etc/haproxy/haproxy.cfg:30] : 'bind' only supports the 'transparent', 'defer-accept', 'name', 'id', 'mss' and 'interface' options.
+.................................
+cat fig.yml
+nginx:
+  build: ./nginx/.
+  #image: zhibing/nginx
+  ports:
+   - "80:80"
+  links:
+   - uwsgi
+uwsgi:
+  build: ./flask_uwsgi/.
+  #image: zhibing/flask_uwsgi
+  ports:
+   - "3031:3031"
+  volumes:
+   - .:/src
 
+To launch it:
+fig up -d			----

@@ -31,9 +31,14 @@ to specify a config file , to start nginx:
 /usr/local/nginx/sbin/nginx -c /usr/local/nginx/conf/nginx.conf
 
 To start uwsgi
-uwsgi -s /tmp/uwsgi.sock --module hello --callable app &; chmod 777 /tmp/uwsgi.sock
+uwsgi -s /tmp/uwsgi.sock --module hello --callable app &
 
+chmod 777 /tmp/uwsgi.sock
 Make sure the /tmp/uwsgi.sock is accessible to nginx 
+
+Or:
+uwsgi -s /tmp/uwsgi.sock --wsgi-file  /home/test_flask.py --callable app &
+
 .................................
 Building nginx
 ./configure --user=www-data --group=www-data --with-http_ssl_module
@@ -84,7 +89,7 @@ configuration checks will fail and Nginx will not start.
 If use "*", nginx will not complain even if no file exists.
 .................................
 To check config:  
-./nginx .t    +
+./nginx -t    +
 
 alex@example.com sbin]$ ./nginx -t .c /home/alex/test.conf +
 

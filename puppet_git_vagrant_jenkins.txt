@@ -60,8 +60,8 @@ If not exist:
 # puppetmasterd --genconfig > puppet.conf 
 .................................
 github
-git config --global user.name 'zwa'
-git config --global user.email 'zwa@orsyp.com'
+git config --global user.name 'zwang'
+git config --global user.email 'zwang@mirantis.com'
 
 To add /etc/puppetlabs to git repository.
 root@cookbook:/etc/puppet# git init
