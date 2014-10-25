@@ -1669,6 +1669,8 @@ os.mkdir(dir_path) -- makes one dir, os.makedirs(dir_path) makes all the needed 
 
 shutil.copy(source-path, dest-path) -- copy a file (dest path directories should exist)
 
+os.chdir(path) -- to set the current directory
+
 ## Example pulls filenames from a dir, prints their relative and absolute paths
 import os
 def printdir(dir):
@@ -5497,4 +5499,17 @@ To determin a system is big endian or little endian
 ############################################
 json pretty print
 curl -u 'zhibwang@cisco.com:mar999%!&' https://us1.rallydev.com/slm/webservice/v2.0/defect/|python -m json.tool
+
+############################################
+>>> import base64
+>>> print base64.b64encode("password")
+cGFzc3dvcmQ=
+>>> print base64.b64decode("cGFzc3dvcmQ=")
+password
+############################################
+To tar and gzip directory
+def make_tarfile(output_filename, source_dir):
+  import tarfile
+  with tarfile.open(output_filename, "w:gz") as tar:
+    tar.add(source_dir, arcname=os.path.basename(source_dir))
 
