@@ -8,8 +8,17 @@ python -m module [arg] ...
 To load an external module 
 export PYTHONPATH=$PYTHONPATH:/home/xlrd-0.9.3
 
+To load custom modules:
+import sys
+sys.path.insert(0,"X")
 
-to run the script and enter interactive mode afterwards. This can be done by passing "-i" before the script.
+where X is the directory you want to import from
+or 
+
+sys.path.append(mod_directory)
+
+
+To run the script and enter interactive mode afterwards. This can be done by passing "-i" before the script.
 
 sys.argv[0] ----
 When known to the interpreter, the script name and additional arguments thereafter are turned into a list of strings and assigned to the argv variable in the sys module. You can access this list by executing import sys. The length of the list is at least one; when no script and no arguments are given, sys.argv[0] is an empty string. When the script name is given as '-' (meaning standard input), sys.argv[0] is set to '-'. When -c command is used, sys.argv[0] is set to '-c'.
