@@ -5520,3 +5520,45 @@ def make_tarfile(output_filename, source_dir):
 .................................
 To check variable type 
 isinstance( <var>, int )
+
+.................................
+Excell store date as floating number, to cover it to int:
+import os
+import sys
+current_dir=os.getcwd()
+sys.path.append(current_dir+"/lib/xlrd-0.9.3")
+import xlrd
+year, month, day, hour, minute, second = xlrd.xldate_as_tuple(sh.cell_value(rowx=rx, colx=13) , 0)
+yyyymm=str(year)+str(month)     # the close months of this case
+.................................
+To get last 3 calendar months
+def last_three_months():
+  from datetime import date, timedelta
+  three_months=[]
+  three_months.append(date.today().strftime("%Y%m"))
+  pre = date.today().replace(day=1) - timedelta(days=1)
+  #print pre.strftime("%Y%m")
+  three_months.append(pre.strftime("%Y%m"))
+  ppre=pre.replace(day=1)- timedelta(days=1)
+  three_months.append(ppre.strftime("%Y%m"))
+  return three_months
+
+.................................
+Access swift object storage with python API
+from swiftclient import client as swiftClient
+swiftConnection = swiftClient.Connection(
+ user="zhibwang.gen",
+ key="p0o9i8u7y6",
+ tenant_name="prod-internal",
+ authurl='https://us-internal-1.cloud.cisco.com:5000/v2.0',
+ auth_version='2.0')
+
+  headers, content = swiftConnection.get_object(container_name,report_name) #download
+  print headers
+  #print content
+  with open(BO_report,'w') as f:
+    f.write(content)
+  container_name="tenant_matrix"
+  swiftConnection.put_object(container=container_name, obj=tar_file_name, contents=open(out_dir+"/"+tar_file_name)) #upload 
+  swiftConnection.close()
+
