@@ -1929,3 +1929,31 @@ devices {
 
 vgcreate cinder-volumes /dev/vdb
 vgs
+............................................
+To set X-Delete-After:
+https://community.runabove.com/kb/en/object-storage/how-to-schedule-deletion-of-objects.html
+To delete an object after xxx seconds
+swift -v -V 2.0 -A https://us-internal-1.cloud.cisco.com:5000/v2.0 -U prod-internal:zhibwang.gen -K "p0o9i8u7y6" post --header "X-Delete-After: 10" tenant_matrix  20141104-0020.tar.gz ----
+
+To check if it is properly set:
+swift -v -V 2.0 -A https://us-internal-1.cloud.cisco.com:5000/v2.0  -U prod-internal:zhibwang.gen -K "p0o9i8u7y6" stat tenant_matrix  20141104-0020.tar.gz		----
+
+It should contain:
+
+X-Delete-At: 1402647646
+
+Sample output: this one does not support X-Delete-After:
+
+           URL: https://storage.us-internal-1.cloud.cisco.com/swift/v1/tenant_matrix/20141104-0020.tar.gz
+    Auth Token: a471a9655f3747f99b60d5bce6d5e66d
+       Account: v1
+     Container: tenant_matrix
+        Object: 20141104-0020.tar.gz
+  Content Type: binary/octet-stream
+Content Length: 45
+ Last Modified: Tue, 04 Nov 2014 18:35:24 GMT
+          ETag: af30fc76fcc0b5bd849551ad8c7400e4
+ Accept-Ranges: bytes
+        Server: Apache/2.2.22 (Ubuntu)
+
+

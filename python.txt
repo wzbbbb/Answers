@@ -1671,6 +1671,11 @@ shutil.copy(source-path, dest-path) -- copy a file (dest path directories should
 
 os.chdir(path) -- to set the current directory
 
+os.remove() will remove a file.
+
+os.rmdir() will remove an empty directory.
+
+shutil.rmtree() will delete a directory and all its contents.
 ## Example pulls filenames from a dir, prints their relative and absolute paths
 import os
 def printdir(dir):
@@ -5512,4 +5517,6 @@ def make_tarfile(output_filename, source_dir):
   import tarfile
   with tarfile.open(output_filename, "w:gz") as tar:
     tar.add(source_dir, arcname=os.path.basename(source_dir))
-
+.................................
+To check variable type 
+isinstance( <var>, int )
